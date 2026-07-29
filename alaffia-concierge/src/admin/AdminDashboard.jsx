@@ -95,12 +95,12 @@ export default function AdminDashboard({ onBackToApp, user }) {
               ← Back to App
             </button>
             <div className="admin-sidebar-user">
-              {user?.photoURL && (
-                <img src={user.photoURL} alt="" className="admin-sidebar-user-avatar" />
+              {user?.imageUrl && (
+                <img src={user.imageUrl} alt="" className="admin-sidebar-user-avatar" />
               )}
               <div className="admin-sidebar-user-info">
-                <div className="admin-sidebar-user-name">{user?.displayName || 'Admin'}</div>
-                <div className="admin-sidebar-user-email">{user?.email || ''}</div>
+                <div className="admin-sidebar-user-name">{user?.fullName || 'Admin'}</div>
+                <div className="admin-sidebar-user-email">{user?.primaryEmailAddress?.emailAddress || ''}</div>
               </div>
             </div>
           </div>
