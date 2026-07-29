@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
+import { getClerkToken } from '../clerk'
 
 const ALL_CITIES = ['Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const CITIES_KEY = 'alaffia_active_cities'
@@ -101,7 +102,7 @@ export default function AdminSettings({ user }) {
 
   async function handleExport(type) {
     try {
-      const token = await user?.getIdToken()
+      const token = await getClerkToken()
       const res = await fetch(`${API_BASE}/api/admin/export/${type}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -164,8 +165,8 @@ export default function AdminSettings({ user }) {
           <div className="admin-stat-header">
             <div className="admin-stat-icon white">👤</div>
             <div>
-              <div className="admin-stat-number" style={{ fontSize: 18 }}>{user?.displayName || 'Admin'}</div>
-              <div className="admin-stat-label">{user?.email || 'Unknown'}</div>
+              <div className="admin-stat-number" style={{ fontSize: 18 }}>{user?.fullName || 'Admin'}</div>
+              <div className="admin-stat-label">{user?.primaryEmailAddress?.emailAddress || 'Unknown'}</div>
             </div>
           </div>
         </div>
@@ -227,8 +228,10 @@ export default function AdminSettings({ user }) {
               <span className="health-value" style={{ fontFamily: 'monospace', fontSize: 12 }}>{API_BASE}</span>
             </div>
             <div className="health-card-row">
-              <span className="health-label">Firebase</span>
-              <span className="health-value health-dot connected">● Configured</span>
+              <span className="health-label">Auth</span>
+              <span className={`health-value health-dot ${health?.authConfigured ? 'connected' : 'bad'}`}>
+                {health?.authConfigured ? '● Configured' : '○ Not configured'}
+              </span>
             </div>
             <div className="health-card-row">
               <span className="health-label">Node Version</span>
