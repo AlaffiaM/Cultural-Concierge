@@ -1,32 +1,20 @@
 import { useState, useEffect, useRef } from "react";
+import { useUser, useAuth, useSignIn, AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import alaffiaLogo from "./assets/Alaffia Logo New.png";
 import { cities } from "./data";
-import { auth, provider, signInWithPopup, signOut } from "./firebase";
+import { setTokenProvider } from "./clerk";
 import CityCards from "./CityCards";
 import SpotsView from "./SpotsView";
 import HappeningsView from "./HappeningsView";
 import TravelBrief from "./TravelBrief";
-import { MoodPresets } from "./VibeSearch";
-import ItineraryView from "./ItineraryView";
+
+
 import SpotDetailModal from "./SpotDetailModal";
 import AdminDashboard from "./admin/AdminDashboard";
 import "./App.css";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
-const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-function getDailyPulse() {
-  const day = new Date().getDay();
-  const dayName = DAY_NAMES[day];
-  let pulse = "", icon = "✦";
-  if (day === 6) { pulse = "Farmers markets & Sip & Paint"; icon = "🎨"; }
-  else if (day === 1) { pulse = "Spas, quiet cafes & low-key wellness"; icon = "🧘"; }
-  else if (day === 0) { pulse = "Brunch spots, retreats & afternoon culture"; icon = "☀️"; }
-  else if (day === 5) { pulse = "Evening social spots & live music"; icon = "🎵"; }
-  else if (day === 4) { pulse = "Art shows, gallery walks & cultural nights"; icon = "🎭"; }
-  else if (day === 3) { pulse = "Mid-week spa escapes & book cafes"; icon = "📚"; }
-  else if (day === 2) { pulse = "Creative workshops & hidden gems"; icon = "✨"; }
-  return { dayName, pulse, icon };
-}
+
 
 function countdownTo(dateStr) {
   const diff = new Date(dateStr) - new Date();
@@ -44,14 +32,13 @@ function gtag(...args) {
 }
 
 function App() {
-  const [user, setUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { getToken, signOut } = useAuth();
+  const { signIn } = useSignIn();
   const hasNavigatedFromHome = useRef(false);
   const [view, setView] = useState("home");
   const [selectedCity, setSelectedCity] = useState(null);
   const [interests, setInterests] = useState("");
-  const [itinerary, setItinerary] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [allSpots, setAllSpots] = useState([]);
   const [filteredSpots, setFilteredSpots] = useState([]);
   const [events, setEvents] = useState([]);
@@ -63,47 +50,41 @@ function App() {
   const [viewMode, setViewMode] = useState("places");
   const [advisory, setAdvisory] = useState(null);
   const [spotsError, setSpotsError] = useState(null);
-  const [authError, setAuthError] = useState(null);
 
-  const { dayName, pulse: dailyPulseText, icon: dailyIcon } = getDailyPulse();
+  const isCallback = window.location.pathname === '/sso-callback'
+
+  useEffect(() => {
+    if (getToken) setTokenProvider(getToken)
+  }, [getToken])
+
+  async function handleGoogleSignIn() {
+    if (!signIn) return
+    try {
+      await signIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: '/sso-callback',
+        redirectUrlComplete: window.location.origin,
+      })
+    } catch (e) {
+      console.error('[signIn] Google auth failed:', e.message)
+    }
+  }
 
   const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
     .split(',')
     .map(e => e.trim().toLowerCase())
-  const isAdmin = user && ADMIN_EMAILS.includes(user.email?.toLowerCase())
+  const isAdmin = isSignedIn && ADMIN_EMAILS.includes(user?.primaryEmailAddress?.emailAddress?.toLowerCase())
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u);
-      setAuthLoading(false);
-      if (u) {
-        gtag("event", "sign_in");
-        if (!hasNavigatedFromHome.current) setView("cities");
-        hasNavigatedFromHome.current = false;
-      }
-    });
-    return unsubscribe;
-  }, []);
-
-  async function handleGoogleSignIn() {
-    setAuthError(null);
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (e) {
-      if (e.code === "auth/popup-closed-by-user") return;
-      setAuthError(e.message || "Sign-in failed. Please try again.");
+    if (isSignedIn && user) {
+      gtag("event", "sign_in");
+      if (!hasNavigatedFromHome.current) setView("cities");
+      hasNavigatedFromHome.current = false;
     }
-  }
+  }, [isSignedIn, user]);
 
   async function handleSignOut() {
-    setAuthError(null);
-    try {
-      await signOut(auth);
-    } catch (e) {
-      setAuthError(e.message || "Sign-out failed.");
-      return;
-    }
-    setUser(null);
+    await signOut();
     setView("home");
     hasNavigatedFromHome.current = true;
     gtag("event", "sign_out");
@@ -201,7 +182,6 @@ function App() {
   function handleSelectCity(city) {
     setSelectedCity(city);
     setView("spots");
-    setItinerary(null);
     setInterests("");
     setActiveVibes([]);
     setSearchQuery("");
@@ -211,47 +191,15 @@ function App() {
   function handleBack() {
     setView("cities");
     setSelectedCity(null);
-    setItinerary(null);
     setInterests("");
     setActiveVibes([]);
     gtag("event", "back_to_cities");
-  }
-
-  function handleBackToSpots() {
-    setView("spots");
-    setItinerary(null);
-    setInterests("");
-    gtag("event", "back_to_spots");
   }
 
   function handleToggleVibe(vibe) {
     setActiveVibes((prev) =>
       prev.includes(vibe) ? prev.filter((v) => v !== vibe) : [...prev, vibe]
     );
-  }
-
-  function handleMoodSelect(query) {
-    setInterests(query);
-  }
-
-  async function handleGenerateItinerary() {
-    if (!interests.trim()) return;
-    setLoading(true);
-    gtag("event", "generate_itinerary", { city: selectedCity });
-
-    try {
-      const res = await fetch(API_BASE + "/api/itinerary", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ city: selectedCity, interests: interests.trim() }),
-      });
-      const data = await res.json();
-      setItinerary(data.itinerary);
-    } catch (err) {
-      console.error('[itinerary] Generate failed:', err.message)
-    } finally {
-      setLoading(false);
-    }
   }
 
   function handleSpotClick(spot) {
@@ -262,7 +210,11 @@ function App() {
     todayEvents.filter((e) => e.linkedSpotId).map((e) => e.linkedSpotId._id)
   );
 
-  if (authLoading) {
+  if (isCallback) {
+    return <AuthenticateWithRedirectCallback />
+  }
+
+  if (!isLoaded) {
     return (
       <div className="app-loading-screen">
         <img src={alaffiaLogo} alt="Alaffia" className="app-loading-logo" />
@@ -275,23 +227,23 @@ function App() {
     <div className="app">
       {view !== "home" && view !== "admin" && (
         <header className="header">
+          {view !== "cities" && (
+            <button
+              className="back-btn"
+              onClick={handleBack}
+              aria-label="Go back"
+            >
+              Back
+            </button>
+          )}
           <div className="logo">
-            {view !== "cities" && (
-              <button
-                className="back-btn"
-                onClick={view === "itinerary" && itinerary ? handleBackToSpots : handleBack}
-                aria-label="Go back"
-              >
-                Back
-              </button>
-            )}
             <img src={alaffiaLogo} alt="Alaffia" className="logo-img" />
           </div>
           <div className="user-area">
-            {user ? (
+            {isSignedIn ? (
               <>
-                {user.photoURL && <img src={user.photoURL} alt="" className="user-avatar" />}
-                <span className="user-name">{user.displayName || "User"}</span>
+                {user?.imageUrl && <img src={user.imageUrl} alt="" className="user-avatar" />}
+                <span className="user-name">{user?.fullName || "User"}</span>
                 {isAdmin && view !== "admin" && (
                   <button className="btn-text" onClick={() => setView("admin")} style={{ borderColor: "var(--sage)" }}>Admin</button>
                 )}
@@ -303,18 +255,8 @@ function App() {
             ) : (
               <button className="btn-text" onClick={handleGoogleSignIn}>Sign in</button>
             )}
-            {authError && <span className="auth-error">{authError}</span>}
           </div>
-          {view === "cities" ? (
-            <>
-              <p className="subtitle">Cultural Concierge</p>
-              <p className="tagline">
-                Your AI-powered cultural concierge for discovering wellness, creativity, and elevated experiences across Africa&rsquo;s most dynamic cities &mdash; Lagos, Kigali, Nairobi and Abuja.
-              </p>
-            </>
-          ) : view !== "admin" ? (
-            <p>{selectedCity}</p>
-          ) : null}
+
         </header>
       )}
 
@@ -334,38 +276,32 @@ function App() {
                 <button className="btn btn-primary btn-full" onClick={handleGoogleSignIn}>
                   Sign in with Google
                 </button>
-                {authError && <p className="auth-error">{authError}</p>}
-              </div>
-            </div>
-          )}
-
-          {view === "cities" && (
-            <div className="daily-pulse">
-              <span className="daily-pulse-icon">{dailyIcon}</span>
-              <div className="daily-pulse-text">
-                <span className="daily-pulse-day">{dayName}</span>
-                <span className="daily-pulse-rec">{dailyPulseText}</span>
               </div>
             </div>
           )}
 
           {view === "cities" && (
             <>
-              <h2 className="section-title">Choose your city</h2>
+              <div className="cities-hero">
+                <div className="cities-hero-brand">
+                  <div className="cities-hero-rule" />
+                  <p className="cities-hero-label">Explore</p>
+                </div>
+                <h2 className="cities-heading">Cultural Concierge</h2>
+                <p className="cities-tagline">
+                  Discover wellness, creativity, and elevated experiences across Africa&rsquo;s most dynamic cities &mdash; Lagos, Kigali, Nairobi and Abuja.
+                </p>
+              </div>
+              <div className="cities-picker">
+                <h2 className="section-title">Choose your city</h2>
+                <div className="section-underline" />
+              </div>
               <CityCards allSpots={allSpots} onSelectCity={handleSelectCity} />
             </>
           )}
 
           {view === "spots" && (
             <>
-              <div className="daily-pulse">
-                <span className="daily-pulse-icon">{dailyIcon}</span>
-                <div className="daily-pulse-text">
-                  <span className="daily-pulse-day">{dayName}</span>
-                  <span className="daily-pulse-rec">{dailyPulseText}</span>
-                </div>
-              </div>
-
               <div className="city-hero">
                 <h2 className="city-hero-name">{selectedCity}</h2>
                 <span className="city-hero-country">
@@ -398,7 +334,6 @@ function App() {
                   allSpots={allSpots}
                   spotsError={spotsError}
                   onSpotClick={handleSpotClick}
-                  onGenerateItinerary={() => setView("itinerary")}
                   todaySpotIds={todaySpotIds}
                   countdownTo={countdownTo}
                 />
@@ -411,7 +346,6 @@ function App() {
                   selectedCity={selectedCity}
                   activePillar={activePillar}
                   onPillarChange={setActivePillar}
-                  onGenerateItinerary={() => setView("itinerary")}
                   countdownTo={countdownTo}
                 />
               )}
@@ -423,47 +357,6 @@ function App() {
                 />
               )}
             </>
-          )}
-
-          {view === "itinerary" && !itinerary && (
-            <div className="itinerary-form">
-              <h2 className="section-title">Your {selectedCity} Itinerary</h2>
-              <p className="form-desc">Tell us what you're into — we'll craft a 2-day plan.</p>
-
-              <MoodPresets onSelect={handleMoodSelect} disabled={loading} />
-
-              <textarea
-                className="form-input"
-                placeholder="e.g. art, culture, relaxation, good food..."
-                value={interests}
-                onChange={(e) => setInterests(e.target.value)}
-                rows={3}
-              />
-              <button
-                className="btn btn-primary btn-full"
-                onClick={handleGenerateItinerary}
-                disabled={loading || !interests.trim()}
-              >
-                {loading ? "Generating..." : "Generate My Itinerary"}
-              </button>
-            </div>
-          )}
-
-          {view === "itinerary" && loading && (
-            <div className="iti-loading">
-              <div className="iti-spinner" />
-              <p>Crafting your cultural journey...</p>
-            </div>
-          )}
-
-          {view === "itinerary" && itinerary && !loading && (
-            <ItineraryView
-              itinerary={itinerary}
-              city={selectedCity}
-              spots={allSpots.filter((s) => s.city === selectedCity)}
-              events={events}
-              onBack={handleBackToSpots}
-            />
           )}
 
         </div>
