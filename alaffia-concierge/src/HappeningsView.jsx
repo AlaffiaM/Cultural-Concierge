@@ -7,7 +7,6 @@ export default function HappeningsView({
   selectedCity,
   activePillar,
   onPillarChange,
-  onGenerateItinerary,
   countdownTo,
 }) {
   const pillars = ["CULTURE", "WELLNESS", "SOCIAL"];
@@ -92,16 +91,7 @@ export default function HappeningsView({
             })}
       </div>
 
-      {events.length > 0 && (
-        <div className="ai-cta-card" onClick={onGenerateItinerary}>
-          <div className="ai-cta-icon">&#x1F9E0;</div>
-          <div className="ai-cta-text">
-            <div className="ai-cta-title">AI Itinerary</div>
-            <div className="ai-cta-desc">Turn these events into a 2-day plan with our AI concierge.</div>
-          </div>
-          <button className="btn btn-primary">Generate &rarr;</button>
-        </div>
-      )}
+
     </>
   );
 }
