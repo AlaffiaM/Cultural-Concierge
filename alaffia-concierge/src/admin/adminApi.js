@@ -1,12 +1,12 @@
-import { auth } from '../firebase'
+import { getClerkToken } from '../clerk'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
 export async function adminFetch(url, options = {}) {
-  if (!auth.currentUser) {
+  const token = await getClerkToken()
+  if (!token) {
     throw new Error('Not signed in. Please log in again.')
   }
-  const token = await auth.currentUser.getIdToken(false)
   const res = await fetch(API_BASE + url, {
     ...options,
     headers: {
