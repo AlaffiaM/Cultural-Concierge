@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { auth } from '../firebase'
+import { getClerkToken } from '../clerk'
 
 export default function ImageUploader({ onUploaded, label = 'Upload Image' }) {
   const [uploading, setUploading] = useState(false)
@@ -17,7 +17,7 @@ export default function ImageUploader({ onUploaded, label = 'Upload Image' }) {
       const formData = new FormData()
       formData.append('image', file)
 
-      const token = await auth.currentUser.getIdToken(false)
+      const token = await getClerkToken()
 
       const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/uploads', {
         method: 'POST',
