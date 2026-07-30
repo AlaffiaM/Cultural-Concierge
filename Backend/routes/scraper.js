@@ -33,7 +33,12 @@ router.get('/history', async (req, res) => {
   try {
     const { source, limit = 50 } = req.query
     const filter = { source: { $in: SCRAPER_SOURCES } }
-    if (source) filter.source = source
+    if (source) {
+      if (!SCRAPER_SOURCES.includes(source)) {
+        return res.status(400).json({ message: `Invalid source. Valid: ${SCRAPER_SOURCES.join(', ')}` })
+      }
+      filter.source = source
+    }
 
     const events = await Event.find(filter)
       .sort({ createdAt: -1 })
