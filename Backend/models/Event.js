@@ -7,7 +7,7 @@ const eventSchema = new mongoose.Schema({
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
   },
-  linkedSpotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Spot', default: null },
+  linkedSpotId: { type: mongoose.Schema.Types.ObjectId, ref: 'Venue', default: null },
   date: { type: Date, required: true },
   endDate: Date,
   time: String,
@@ -24,5 +24,10 @@ const eventSchema = new mongoose.Schema({
   isGhostLocation: { type: Boolean, default: false },
   source: { type: String, default: 'manual' },
 }, { timestamps: true })
+
+eventSchema.index(
+  { name: 1, city: 1, date: 1 },
+  { unique: true, collation: { locale: 'en', strength: 2 } }
+)
 
 module.exports = mongoose.model('Event', eventSchema)
