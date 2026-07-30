@@ -1,11 +1,34 @@
 .travel-brief {
   animation: fadeIn 0.3s ease;
+  max-width: 680px;
+  margin: 0 auto;
 }
 
-.tb-hero {
-  border-radius: var(--radius);
-  padding: 28px 24px 20px;
+.empty-state {
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 48px;
+  display: block;
   margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-state p {
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ===== Hero ===== */
+
+.tb-hero {
+  border-radius: var(--radius-lg);
+  padding: 32px 28px 24px;
+  margin-bottom: 20px;
   position: relative;
   overflow: hidden;
 }
@@ -14,7 +37,15 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.6) 100%);
+  background: linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.55) 100%);
+  pointer-events: none;
+}
+
+.tb-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 40%, rgba(255,255,255,0.06) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -27,54 +58,59 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .tb-hero-name {
   font-family: var(--heading);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.03em;
   margin: 0;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.25);
-  line-height: 1.15;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+  line-height: 1.1;
 }
 
 .tb-hero-country {
-  font-size: 13px;
-  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  color: rgba(255,255,255,0.75);
   font-weight: 500;
   text-shadow: 0 1px 4px rgba(0,0,0,0.2);
 }
 
 .tb-hero-updated {
   font-size: 10px;
-  color: rgba(255,255,255,0.75);
+  color: rgba(255,255,255,0.7);
   font-weight: 500;
-  background: rgba(0,0,0,0.25);
+  background: rgba(0,0,0,0.2);
   padding: 3px 10px;
   border-radius: 8px;
   white-space: nowrap;
+  letter-spacing: 0.02em;
 }
 
 .tb-badge-static {
-  background: rgba(255,255,255,0.2) !important;
+  background: rgba(255,255,255,0.18) !important;
   color: #fff !important;
   font-size: 10px !important;
-  padding: 3px 10px !important;
-  border-radius: 6px !important;
+  padding: 4px 12px !important;
+  border-radius: 8px !important;
+  backdrop-filter: blur(4px);
 }
 
+/* ===== Overview ===== */
+
 .tb-overview {
-  font-size: 13px;
-  line-height: 1.75;
+  font-size: 14px;
+  line-height: 1.8;
   color: var(--text);
-  margin: 0 0 16px;
-  padding: 16px 20px;
+  margin: 0 0 20px;
+  padding: 18px 22px;
   background: var(--card-bg);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
 .tb-overview strong {
@@ -82,38 +118,44 @@
   font-weight: 600;
 }
 
+/* ===== Airport Tip ===== */
+
 .tb-airport-tip {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  background: rgba(46, 125, 50, 0.08);
-  border: 1px solid rgba(46, 125, 50, 0.18);
-  border-radius: var(--radius-sm);
+  gap: 12px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(46,125,50,0.07) 0%, rgba(46,125,50,0.12) 100%);
+  border: 1px solid rgba(46,125,50,0.2);
+  border-radius: var(--radius);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.55;
   color: var(--text);
 }
 
 .tb-airport-icon {
-  font-size: 18px;
+  font-size: 20px;
   flex-shrink: 0;
   margin-top: 1px;
 }
 
 .tb-airport-text strong {
-  color: var(--copper);
+  color: #2d7a31;
+  font-weight: 700;
 }
+
+/* ===== Tab Bar (pill-style toggle) ===== */
 
 .tb-tabs {
   display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: 0;
+  margin-bottom: 20px;
   background: var(--bg);
   border: 1.5px solid var(--border);
   border-radius: 12px;
   padding: 4px;
+  position: relative;
 }
 
 .tb-tab {
@@ -133,6 +175,8 @@
   justify-content: center;
   gap: 6px;
   font-family: inherit;
+  position: relative;
+  z-index: 1;
 }
 
 .tb-tab-icon {
@@ -141,53 +185,58 @@
 
 .tb-tab:hover {
   color: var(--copper);
-  background: rgba(180,95,45,0.04);
 }
 
 .tb-tab.active {
   background: var(--card-bg);
   color: var(--copper);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
+
+/* ===== Section ===== */
 
 .tb-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
+
+/* ===== Badge Row ===== */
 
 .tb-badge-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .tb-badge {
-  padding: 5px 14px;
+  padding: 6px 16px;
   border-radius: 20px;
   font-size: 12px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .tb-badge-green {
-  background: rgba(46, 125, 50, 0.1);
-  color: #3a8a3e;
+  background: rgba(46,125,50,0.1);
+  color: #2d7a31;
 }
 
 .tb-badge-amber {
-  background: rgba(255, 152, 0, 0.1);
-  color: #d48a00;
+  background: rgba(232,154,34,0.1);
+  color: #c47e14;
 }
 
 .tb-crime {
   font-size: 12px;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.45;
 }
+
+/* ===== Accordion ===== */
 
 .tb-accordion {
   display: flex;
@@ -201,19 +250,24 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin: 4px 0 2px;
+  margin: 8px 0 2px;
 }
 
 .tb-details {
   background: var(--card-bg);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
   transition: box-shadow 0.2s;
 }
 
+.tb-details:hover {
+  border-color: var(--copper-subtle);
+}
+
 .tb-details[open] {
   border-color: var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .tb-summary {
@@ -244,13 +298,14 @@
   font-size: 18px;
   font-weight: 400;
   color: var(--text-faint);
-  transition: transform 0.25s;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   line-height: 1;
   flex-shrink: 0;
 }
 
 .tb-details[open] .tb-summary::after {
   content: '−';
+  transform: rotate(90deg);
 }
 
 .tb-instruction {
@@ -258,17 +313,10 @@
   margin: 0;
   font-size: 13px;
   color: var(--text-muted);
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
-.tb-subtitle {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 8px 0 6px;
-}
+/* ===== Risk Badge ===== */
 
 .tb-risk {
   font-size: 10px;
@@ -281,6 +329,19 @@
   flex-shrink: 0;
 }
 
+/* ===== Subtitle ===== */
+
+.tb-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 12px 0 6px;
+}
+
+/* ===== Entry Requirements ===== */
+
 .tb-entry {
   display: flex;
   flex-direction: column;
@@ -289,9 +350,14 @@
 
 .tb-entry-block {
   background: var(--card-bg);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 16px;
+  padding: 18px;
+  transition: box-shadow 0.2s;
+}
+
+.tb-entry-block:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
 .tb-entry-label {
@@ -315,7 +381,31 @@
   font-weight: 500;
   color: var(--text);
   background: var(--bg);
-  padding: 5px 12px;
+  padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+.tb-entry-item:hover {
+  border-color: var(--copper-subtle);
+  color: var(--copper);
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 600px) {
+  .tb-hero {
+    padding: 24px 20px 20px;
+    border-radius: var(--radius);
+  }
+
+  .tb-hero-name {
+    font-size: 26px;
+  }
+
+  .tb-overview {
+    padding: 14px 16px;
+    font-size: 13px;
+  }
 }
