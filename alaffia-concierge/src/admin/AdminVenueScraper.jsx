@@ -11,21 +11,21 @@ export default function AdminVenueScraper() {
   const [scraperSelected, setScraperSelected] = useState(new Set())
   const [accepting, setAccepting] = useState(false)
   const [venueExpanded, setVenueExpanded] = useState(new Set())
-  const [existingSpots, setExistingSpots] = useState(null)
+  const [existingVenues, setExistingVenues] = useState(null)
   const [loadingExisting, setLoadingExisting] = useState(false)
 
   async function handleRunScraper(source) {
     setScraperRunning(source)
     setScraperResults(null)
     setScraperSelected(new Set())
-    setExistingSpots(null)
+    setExistingVenues(null)
     try {
-      const res = await adminFetch('/api/spots/scraper/run', {
+      const res = await adminFetch('/api/venues/scraper/run', {
         method: 'POST',
         body: JSON.stringify({ source }),
       })
       setScraperResults(res)
-      if (res.spots.length === 0) loadExistingScraped()
+      if (res.venues.length === 0) loadExistingScraped()
     } catch (err) {
       console.error('[AdminVenueScraper] Run failed:', err.message)
     } finally {
@@ -36,8 +36,8 @@ export default function AdminVenueScraper() {
   async function loadExistingScraped() {
     setLoadingExisting(true)
     try {
-      const all = await adminFetch('/api/spots?all=true')
-      setExistingSpots((all.spots || all).filter(s => ['gemini'].includes(s.source) && s.status === 'scraped'))
+      const all = await adminFetch('/api/venues?all=true')
+      setExistingVenues((all.venues || all).filter(s => ['gemini'].includes(s.source) && s.status === 'scraped'))
       setScraperSelected(new Set())
     } catch (err) {
       console.error('[AdminVenueScraper] Load existing failed:', err.message)
@@ -68,17 +68,17 @@ export default function AdminVenueScraper() {
     if (ids.length === 0) return
     setAccepting(true)
     try {
-      await adminFetch('/api/spots/scraper/accept', {
+      await adminFetch('/api/venues/scraper/accept', {
         method: 'POST',
-        body: JSON.stringify({ spotIds: ids }),
+        body: JSON.stringify({ venueIds: ids }),
       })
       const updateList = list =>
         list.map(s => (ids.includes(s._id) ? { ...s, status: 'inactive' } : s))
-      if (scraperResults?.spots) {
-        setScraperResults(prev => ({ ...prev, spots: updateList(prev.spots) }))
+      if (scraperResults?.venues) {
+        setScraperResults(prev => ({ ...prev, venues: updateList(prev.venues) }))
       }
-      if (existingSpots) {
-        setExistingSpots(prev => updateList(prev))
+      if (existingVenues) {
+        setExistingVenues(prev => updateList(prev))
       }
       setScraperSelected(new Set())
     } catch (err) {
@@ -125,23 +125,23 @@ export default function AdminVenueScraper() {
               </tr>
             </thead>
             <tbody>
-              {items.map(spot => {
-                const canAccept = spot.status === 'scraped'
+              {items.map(venue => {
+                const canAccept = venue.status === 'scraped'
                 return (
-                  <tr key={spot._id}>
+                  <tr key={venue._id}>
                     <td>
                       {canAccept && (
                         <input
                           type="checkbox"
-                          checked={scraperSelected.has(spot._id)}
-                          onChange={() => toggleScraperSelect(spot._id)}
+                          checked={scraperSelected.has(venue._id)}
+                          onChange={() => toggleScraperSelect(venue._id)}
                           style={{ accentColor: '#B45F2D' }}
                         />
                       )}
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {spot.images?.slice(0, 5).map((img, i) => (
+                        {venue.images?.slice(0, 5).map((img, i) => (
                           <a key={i} href={img} target="_blank" rel="noopener noreferrer">
                             <img
                               src={img}
@@ -151,39 +151,39 @@ export default function AdminVenueScraper() {
                             />
                           </a>
                         ))}
-                        {(!spot.images || spot.images.length === 0) && (
+                        {(!venue.images || venue.images.length === 0) && (
                           <div style={{ width: 50, height: 50, borderRadius: 4, background: 'rgba(255,255,255,0.04)' }} />
                         )}
-                        {spot.images?.length > 5 && (
+                        {venue.images?.length > 5 && (
                           <span style={{ fontSize: 10, color: 'var(--admin-text-muted)', alignSelf: 'flex-end' }}>
-                            +{spot.images.length - 5}
+                            +{venue.images.length - 5}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td style={{ fontWeight: 600 }}>{spot.name}</td>
+                    <td style={{ fontWeight: 600 }}>{venue.name}</td>
                     <td
-                      style={{ color: 'var(--admin-text-muted)', fontSize: 11, cursor: spot.address ? 'pointer' : 'default', maxWidth: 160 }}
+                      style={{ color: 'var(--admin-text-muted)', fontSize: 11, cursor: venue.address ? 'pointer' : 'default', maxWidth: 160 }}
                       onClick={() => {
-                        if (!spot.address) return
+                        if (!venue.address) return
                         setVenueExpanded(prev => {
                           const next = new Set(prev)
-                          next.has(spot._id) ? next.delete(spot._id) : next.add(spot._id)
+                          next.has(venue._id) ? next.delete(venue._id) : next.add(venue._id)
                           return next
                         })
                       }}
-                      title={venueExpanded.has(spot._id) ? '' : spot.address}
+                      title={venueExpanded.has(venue._id) ? '' : venue.address}
                     >
-                      {venueExpanded.has(spot._id) ? spot.address : (spot.address?.slice(0, 30) || '—')}
+                      {venueExpanded.has(venue._id) ? venue.address : (venue.address?.slice(0, 30) || '—')}
                     </td>
-                    <td>{spot.city}</td>
+                    <td>{venue.city}</td>
                     <td style={{ fontSize: 11 }}>
-                      {(spot.tags || []).slice(0, 3).join(', ')}
-                      {spot.tags?.length > 3 && '...'}
+                      {(venue.tags || []).slice(0, 3).join(', ')}
+                      {venue.tags?.length > 3 && '...'}
                     </td>
                     <td>
                       <span className="admin-status-badge" style={{ background: 'rgba(180,95,45,0.15)', color: '#B45F2D' }}>
-                        {SOURCE_LABELS[spot.source] || spot.source}
+                        {SOURCE_LABELS[venue.source] || venue.source}
                       </span>
                     </td>
                     <td>
@@ -191,8 +191,8 @@ export default function AdminVenueScraper() {
                         <button
                           className="admin-btn-sm admin-btn-approve"
                           onClick={() => {
-                            setScraperSelected(new Set([spot._id]))
-                            handleAccept([spot._id])
+                            setScraperSelected(new Set([venue._id]))
+                            handleAccept([venue._id])
                           }}
                           disabled={accepting}
                         >
@@ -224,19 +224,19 @@ export default function AdminVenueScraper() {
             {scraperRunning === 'gemini' ? <div className="admin-spinner" /> : '🤖'}
           </div>
           <div className="admin-quick-action-body">
-            <h4>{scraperRunning === 'gemini' ? 'Researching...' : 'AI Research Spots'}</h4>
+            <h4>{scraperRunning === 'gemini' ? 'Researching...' : 'AI Research Venues'}</h4>
             <p>Gemini searches Google for cultural + wellness venues</p>
           </div>
         </button>
       </div>
 
-      {scraperResults && scraperResults.spots?.length > 0 && (
+      {scraperResults && scraperResults.venues?.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          {renderTable(scraperResults.spots, `New: ${scraperResults.source} — ${scraperResults.fetched} found, ${scraperResults.new} new (${scraperResults.skipped} skipped)`)}
+          {renderTable(scraperResults.venues, `New: ${scraperResults.source} — ${scraperResults.fetched} found, ${scraperResults.new} new (${scraperResults.skipped} skipped)`)}
         </div>
       )}
 
-      {scraperResults && scraperResults.spots?.length === 0 && !existingSpots && (
+      {scraperResults && scraperResults.venues?.length === 0 && !existingVenues && (
         <div className="admin-stat-card" style={{ textAlign: 'center', padding: 24 }}>
           <p style={{ color: 'var(--admin-text-muted)', margin: '0 0 12px 0' }}>
             No new venues found — all already in the database.
@@ -247,13 +247,13 @@ export default function AdminVenueScraper() {
         </div>
       )}
 
-      {existingSpots && existingSpots.length > 0 && (
+      {existingVenues && existingVenues.length > 0 && (
         <div>
-          {renderTable(existingSpots, 'Existing scraped venues')}
+          {renderTable(existingVenues, 'Existing scraped venues')}
         </div>
       )}
 
-      {existingSpots && existingSpots.length === 0 && (
+      {existingVenues && existingVenues.length === 0 && (
         <div className="admin-stat-card" style={{ textAlign: 'center', padding: 24 }}>
           <p style={{ color: 'var(--admin-text-muted)', margin: 0 }}>
             No scraped venues in the database.
