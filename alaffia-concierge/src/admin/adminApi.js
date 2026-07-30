@@ -1,4 +1,4 @@
-import { getClerkToken } from '../clerk'
+import { getClerkToken } from '../lib/clerk'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
 
