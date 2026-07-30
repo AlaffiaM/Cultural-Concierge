@@ -18,6 +18,7 @@
   --shadow-sm: 0 2px 8px rgba(70, 52, 37, 0.06);
   --shadow: 0 8px 28px rgba(70, 52, 37, 0.08);
   --shadow-lg: 0 20px 48px rgba(70, 52, 37, 0.12);
+  --shadow-xl: 0 32px 64px rgba(70, 52, 37, 0.16);
   --radius-sm: 10px;
   --radius: 14px;
   --radius-lg: 20px;
@@ -115,6 +116,25 @@ img {
   100% { background-position: 400% 0; }
 }
 
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+.view-enter {
+  animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .skeleton {
   background: linear-gradient(90deg, var(--border) 20%, #f0eff0 40%, var(--border) 60%);
   background-size: 400% 100%;
@@ -124,18 +144,4 @@ img {
 
 .skeleton-sm { height: 14px; width: 60%; margin-bottom: 8px; }
 .skeleton-md { height: 18px; width: 80%; margin-bottom: 10px; }
-.skeleton-lg { height: 24px; width: 100%; margin-bottom: 12px; }
-.skeleton-block { height: 120px; width: 100%; }
-.skeleton-card { height: 100px; width: 100%; border-radius: 14px; }
 .skeleton-circle { width: 44px; height: 44px; border-radius: 50%; }
-
-@keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.view-enter {
-  animation: fadeSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-
