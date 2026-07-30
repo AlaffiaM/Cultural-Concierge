@@ -3,7 +3,7 @@ import { adminFetch } from './adminApi'
 
 const STAT_ICONS = {
   totalEvents: { icon: '📅', color: 'white', nav: 'events' },
-  totalSpots: { icon: '📍', color: 'copper', nav: 'spots' },
+  totalVenues: { icon: '📍', color: 'copper', nav: 'venues' },
   ghostEvents: { icon: '📝', color: 'white', nav: 'ghosts' },
   eventsThisWeek: { icon: '🔥', color: 'copper', nav: 'events' },
 }
@@ -38,8 +38,8 @@ export default function AdminOverview({ onNavigate }) {
 
   const statEntries = [
     { key: 'totalEvents', label: 'Total Events' },
-    { key: 'totalSpots', label: 'Total Spots' },
-    { key: 'ghostEvents', label: 'Draft Events', tooltip: 'Pop-up and draft events awaiting approval' },
+    { key: 'totalVenues', label: 'Total Venues' },
+    { key: 'ghostEvents', label: 'Ghost Events', tooltip: 'Pop-up events with no fixed venue' },
     { key: 'eventsThisWeek', label: 'Events This Week' },
   ]
 
@@ -49,7 +49,7 @@ export default function AdminOverview({ onNavigate }) {
 
   const allCities = []
   const seen = new Set()
-  for (const c of [...(stats.eventsByCity || []), ...(stats.spotsByCity || [])]) {
+  for (const c of [...(stats.eventsByCity || []), ...(stats.venuesByCity || [])]) {
     if (!seen.has(c.city)) {
       allCities.push(c)
       seen.add(c.city)
@@ -135,13 +135,22 @@ export default function AdminOverview({ onNavigate }) {
             <p>Import events from external sources</p>
           </div>
         </button>
-        <button className="admin-quick-action" onClick={() => onNavigate('spots')}>
+        <button className="admin-quick-action" onClick={() => onNavigate('venues')}>
           <div className="admin-quick-action-icon white">📍</div>
           <div className="admin-quick-action-body">
-            <h4>{stats.totalSpots} Spots</h4>
+            <h4>{stats.totalVenues} Venues</h4>
             <p>Manage venues and experiences</p>
           </div>
         </button>
+        {stats.venuesWithoutImages > 0 && (
+          <button className="admin-quick-action" onClick={() => onNavigate('venues')}>
+            <div className="admin-quick-action-icon copper">🖼️</div>
+            <div className="admin-quick-action-body">
+              <h4>{stats.venuesWithoutImages} Venues Missing Images</h4>
+              <p>Run Find Images or upload manually</p>
+            </div>
+          </button>
+        )}
       </div>
 
       {/* City Distribution */}
@@ -183,14 +192,14 @@ export default function AdminOverview({ onNavigate }) {
                 </div>
               ))}
             </div>
-            {stats.spotsByCity?.length > 0 && (
+            {stats.venuesByCity?.length > 0 && (
               <>
                 <div className="admin-section-header" style={{ marginTop: 16 }}>
-                  <h3 className="admin-section-title">Spots by City</h3>
+                  <h3 className="admin-section-title">Venues by City</h3>
                 </div>
                 <div className="admin-city-list">
-                  {stats.spotsByCity.map(c => (
-                    <div key={c.city} className="admin-city-row clickable" onClick={() => onNavigate('spots')}>
+                  {stats.venuesByCity.map(c => (
+                    <div key={c.city} className="admin-city-row clickable" onClick={() => onNavigate('venues')}>
                       <span>{c.city}</span>
                       <span>{c.count}</span>
                     </div>
@@ -254,7 +263,7 @@ export default function AdminOverview({ onNavigate }) {
                   )
                 })}
                 <div className="pillar-total">
-                  {stats.pillarBreakdown.reduce((sum, p) => sum + p.count, 0)} total events & spots
+                  {stats.pillarBreakdown.reduce((sum, p) => sum + p.count, 0)} total events & venues
                 </div>
               </div>
             </div>
