@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { vibeMeta, moodPresets } from "./data";
+import { vibeMeta, moodPresets } from "./lib/data";
 import "./VibeSearch.css";
 
 const VIBE_ORDER = ["Premium", "Chic", "Serene", "Intimate", "Vibrant", "Curated"];
@@ -55,26 +55,5 @@ function Chip({ vibe, isActive, onToggle }) {
       <span className="vibe-chip-icon">{meta.icon}</span>
       {vibe}
     </button>
-  );
-}
-
-export function MoodPresets({ onSelect, disabled }) {
-  return (
-    <div className="mood-presets">
-      <span className="mood-presets-label">How are you feeling?</span>
-      <div className="mood-chips">
-        {moodPresets.map((mood) => (
-          <button
-            key={mood.label}
-            className="mood-chip"
-            onClick={() => onSelect(mood.query)}
-            disabled={disabled}
-          >
-            <span className="mood-chip-icon">{mood.icon}</span>
-            {mood.label}
-          </button>
-        ))}
-      </div>
-    </div>
   );
 }
