@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import AdminOverview from './AdminOverview'
 import AdminEvents from './AdminEvents'
-import AdminSpots from './AdminSpots'
+import AdminPendingEvents from './AdminPendingEvents'
+import AdminVenues from './AdminVenues'
 import AdminTags from './AdminTags'
 import AdminSettings from './AdminSettings'
 import AdminScraper from './AdminScraper'
-import AdminGhostEvents from './AdminGhostEvents'
+import AdminSubscribers from './AdminSubscribers'
+
 import './AdminDashboard.css'
 
 const TABS = [
@@ -15,24 +17,29 @@ const TABS = [
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
   },
   {
-    key: 'events',
-    label: 'Events',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>,
+    key: 'live-events',
+    label: 'Live Events',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
   },
   {
-    key: 'ghosts',
-    label: 'Drafts',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>,
+    key: 'pending-events',
+    label: 'Pending Events',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
   },
   {
-    key: 'spots',
-    label: 'Spots',
+    key: 'venues',
+    label: 'Venues',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
   },
   {
     key: 'tags',
     label: 'Tags',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  },
+  {
+    key: 'subscribers',
+    label: 'Subscribers',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
   },
   {
     key: 'settings',
@@ -48,20 +55,22 @@ const TABS = [
 
 const PAGE_TITLES = {
   overview: 'Dashboard',
-  events: 'Events',
-  ghosts: 'Draft Events',
-  spots: 'Spots',
+  'live-events': 'Live Events',
+  'pending-events': 'Pending Events',
+  venues: 'Venues',
   tags: 'Tags',
+  subscribers: 'Subscribers',
   settings: 'Settings',
   scraper: 'Scraper',
 }
 
 const PAGE_SUBTITLES = {
   overview: 'Overview of your content and activity',
-  events: 'Manage events across all cities',
-  ghosts: 'Pop-up and draft events awaiting approval',
-  spots: 'Manage spots and venues',
+  'live-events': 'Approved events (venues + pop-ups) visible in the app',
+  'pending-events': 'Scraped events awaiting approval',
+  venues: 'Manage venues',
   tags: 'Tag taxonomy and keyword system',
+  subscribers: 'Email subscribers collected via sign-in and newsletter forms',
   settings: 'Admin access and environment info',
   scraper: 'Import events from Ticketsasa, Kenyabuzz, and Mookh',
 }
@@ -115,10 +124,11 @@ export default function AdminDashboard({ onBackToApp, user }) {
         </div>
 
         {activeTab === 'overview' && <AdminOverview onNavigate={setActiveTab} />}
-        {activeTab === 'events' && <AdminEvents />}
-        {activeTab === 'ghosts' && <AdminGhostEvents />}
-        {activeTab === 'spots' && <AdminSpots />}
+        {activeTab === 'live-events' && <AdminEvents />}
+        {activeTab === 'pending-events' && <AdminPendingEvents />}
+        {activeTab === 'venues' && <AdminVenues />}
         {activeTab === 'tags' && <AdminTags />}
+        {activeTab === 'subscribers' && <AdminSubscribers />}
         {activeTab === 'settings' && <AdminSettings user={user} />}
         {activeTab === 'scraper' && <AdminScraper />}
       </div>
