@@ -1,7 +1,7 @@
 {
   "name": "Alaffia Cultural Concierge",
   "short_name": "Alaffia",
-  "description": "Curated wellness spots, cultural events, and AI-powered travel itineraries across Lagos, Abuja, Kigali, and Nairobi.",
+  "description": "Curated wellness venues, cultural events, and AI-powered travel itineraries across Lagos, Abuja, Kigali, and Nairobi.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F9F7F2",
