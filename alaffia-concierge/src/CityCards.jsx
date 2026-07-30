@@ -2,7 +2,7 @@ import lagosImg from "./assets/lagos.jpg";
 import abujaImg from "./assets/abuja.jpg";
 import kigaliImg from "./assets/kigali.jpg";
 import nairobiImg from "./assets/nairobi.jpg";
-import { cities } from "./data";
+import { cities } from "./lib/data";
 import "./CityCards.css";
 
 const cityImages = {
@@ -12,10 +12,10 @@ const cityImages = {
   Nairobi: nairobiImg,
 };
 
-export default function CityCards({ allSpots, onSelectCity }) {
-  const spots = Array.isArray(allSpots) ? allSpots : [];
+export default function CityCards({ allVenues, onSelectCity }) {
+  const venues = Array.isArray(allVenues) ? allVenues : [];
 
-  if (spots.length === 0) {
+  if (venues.length === 0) {
     return (
       <div className="city-grid">
         {[1, 2, 3, 4].map((i) => (
@@ -34,7 +34,7 @@ export default function CityCards({ allSpots, onSelectCity }) {
   return (
     <div className="city-grid">
       {cities.map((city) => {
-        const count = spots.filter((s) => s.city === city.name).length;
+        const count = venues.filter((s) => s.city === city.name).length;
         return (
           <div
             key={city.name}
@@ -52,7 +52,7 @@ export default function CityCards({ allSpots, onSelectCity }) {
             </div>
             <div className="city-card-footer">
               <span className="city-card-count">
-                {count} {count === 1 ? "spot" : "spots"}
+                {count} {count === 1 ? "venue" : "venues"}
               </span>
               <span className="city-card-arrow">&rarr;</span>
             </div>
