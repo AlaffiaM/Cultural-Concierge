@@ -3,6 +3,8 @@ const Event = require('../models/Event')
 const REJECTED_TERMS = [
   'conference', 'corporate', 'seminar', 'summit', 'business',
   'hackathon', 'webinar',
+  'book', 'books', 'bookstore', 'bookshop', 'book club', 'bookclub',
+  'literary', 'library', 'storytelling', 'meet the author',
 ]
 
 const CITY_COORDS = {
@@ -78,31 +80,39 @@ async function runScrapers(sources) {
         const coords = ev.coordinates || CITY_COORDS[ev.city] || CITY_COORDS.Nairobi
         const normalizedDate = ev.date ? new Date(new Date(ev.date).toISOString().slice(0, 10)) : new Date()
         const fuzzyName = fuzzyNormalize(ev.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const event = await Event.findOneAndUpdate(
-          { name: { $regex: `^${fuzzyName}`, $options: 'i' }, city: { $regex: `^${(ev.city || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' }, date: normalizedDate },
-          {
-            $setOnInsert: {
-              name: ev.name,
-              city: ev.city,
-              date: normalizedDate,
-              description: ev.description || '',
-              imageUrl: ev.imageUrl || '',
-              pillar: ev.pillar || 'CULTURE',
-              type: ev.type || '',
-              venue: ev.venue || '',
-              price: ev.price || '',
-              source: ev.source || source,
-              status: 'draft',
-              isGhostLocation: true,
-              coordinates: coords,
-              tags: [source],
-              time: ev.time || '',
+        try {
+          const event = await Event.findOneAndUpdate(
+            { name: { $regex: `^${fuzzyName}`, $options: 'i' }, city: { $regex: `^${(ev.city || '').trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' }, date: normalizedDate },
+            {
+              $setOnInsert: {
+                name: ev.name,
+                city: ev.city,
+                date: normalizedDate,
+                description: ev.description || '',
+                imageUrl: ev.imageUrl || '',
+                pillar: ev.pillar || 'CULTURE',
+                type: ev.type || '',
+                venue: ev.venue || '',
+                price: ev.price || '',
+                source: ev.source || source,
+                status: 'draft',
+                isGhostLocation: true,
+                coordinates: coords,
+                tags: [source],
+                time: ev.time || '',
+              },
             },
-          },
-          { upsert: true, new: true, collation: { locale: 'en', strength: 2 } }
-        )
-        results[source].new++
-        allNew.push(event)
+            { upsert: true, new: true, collation: { locale: 'en', strength: 2 } }
+          )
+          results[source].new++
+          allNew.push(event)
+        } catch (err) {
+          if (err.code === 11000) {
+            results[source].skipped++
+          } else {
+            throw err
+          }
+        }
       }
     } catch (err) {
       results[source] = { fetched: 0, new: 0, skipped: 0, error: err.message }
