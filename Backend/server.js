@@ -70,6 +70,15 @@ app.use("/api/uploads", uploadsRoute);
 app.use("/api/advisories", advisoriesRoute);
 app.use("/api/subscribe", subscribeRoute);
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('[unhandled]', err)
+  if (req.path.startsWith('/api/')) {
+    return res.status(500).json({ success: false, message: 'Internal server error' })
+  }
+  next(err)
+})
+
 // Connect to MongoDB Atlas
 mongoose
   .connect(process.env.MONGO_URI)
@@ -97,10 +106,7 @@ app.use((req, res, next) => {
 
 // 404 catch-all — API routes only from here
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.url}`,
-  });
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 const PORT = process.env.PORT || 5000;
