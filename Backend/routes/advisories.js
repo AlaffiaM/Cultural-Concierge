@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const CityAdvisory = require('../models/CityAdvisory')
+const { escapeRegex } = require('../utils/sanitize')
 const { requireAdmin } = require('../middleware/admin')
-const { refreshAdvisories } = require('../utils/travelBriefUpdater')
 
 function applyNightTravelOverride(advisory) {
   if (!advisory || !advisory.security) return advisory
@@ -19,7 +19,7 @@ function applyNightTravelOverride(advisory) {
 // GET /api/advisories/:city — public, returns advisory for a city
 router.get('/:city', async (req, res) => {
   try {
-    const query = req.params.city
+    const query = escapeRegex(req.params.city)
     const advisory = await CityAdvisory.findOne({
       $or: [
         { city_id: { $regex: `^${query}$`, $options: 'i' } },
@@ -28,17 +28,19 @@ router.get('/:city', async (req, res) => {
     })
     res.json(applyNightTravelOverride(advisory) || null)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
-// POST /api/advisories/refresh — admin-only, triggers Gemini update
-router.post('/refresh', requireAdmin, async (req, res) => {
+// POST /api/advisories/run — run the advisors-gemini scraper (admin)
+router.post('/run', requireAdmin, async (req, res) => {
   try {
-    const result = await refreshAdvisories()
+    const scraper = require('../scrapers/advisors-gemini')
+    const result = await scraper.scrape()
     res.json(result)
   } catch (err) {
-    console.error('[advisories] Refresh error:', err)
+    console.error('[advisories] scraper error:', err.message)
     res.status(500).json({ message: err.message })
   }
 })
