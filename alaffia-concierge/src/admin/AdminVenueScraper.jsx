@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { adminFetch } from './adminApi'
+import { useToast } from './Toast'
 
 const SOURCE_LABELS = {
   gemini: 'AI Research',
@@ -13,6 +14,7 @@ export default function AdminVenueScraper() {
   const [venueExpanded, setVenueExpanded] = useState(new Set())
   const [existingVenues, setExistingVenues] = useState(null)
   const [loadingExisting, setLoadingExisting] = useState(false)
+  const { addToast } = useToast()
 
   async function handleRunScraper(source) {
     setScraperRunning(source)
@@ -25,9 +27,10 @@ export default function AdminVenueScraper() {
         body: JSON.stringify({ source }),
       })
       setScraperResults(res)
+      addToast(`${source} scraper: ${res.new} new, ${res.skipped} skipped`, res.new > 0 ? 'success' : 'info')
       if (res.venues.length === 0) loadExistingScraped()
     } catch (err) {
-      console.error('[AdminVenueScraper] Run failed:', err.message)
+      addToast(`${source} scraper failed: ${err.message}`, 'error')
     } finally {
       setScraperRunning(null)
     }
@@ -81,6 +84,7 @@ export default function AdminVenueScraper() {
         setExistingVenues(prev => updateList(prev))
       }
       setScraperSelected(new Set())
+      addToast(`${ids.length} venue(s) accepted`, 'success')
     } catch (err) {
       console.error('[AdminVenueScraper] Accept failed:', err.message)
     } finally {
@@ -135,7 +139,7 @@ export default function AdminVenueScraper() {
                           type="checkbox"
                           checked={scraperSelected.has(venue._id)}
                           onChange={() => toggleScraperSelect(venue._id)}
-                          style={{ accentColor: '#B45F2D' }}
+                          style={{ accentColor: 'var(--admin-copper)' }}
                         />
                       )}
                     </td>
