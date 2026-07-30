@@ -88,7 +88,8 @@ router.get('/stats', async (req, res) => {
       pillarBreakdown,
     })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -101,7 +102,8 @@ router.get('/tags', async (req, res) => {
     const unique = [...new Set([...allTags, ...allVibeTags])].sort()
     res.json(unique)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -118,7 +120,8 @@ router.get('/vibe-tags', async (req, res) => {
     const all = [...new Set([...eventTags, ...venueTags])].filter(Boolean).sort()
     res.json(all)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -151,7 +154,8 @@ router.get('/health', async (req, res) => {
       nodeVersion: process.version,
     })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -170,7 +174,8 @@ router.get('/team', async (req, res) => {
       added: 'Via ADMIN_EMAILS env',
     })))
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -188,7 +193,8 @@ router.get('/export/events', async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename=events-export.csv')
     res.send(csv)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -204,7 +210,8 @@ router.get('/export/venues', async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename=venues-export.csv')
     res.send(csv)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -217,7 +224,8 @@ router.delete('/scraped-events', async (req, res) => {
     })
     res.json({ deleted: result.deletedCount })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -226,7 +234,8 @@ router.delete('/manual-events', async (req, res) => {
     const result = await Event.deleteMany({ source: 'manual' })
     res.json({ deleted: result.deletedCount, message: `Deleted ${result.deletedCount} manual/seed events` })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -237,7 +246,8 @@ router.get('/subscribers', async (req, res) => {
     const emails = await Email.find({}).sort({ createdAt: -1 }).lean()
     res.json(emails)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -251,7 +261,8 @@ router.get('/subscribers/export', async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename=subscribers.csv')
     res.send(csv)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
