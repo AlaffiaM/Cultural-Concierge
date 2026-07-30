@@ -1,10 +1,5 @@
 const { verifyClerkToken } = require('./verifyToken')
 
-const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
-  .split(',')
-  .map(e => e.trim().toLowerCase())
-  .filter(Boolean)
-
 async function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -15,7 +10,13 @@ async function requireAdmin(req, res, next) {
   try {
     const decoded = await verifyClerkToken(token)
     const { email, uid } = decoded
-    if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
+
+    const adminEmails = (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean)
+
+    if (!adminEmails.includes(email.toLowerCase())) {
       return res.status(403).json({ message: 'Access denied. Not an admin.' })
     }
     req.adminUser = { email: email.toLowerCase(), uid }
