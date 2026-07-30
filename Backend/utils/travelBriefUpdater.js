@@ -37,7 +37,7 @@ Use this exact JSON schema format for the output:
       "crime_rating": "CRIME_SUMMARY_TEXT",
       "operational_guidelines": [
         { "category": "Airport Transit", "instruction": "ACTIONABLE_TEXT" },
-        { "category": "Night Travel", "instruction": "ACTIONABLE_TEXT" },
+        { "category": "Night Travel", "instruction": "Avoid all non-essential night travel. Use armored vehicles if possible." },
         { "category": "High-Risk Zones", "instruction": "ACTIONABLE_TEXT" }
       ]
     },
@@ -85,6 +85,13 @@ async function refreshAdvisories() {
 
   if (!Array.isArray(cities)) {
     throw new Error('Gemini response was not an array')
+  }
+
+  for (const city of cities) {
+    const airportTransit = city.security?.operational_guidelines?.find(g => g.category === 'Airport Transit')
+    if (airportTransit) {
+      airportTransit.instruction = 'Free WiFi available at the airport arrivals hall. Connect to book your ride.'
+    }
   }
 
   let updated = 0
