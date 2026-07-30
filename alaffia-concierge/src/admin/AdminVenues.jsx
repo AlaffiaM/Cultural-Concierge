@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 import VenueEditor from './VenueEditor'
 import { useConfirm } from './ConfirmModal'
+import { useToast } from './Toast'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['All', 'CULTURE', 'WELLNESS', 'SOCIAL']
@@ -46,7 +47,9 @@ export default function AdminVenues() {
   const [showEditor, setShowEditor] = useState(false)
   const [editingVenue, setEditingVenue] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [enriching, setEnriching] = useState(false)
   const { showConfirm, ConfirmModal } = useConfirm()
+  const { addToast } = useToast()
 
   function loadVenues() {
     const params = new URLSearchParams({ all: 'true', page, limit: PAGE_SIZE })
@@ -142,6 +145,20 @@ export default function AdminVenues() {
     setShowEditor(true)
   }
 
+  async function handleEnrichImages() {
+    if (!await showConfirm('Look up Wikipedia for all venues missing images? This may take a while.')) return
+    setEnriching(true)
+    try {
+      const data = await adminFetch('/api/venues/batch-enrich', { method: 'POST', body: '{}' })
+      addToast(`${data.enriched} enriched, ${data.skipped} skipped (${data.total} total without images)`, data.enriched > 0 ? 'success' : 'info')
+      loadVenues()
+    } catch (err) {
+      addToast(err.message || 'Enrich failed', 'error')
+    } finally {
+      setEnriching(false)
+    }
+  }
+
   function handleEditorClose() {
     setShowEditor(false)
     setEditingVenue(null)
@@ -181,6 +198,9 @@ export default function AdminVenues() {
     <div>
       <div className="admin-toolbar">
         <button className="admin-btn admin-btn-primary" onClick={handleCreate}>+ Create Venue</button>
+        <button className="admin-btn admin-btn-secondary" onClick={handleEnrichImages} disabled={enriching} style={{ fontSize: 11, padding: '4px 10px' }}>
+          {enriching ? 'Enriching...' : 'Enrich Images'}
+        </button>
         <select value={filterCity} onChange={e => { setFilterCity(e.target.value); setPage(1) }}>
           <option value="All">All Cities</option>
           {CITIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
@@ -227,7 +247,7 @@ export default function AdminVenues() {
                       type="checkbox"
                       checked={venues.length > 0 && selectedIds.size === venues.length}
                       onChange={selectAll}
-                      style={{ accentColor: '#B45F2D' }}
+                      style={{ accentColor: 'var(--admin-copper)' }}
                     />
                   </th>
                   <th style={{ width: 50 }}>Image</th>
@@ -252,7 +272,7 @@ export default function AdminVenues() {
                           type="checkbox"
                           checked={selectedIds.has(venue._id)}
                           onChange={() => toggleSelect(venue._id)}
-                          style={{ accentColor: '#B45F2D' }}
+                          style={{ accentColor: 'var(--admin-copper)' }}
                         />
                       </td>
                       <td style={{ verticalAlign: 'middle' }}>
