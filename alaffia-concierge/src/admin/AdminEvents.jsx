@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 import EventEditor from './EventEditor'
+import { useConfirm } from './ConfirmModal'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['All', 'CULTURE', 'WELLNESS', 'SOCIAL']
@@ -42,11 +43,15 @@ export default function AdminEvents() {
   const [editingEvent, setEditingEvent] = useState(null)
   const [selectedIds, setSelectedIds] = useState(new Set())
   const [venueExpanded, setVenueExpanded] = useState(new Set())
+  const [filterGhost, setFilterGhost] = useState('all')
+  const { showConfirm, ConfirmModal } = useConfirm()
 
   function loadEvents() {
-    const params = new URLSearchParams({ all: 'true', page, limit: PAGE_SIZE })
+    const params = new URLSearchParams({ page, limit: PAGE_SIZE })
     if (filterCity !== 'All') params.set('city', filterCity)
     if (filterPillar !== 'All') params.set('pillar', filterPillar)
+    if (filterGhost === 'ghost') params.set('ghost', 'true')
+    else if (filterGhost === 'venue') params.set('ghost', 'false')
 
     adminFetch(`/api/events?${params}`)
       .then(data => {
@@ -66,7 +71,7 @@ export default function AdminEvents() {
       .catch(err => console.error('[AdminEvents]', err.message))
   }
 
-  useEffect(() => { loadEvents() }, [filterCity, filterPillar, page])
+  useEffect(() => { loadEvents() }, [filterCity, filterPillar, filterGhost, search, page])
 
   function goToPage(p) {
     if (p >= 1 && p <= totalPages) setPage(p)
@@ -90,7 +95,7 @@ export default function AdminEvents() {
 
   async function bulkDelete() {
     if (selectedIds.size === 0) return
-    if (!confirm(`Delete ${selectedIds.size} event(s)? This cannot be undone.`)) return
+    if (!await showConfirm(`Delete ${selectedIds.size} event(s)? This cannot be undone.`)) return
     for (const id of selectedIds) {
       await adminFetch(`/api/events/${id}`, { method: 'DELETE' }).catch(() => {})
     }
@@ -99,7 +104,7 @@ export default function AdminEvents() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Delete this event?')) return
+    if (!await showConfirm('Delete this event?')) return
     await adminFetch(`/api/events/${id}`, { method: 'DELETE' })
     loadEvents()
   }
@@ -172,9 +177,6 @@ export default function AdminEvents() {
 
   return (
     <div>
-      {/* Pending Events */}
-      <PendingEvents onApproved={loadEvents} />
-
       <div className="admin-toolbar">
         <button className="admin-btn admin-btn-primary" onClick={handleCreate}>+ Create Event</button>
         <select value={filterCity} onChange={e => { setFilterCity(e.target.value); setPage(1) }}>
@@ -183,6 +185,22 @@ export default function AdminEvents() {
         <select value={filterPillar} onChange={e => { setFilterPillar(e.target.value); setPage(1) }}>
           {PILLARS.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
+        <div className="filter-pills" style={{ display: 'flex', gap: 4 }}>
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'ghost', label: 'Pop-ups' },
+            { key: 'venue', label: 'Venues' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              className={`admin-btn ${filterGhost === opt.key ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
+              onClick={() => { setFilterGhost(opt.key); setPage(1) }}
+              style={{ fontSize: 11, padding: '4px 10px' }}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <input
           className="search-input"
           type="text"
@@ -292,142 +310,8 @@ export default function AdminEvents() {
           <Pagination />
         </>
       )}
+      {ConfirmModal}
     </div>
   )
 }
 
-function PendingEvents({ onApproved }) {
-  const [pending, setPending] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState(new Set())
-  const [approving, setApproving] = useState(false)
-
-  async function loadPending() {
-    setLoading(true)
-    try {
-      const data = await adminFetch('/api/events/pending')
-      setPending(data)
-    } catch (err) {
-      console.error('[PendingEvents] Load failed:', err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { loadPending() }, [])
-
-  function toggleSelect(id) {
-    setSelected(prev => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
-  }
-
-  function selectAll() {
-    if (selected.size === pending.length) {
-      setSelected(new Set())
-    } else {
-      setSelected(new Set(pending.map(e => e._id)))
-    }
-  }
-
-  async function handleApprove() {
-    const ids = Array.from(selected)
-    if (ids.length === 0) return
-    setApproving(true)
-    try {
-      await adminFetch('/api/scraper/approve', {
-        method: 'POST',
-        body: JSON.stringify({ eventIds: ids }),
-      })
-      setPending(prev => prev.filter(e => !ids.includes(e._id)))
-      setSelected(new Set())
-      onApproved()
-    } catch (err) {
-      console.error('[PendingEvents] Approve failed:', err.message)
-    } finally {
-      setApproving(false)
-    }
-  }
-
-  if (loading) return null
-  if (pending.length === 0) return null
-
-  return (
-    <div style={{ marginBottom: 24, border: '1px solid rgba(220,50,50,0.2)', borderRadius: 10, overflow: 'hidden' }}>
-      <div style={{ padding: '12px 16px', background: 'rgba(220,50,50,0.06)', borderBottom: '1px solid rgba(220,50,50,0.15)' }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#dc3232' }}>
-          {pending.length} Pending Approval
-        </span>
-        <span style={{ fontSize: 11, color: 'var(--admin-text-muted)', marginLeft: 8 }}>
-          — approve to make live
-        </span>
-      </div>
-      <div className="admin-toolbar" style={{ padding: '8px 16px' }}>
-        <button className="admin-btn-sm admin-btn-edit" onClick={selectAll}>
-          {selected.size === pending.length ? 'Deselect All' : 'Select All'}
-        </button>
-        <button
-          className="admin-btn admin-btn-primary"
-          onClick={handleApprove}
-          disabled={selected.size === 0 || approving}
-          style={{ padding: '4px 14px', fontSize: 12, marginLeft: 'auto' }}
-        >
-          {approving ? 'Approving...' : `Approve (${selected.size})`}
-        </button>
-      </div>
-      <div className="admin-table-wrap">
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th style={{ width: 28 }}></th>
-              <th style={{ width: 50 }}>Image</th>
-              <th>Name</th>
-              <th>Venue</th>
-              <th>Source</th>
-              <th>City</th>
-              <th>Date</th>
-              <th>Pillar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pending.map(ev => (
-              <tr key={ev._id}>
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(ev._id)}
-                    onChange={() => toggleSelect(ev._id)}
-                    style={{ accentColor: '#B45F2D' }}
-                  />
-                </td>
-                <td>
-                  {ev.imageUrl ? (
-                    <a href={ev.imageUrl} target="_blank" rel="noopener noreferrer">
-                      <img src={ev.imageUrl} alt="" className="admin-thumb" />
-                    </a>
-                  ) : (
-                    <div className="admin-thumb" style={{ background: 'rgba(255,255,255,0.04)' }} />
-                  )}
-                </td>
-                <td style={{ fontWeight: 600 }}>{ev.name}</td>
-                <td style={{ color: 'var(--admin-text-muted)', fontSize: 12, maxWidth: 160 }}>{ev.venue || '—'}</td>
-                <td>
-                  <span className="admin-status-badge" style={{ background: 'rgba(180,95,45,0.15)', color: '#B45F2D' }}>
-                    {ev.source}
-                  </span>
-                </td>
-                <td>{ev.city}</td>
-                <td>{new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                <td>
-                  <PillarBadge pillar={ev.pillar} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
