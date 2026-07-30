@@ -6,10 +6,16 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 
 async function callGemini(prompt, maxTokens = 300) {
   const { data } = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
     {
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: { temperature: 0.5, maxOutputTokens: maxTokens },
+    },
+    {
+      headers: {
+        'x-goog-api-key': process.env.GEMINI_API_KEY,
+        'Content-Type': 'application/json',
+      },
     }
   )
   return data.candidates[0].content.parts[0].text
