@@ -146,7 +146,7 @@ export default function AdminPendingEvents() {
                     type="checkbox"
                     checked={selected.has(ev._id)}
                     onChange={() => toggleSelect(ev._id)}
-                    style={{ accentColor: '#B45F2D' }}
+                    style={{ accentColor: 'var(--admin-copper)' }}
                   />
                 </td>
                 <td>
