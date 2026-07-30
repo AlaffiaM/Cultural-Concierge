@@ -57,7 +57,7 @@ async function researchCity(cityName, country) {
 
 For each venue, return a JSON object with these fields:
 - "name": the venue name
-- "type": one of "Museum", "Gallery", "Park", "Theatre", "Cultural Centre", "Wellness Centre", "Market", "Monument", "Historical Site", "Sports Venue", "Place of Worship", "Library", "Beach", "Nature Reserve", "Hotel", "Restaurant", "Landmark"
+- "type": one of "Museum", "Gallery", "Park", "Theatre", "Cultural Centre", "Wellness Centre", "Monument", "Historical Site", "Sports Venue", "Place of Worship", "Library", "Beach", "Nature Reserve", "Hotel", "Restaurant", "Landmark"
 - "pillar": one of "CULTURE", "WELLNESS", "SOCIAL"
 - "description": a 1-2 sentence description
 - "tip": a practical tip for visitors
@@ -65,7 +65,9 @@ For each venue, return a JSON object with these fields:
 - "vibeTags": an array of 2-4 relevant tags like "Art", "Music", "History", "Food", "Wellness", "Nature", "Adventure", "Social", "Relaxation", "Culture", "Family", "Nightlife"
 - "coordinates": { "lat": number, "lng": number }
 
-Focus on venues interesting for cultural tourists: museums, art galleries, parks, gardens, theatres, cultural centres, markets, stadiums, monuments, historical sites, landmarks, beaches, nature reserves, wildlife parks, botanic gardens, wellness centres, spas, hotels, resorts, restaurants.
+Focus on venues interesting for cultural tourists: museums, art galleries, parks, gardens, theatres, cultural centres, monuments, historical sites, landmarks, beaches, nature reserves, wildlife parks, botanic gardens, wellness centres, spas, hotels, resorts, restaurants.
+
+Do NOT include markets, shopping malls, supermarkets, stores, shops, or any retail/commercial trading places. Only cultural, wellness, social, and hospitality venues.
 
 Return ONLY a valid JSON array of objects, no other text. Example:
 [
