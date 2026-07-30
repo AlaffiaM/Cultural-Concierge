@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Event = require('../models/Event')
+const { escapeRegex } = require('../utils/sanitize')
 const { requireAdmin } = require('../middleware/admin')
 
 // GET /api/events — list events, filterable by city, with pagination
@@ -11,7 +12,7 @@ router.get('/', async (req, res) => {
       filter.status = 'approved'
     }
     if (req.query.city) {
-      filter.city = { $regex: req.query.city, $options: 'i' }
+      filter.city = { $regex: escapeRegex(req.query.city), $options: 'i' }
     }
     if (req.query.ghost === 'true') {
       filter.isGhostLocation = true
@@ -19,7 +20,7 @@ router.get('/', async (req, res) => {
       filter.isGhostLocation = { $ne: true }
     }
     if (req.query.pillar) {
-      filter.pillar = { $regex: `^${req.query.pillar}$`, $options: 'i' }
+      filter.pillar = { $regex: `^${escapeRegex(req.query.pillar)}$`, $options: 'i' }
     }
 
     const page = Math.max(parseInt(req.query.page) || 1, 1)
@@ -33,7 +34,8 @@ router.get('/', async (req, res) => {
 
     res.json({ events, total, page, totalPages: Math.ceil(total / limit) || 1 })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -53,12 +55,13 @@ router.get('/upcoming', async (req, res) => {
       date: dateFilter,
     }
     if (req.query.city) {
-      filter.city = { $regex: req.query.city, $options: 'i' }
+      filter.city = { $regex: escapeRegex(req.query.city), $options: 'i' }
     }
     const events = await Event.find(filter).sort({ date: 1 }).limit(200).populate('linkedSpotId', 'name type')
     res.json(events)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -72,7 +75,8 @@ router.get('/ghosts', requireAdmin, async (req, res) => {
     const events = await Event.find(filter).sort({ date: -1 }).populate('linkedSpotId', 'name type')
     res.json(events)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -85,7 +89,8 @@ router.get('/pending', requireAdmin, async (req, res) => {
     const events = await Event.find(filter).sort({ createdAt: -1 }).populate('linkedSpotId', 'name type')
     res.json(events)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -102,12 +107,13 @@ router.get('/today', async (req, res) => {
       date: { $gte: start, $lte: end },
     }
     if (req.query.city) {
-      filter.city = { $regex: req.query.city, $options: 'i' }
+      filter.city = { $regex: escapeRegex(req.query.city), $options: 'i' }
     }
     const events = await Event.find(filter).populate('linkedSpotId', 'name type')
     res.json(events)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -118,7 +124,8 @@ router.get('/:id', async (req, res) => {
     if (!event) return res.status(404).json({ message: 'Event not found' })
     res.json(event)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -293,7 +300,8 @@ router.post('/deduplicate', requireAdmin, async (req, res) => {
 
     res.json({ mode, duplicatesFound: dupes.length, duplicatesRemoved: removed, groups: dupes })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -304,7 +312,8 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     if (!event) return res.status(404).json({ message: 'Event not found' })
     res.json({ message: 'Event deleted' })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
