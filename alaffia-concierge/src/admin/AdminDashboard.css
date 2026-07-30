@@ -1419,17 +1419,6 @@
   letter-spacing: 0.04em;
 }
 
-/* ===== Vibe Pill (table cell) ===== */
-
-.vibe-pill {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  white-space: nowrap;
-}
-
 /* ===== Pagination ===== */
 
 .pagination-bar {
@@ -1516,17 +1505,17 @@
   background: rgba(180,95,45,0.22);
 }
 
-/* ===== Spots Table Hover Row ===== */
+/* ===== Venues Table Hover Row ===== */
 
-.spots-hover-row {
+.venues-hover-row {
   transition: background 0.1s;
 }
 
-.spots-hover-row:hover {
+.venues-hover-row:hover {
   background: rgba(255,255,255,0.04);
 }
 
-/* ===== Vibe Pills (Spots table) ===== */
+/* ===== Vibe Pills (Venues table) ===== */
 
 .vibe-pill {
   display: inline-block;
@@ -1555,6 +1544,21 @@
 
 .settings-page {
   max-width: 780px;
+}
+
+.settings-group-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--admin-text-muted);
+  margin: 36px 0 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.settings-group-header:first-of-type {
+  margin-top: 0;
 }
 
 .settings-section {
@@ -1763,11 +1767,21 @@
   color: var(--admin-copper);
 }
 
-/* ===== Export Actions ===== */
+/* ===== Admin Spinner ===== */
 
-.export-actions {
-  display: flex;
-  gap: 12px;
+.admin-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--admin-text-muted);
+  border-top-color: var(--admin-copper);
+  border-radius: 50%;
+  animation: admin-spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes admin-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ===== Team ===== */
@@ -1925,10 +1939,6 @@
 @media (max-width: 768px) {
   .settings-grid {
     grid-template-columns: 1fr;
-  }
-
-  .export-actions {
-    flex-direction: column;
   }
 
   .danger-action {
