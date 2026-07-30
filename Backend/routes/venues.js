@@ -272,9 +272,14 @@ router.post('/', requireAdmin, async (req, res) => {
 })
 
 // PUT /api/venues/:id — update a venue (admin)
+const VENUE_ALLOWED_UPDATES = ['name', 'city', 'type', 'pillar', 'vibeTags', 'tags', 'description', 'tip', 'address', 'images', 'coordinates', 'status']
 router.put('/:id', requireAdmin, async (req, res) => {
   try {
-    const venue = await Venue.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after', runValidators: true })
+    const updates = {}
+    for (const key of VENUE_ALLOWED_UPDATES) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key]
+    }
+    const venue = await Venue.findByIdAndUpdate(req.params.id, updates, { returnDocument: 'after', runValidators: true })
     if (!venue) return res.status(404).json({ message: 'Venue not found' })
     res.json(venue)
   } catch (err) {
