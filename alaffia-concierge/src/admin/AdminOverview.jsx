@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 
 const STAT_ICONS = {
-  totalEvents: { icon: '📅', color: 'white', nav: 'events' },
+  totalEvents: { icon: '📅', color: 'white', nav: 'live-events' },
   totalVenues: { icon: '📍', color: 'copper', nav: 'venues' },
-  ghostEvents: { icon: '📝', color: 'white', nav: 'ghosts' },
-  eventsThisWeek: { icon: '🔥', color: 'copper', nav: 'events' },
+  ghostEvents: { icon: '📝', color: 'white', nav: 'pending-events' },
+  eventsThisWeek: { icon: '🔥', color: 'copper', nav: 'live-events' },
 }
 
 const PILLAR_STYLES = {
@@ -88,7 +88,7 @@ export default function AdminOverview({ onNavigate }) {
       {/* Insights + Pillar Strip */}
       <div className="admin-insights-row">
         {stats.eventsThisWeek > 0 && (
-          <div className="admin-insight-card clickable" onClick={() => onNavigate('events')}>
+          <div className="admin-insight-card clickable" onClick={() => onNavigate('live-events')}>
             <span className="admin-insight-icon">📈</span>
             <div>
               <span className="admin-insight-value">+{stats.eventsThisWeek}</span>
@@ -97,7 +97,7 @@ export default function AdminOverview({ onNavigate }) {
           </div>
         )}
         {maxCity && (
-          <div className="admin-insight-card clickable" onClick={() => onNavigate('events')}>
+          <div className="admin-insight-card clickable" onClick={() => onNavigate('live-events')}>
             <span className="admin-insight-icon">🔥</span>
             <div>
               <span className="admin-insight-value">{maxCity.city}</span>
@@ -106,7 +106,7 @@ export default function AdminOverview({ onNavigate }) {
           </div>
         )}
         {stats.pillarBreakdown?.length > 0 && (
-          <div className="admin-pillar-strip clickable" onClick={() => onNavigate('events')}>
+          <div className="admin-pillar-strip clickable" onClick={() => onNavigate('live-events')}>
             {stats.pillarBreakdown.map(p => {
               const s = PILLAR_STYLES[p.pillar] || { bg: 'rgba(255,255,255,0.06)', text: '#888', label: p.pillar }
               return (
@@ -121,7 +121,7 @@ export default function AdminOverview({ onNavigate }) {
 
       {/* Quick Actions */}
       <div className="admin-quick-actions" style={{ marginBottom: 28 }}>
-        <button className="admin-quick-action" onClick={() => onNavigate('events')}>
+        <button className="admin-quick-action" onClick={() => onNavigate('live-events')}>
           <div className="admin-quick-action-icon copper">➕</div>
           <div className="admin-quick-action-body">
             <h4>Add New Event</h4>
@@ -162,7 +162,7 @@ export default function AdminOverview({ onNavigate }) {
             </div>
             <div className="city-chart">
               {allCities.map((c, i) => (
-                <div key={c.city} className="city-chart-row clickable" onClick={() => onNavigate('events')}>
+                <div key={c.city} className="city-chart-row clickable" onClick={() => onNavigate('live-events')}>
                   <span className="city-chart-label">{c.city}</span>
                   <div className="city-chart-track">
                     <div
@@ -186,7 +186,7 @@ export default function AdminOverview({ onNavigate }) {
             </div>
             <div className="admin-city-list">
               {(stats.eventsByCity || []).map(c => (
-                <div key={c.city} className="admin-city-row clickable" onClick={() => onNavigate('events')}>
+                <div key={c.city} className="admin-city-row clickable" onClick={() => onNavigate('live-events')}>
                   <span>{c.city}</span>
                   <span>{c.count}</span>
                 </div>
@@ -223,7 +223,7 @@ export default function AdminOverview({ onNavigate }) {
             </div>
             <div className="admin-activity-feed admin-activity-feed-scroll">
               {recentEvents.map(ev => (
-                <div key={ev._id} className="admin-activity-item hover-row clickable" onClick={() => onNavigate('events')}>
+                <div key={ev._id} className="admin-activity-item hover-row clickable" onClick={() => onNavigate('live-events')}>
                   <div className={`admin-activity-dot ${ev.status === 'approved' ? 'sage' : 'copper'}`} />
                   <div className="admin-activity-body">
                     <span className="admin-activity-name">{ev.name}</span>
@@ -250,7 +250,7 @@ export default function AdminOverview({ onNavigate }) {
                   const total = stats.pillarBreakdown.reduce((sum, x) => sum + x.count, 0)
                   const pct = Math.round((p.count / total) * 100)
                   return (
-                    <div key={p.pillar} className="pillar-row clickable" onClick={() => onNavigate('events')}>
+                    <div key={p.pillar} className="pillar-row clickable" onClick={() => onNavigate('live-events')}>
                       <div className="pillar-row-header">
                         <span className="pillar-row-label" style={{ color: s.text }}>{s.label}</span>
                         <span className="pillar-row-count">{p.count}</span>
