@@ -2,15 +2,156 @@ const express = require('express')
 const router = express.Router()
 const Venue = require('../models/Venue')
 const { requireAdmin } = require('../middleware/admin')
+const { escapeRegex } = require('../utils/sanitize')
+const axios = require('axios')
 
-const VENUE_SCRAPER_SOURCES = ['gemini']
+const VENUE_SCRAPER_SOURCES = ['gemini', 'wikipedia']
+
+const WIKI_API = 'https://en.wikipedia.org/w/api.php'
+const UA = 'CultureConcierge/1.0 (venue lookup; contact@cultureconcierge.com)'
+
+// GET /api/venues/lookup — lookup a Wikipedia image for a venue name (admin)
+router.get('/lookup', requireAdmin, async (req, res) => {
+  try {
+    const { name, city } = req.query
+    if (!name) return res.status(400).json({ message: 'name query param required' })
+
+    async function findImage(title) {
+      const { data } = await axios.get(WIKI_API, {
+        headers: { 'User-Agent': UA },
+        params: { action: 'query', titles: title, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600, format: 'json', origin: '*' },
+        timeout: 10000,
+      })
+      const pages = data.query?.pages
+      if (!pages) return ''
+      for (const id of Object.keys(pages)) {
+        const p = pages[id]
+        if (p.thumbnail?.source) return p.thumbnail.source
+      }
+      return ''
+    }
+
+    async function searchImage(query) {
+      const { data } = await axios.get(WIKI_API, {
+        headers: { 'User-Agent': UA },
+        params: { action: 'query', generator: 'search', gsrsearch: query, gsrlimit: 5, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600, exlimit: 5, format: 'json', origin: '*' },
+        timeout: 10000,
+      })
+      const pages = data.query?.pages
+      if (!pages) return ''
+      for (const id of Object.keys(pages)) {
+        const p = pages[id]
+        if (!p.thumbnail?.source) continue
+        if (city && p.title.toLowerCase() === city.toLowerCase()) continue
+        return p.thumbnail.source
+      }
+      return ''
+    }
+
+    let imageUrl = ''
+    if (city) imageUrl = await findImage(`${name}, ${city}`)
+    if (!imageUrl) imageUrl = await findImage(name)
+    if (!imageUrl && city) imageUrl = await searchImage(`"${name}" ${city}`)
+    if (!imageUrl) imageUrl = await searchImage(name)
+
+    res.json({ imageUrl })
+  } catch (err) {
+    console.error('[venues] lookup error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// POST /api/venues/batch-enrich — find Wikipedia images for venues missing them (admin)
+router.post('/batch-enrich', requireAdmin, async (req, res) => {
+  try {
+    const { city } = req.body
+    const filter = { $or: [{ images: { $exists: false } }, { images: { $eq: [] } }, { images: null }] }
+    if (city) filter.city = city
+
+    const venues = await Venue.find(filter).select('name city images').lean()
+    if (venues.length === 0) return res.json({ enriched: 0, skipped: 0, total: 0, message: 'All venues already have images.' })
+
+    async function wikiGet(params) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const { data } = await axios.get(WIKI_API, { headers: { 'User-Agent': UA }, params: { ...params, format: 'json', origin: '*' }, timeout: 10000 })
+          return data
+        } catch (err) {
+          const status = err.response?.status
+          const retryAfter = parseInt(err.response?.headers?.['retry-after'] || '0', 10) || 5
+          if (status === 429 && attempt < 2) {
+            const wait = retryAfter * 1000 + attempt * 2000
+            console.log(`[batch-enrich] rate limited, waiting ${wait}ms before retry ${attempt + 1}`)
+            await new Promise(r => setTimeout(r, wait))
+            continue
+          }
+          throw err
+        }
+      }
+    }
+
+    let enriched = 0, skipped = 0, rateLimited = 0, notFound = 0
+
+    for (let i = 0; i < venues.length; i++) {
+      const v = venues[i]
+      let imageUrl = ''
+      let reason = ''
+      try {
+        const data = await wikiGet({ action: 'query', titles: `${v.name}, ${v.city}`, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600 })
+        const pages = data.query?.pages
+        if (pages) {
+          for (const id of Object.keys(pages)) {
+            const p = pages[id]
+            if (p.thumbnail?.source) { imageUrl = p.thumbnail.source; break }
+          }
+        }
+        if (!imageUrl) {
+          const sdata = await wikiGet({ action: 'query', generator: 'search', gsrsearch: `"${v.name}" ${v.city}`, gsrlimit: 5, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600, exlimit: 5 })
+          const spages = sdata.query?.pages
+          if (spages) {
+            for (const id of Object.keys(spages)) {
+              const p = spages[id]
+              if (!p.thumbnail?.source) continue
+              if (p.title.toLowerCase() === v.city.toLowerCase()) continue
+              imageUrl = p.thumbnail.source
+              break
+            }
+          }
+        }
+        if (!imageUrl) { reason = 'no image found on Wikipedia'; notFound++ }
+      } catch (err) {
+        if (err.response?.status === 429) { rateLimited++; reason = 'rate limited after retries' }
+        else { reason = err.message }
+        console.log(`[batch-enrich] failed for "${v.name}": ${reason}`)
+      }
+
+      if (imageUrl) {
+        await Venue.findByIdAndUpdate(v._id, { $push: { images: imageUrl } })
+        enriched++
+      } else {
+        skipped++
+      }
+
+      if (i % 5 === 0 || imageUrl) console.log(`[batch-enrich] ${i + 1}/${venues.length}: "${v.name}" -> ${imageUrl ? 'image found' : 'skipped (' + reason + ')'}`)
+      await new Promise(r => setTimeout(r, 2000 + Math.random() * 1000))
+    }
+
+    let message = `Enriched: ${enriched}, Skipped: ${skipped}`
+    if (rateLimited > 0) message += ` (${rateLimited} rate-limited)`
+
+    res.json({ enriched, skipped, total: venues.length, rateLimited, notFound, message })
+  } catch (err) {
+    console.error('[venues] batch-enrich error:', err.message)
+    res.status(500).json({ message: err.message })
+  }
+})
 
 // GET /api/venues — return venues with pagination (public)
 router.get('/', async (req, res) => {
   try {
     const filter = req.query.all === 'true' ? {} : { status: { $in: ['active', 'inactive'] } }
     if (req.query.city) {
-      filter.city = { $regex: req.query.city, $options: 'i' }
+      filter.city = { $regex: escapeRegex(req.query.city), $options: 'i' }
     }
 
     const page = Math.max(parseInt(req.query.page) || 1, 1)
@@ -29,7 +170,8 @@ router.get('/', async (req, res) => {
 
     res.json({ venues, total, page, totalPages: Math.ceil(total / limit) || 1 })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -37,12 +179,13 @@ router.get('/', async (req, res) => {
 router.get('/:city', async (req, res) => {
   try {
     const venues = await Venue.find({
-      city: { $regex: req.params.city, $options: 'i' },
+      city: { $regex: escapeRegex(req.params.city), $options: 'i' },
       status: { $in: ['active', 'inactive'] },
     }).lean().select('name city type pillar vibeTags tags description tip address images coordinates source status updatedAt')
     res.json(venues)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -51,7 +194,7 @@ router.get('/vibes/:city', async (req, res) => {
   try {
     const { vibe, q } = req.query
     const filter = {
-      city: { $regex: req.params.city, $options: 'i' },
+      city: { $regex: escapeRegex(req.params.city), $options: 'i' },
       status: { $in: ['active', 'inactive'] },
     }
     if (vibe) {
@@ -59,7 +202,7 @@ router.get('/vibes/:city', async (req, res) => {
       filter.vibeTags = { $in: vibes }
     }
     if (q && q.length >= 2) {
-      const text = q.trim()
+      const text = escapeRegex(q.trim())
       filter.$or = [
         { name: { $regex: text, $options: 'i' } },
         { description: { $regex: text, $options: 'i' } },
@@ -78,7 +221,8 @@ router.get('/vibes/:city', async (req, res) => {
     }
     res.json(venues)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -87,17 +231,18 @@ router.get('/upcoming/:city', async (req, res) => {
   try {
     const Event = require('../models/Event')
     const upcomingEventVenueIds = await Event.distinct('linkedSpotId', {
-      city: { $regex: req.params.city, $options: 'i' },
+      city: { $regex: escapeRegex(req.params.city), $options: 'i' },
       status: 'approved',
       date: { $gte: new Date() },
     })
     const venues = await Venue.find({
       _id: { $in: upcomingEventVenueIds },
-      city: { $regex: req.params.city, $options: 'i' },
+      city: { $regex: escapeRegex(req.params.city), $options: 'i' },
     })
     res.json(venues)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -144,7 +289,8 @@ router.delete('/:id', requireAdmin, async (req, res) => {
     if (!venue) return res.status(404).json({ message: 'Venue not found' })
     res.json({ message: 'Venue deleted' })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -199,7 +345,8 @@ router.post('/scraper/run', requireAdmin, async (req, res) => {
     })
   } catch (err) {
     console.error('[venues] scraper/run error:', err.stack || err)
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -218,7 +365,8 @@ router.post('/scraper/accept', requireAdmin, async (req, res) => {
 
     res.json({ modified: result.modifiedCount })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
