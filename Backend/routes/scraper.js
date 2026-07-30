@@ -45,4 +45,23 @@ router.get('/history', async (req, res) => {
   }
 })
 
+// POST /api/scraper/approve — approve draft events (admin)
+router.post('/approve', async (req, res) => {
+  try {
+    const { eventIds } = req.body
+    if (!eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {
+      return res.status(400).json({ message: 'eventIds array is required' })
+    }
+
+    const result = await Event.updateMany(
+      { _id: { $in: eventIds } },
+      { $set: { status: 'approved' } }
+    )
+
+    res.json({ modified: result.modifiedCount })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
 module.exports = router
