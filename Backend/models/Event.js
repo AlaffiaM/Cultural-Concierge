@@ -29,5 +29,10 @@ eventSchema.index(
   { name: 1, city: 1, date: 1 },
   { unique: true, collation: { locale: 'en', strength: 2 } }
 )
+eventSchema.index({ status: 1, date: 1 })
+eventSchema.index({ city: 1, status: 1, date: 1 })
+eventSchema.index({ source: 1 })
+eventSchema.index({ linkedSpotId: 1 })
+eventSchema.index({ isGhostLocation: 1, status: 1 })
 
 module.exports = mongoose.model('Event', eventSchema)
