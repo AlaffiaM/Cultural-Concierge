@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { getClerkToken } from '../clerk'
+import { getClerkToken } from '../lib/clerk'
 
 export default function ImageUploader({ onUploaded, label = 'Upload Image' }) {
   const [uploading, setUploading] = useState(false)
