@@ -1,10 +1,12 @@
 const express = require("express");
 const path = require("path");
 const cors = require("cors");
+const helmet = require("helmet");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
 const app = express();
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
@@ -13,22 +15,22 @@ const distPath = path.join(__dirname, "..", "alaffia-concierge", "dist")
 app.use(express.static(distPath))
 
 // Mount route modules
-const spotsRoute = require("./routes/spots");
-const itineraryRoute = require("./routes/itinerary");
+const venuesRoute = require("./routes/venues");
 const eventsRoute = require("./routes/events");
 const aiRoute = require("./routes/ai");
 const adminRoute = require("./routes/admin");
 const scraperRoute = require("./routes/scraper");
 const uploadsRoute = require("./routes/uploads");
 const advisoriesRoute = require("./routes/advisories");
-app.use("/api/spots", spotsRoute);
-app.use("/api/itinerary", itineraryRoute);
+const subscribeRoute = require("./routes/subscribe");
+app.use("/api/venues", venuesRoute);
 app.use("/api/events", eventsRoute);
 app.use("/api/ai", aiRoute);
 app.use("/api/admin", adminRoute);
 app.use("/api/scraper", scraperRoute);
 app.use("/api/uploads", uploadsRoute);
 app.use("/api/advisories", advisoriesRoute);
+app.use("/api/subscribe", subscribeRoute);
 
 // Connect to MongoDB Atlas
 mongoose
