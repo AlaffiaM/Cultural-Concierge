@@ -324,7 +324,7 @@ function App() {
               <div className="venues-header">
                 <div className="segmented-control">
                   <button className={viewMode === "travelbrief" ? "active" : ""} onClick={() => setViewMode("travelbrief")}>&#x1F6F0;&#xFE0F; Travel Brief</button>
-                  <button className={viewMode === "places" ? "active" : ""} onClick={() => setViewMode("places")}>&#x1F5FA;&#xFE0F; Places</button>
+                  <button className={viewMode === "places" ? "active" : ""} onClick={() => setViewMode("places")}>&#x1F5FA;&#xFE0F; Venues</button>
                   <button className={viewMode === "happenings" ? "active" : ""} onClick={() => setViewMode("happenings")}>
                     &#x1F4C5; Happenings{events.length > 0 ? ` (${events.length})` : ""}
                   </button>
