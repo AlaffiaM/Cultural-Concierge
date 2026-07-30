@@ -2,13 +2,50 @@ const express = require("express");
 const path = require("path");
 const cors = require("cors");
 const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const mongoose = require("mongoose");
 require("dotenv").config();
 
 const app = express();
+
+// Security
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+
+// HTTPS redirect in production (behind Cloudflare/nginx)
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
+    return res.redirect(301, 'https://' + req.headers.host + req.originalUrl)
+  }
+  next()
+})
+
+app.use(cors({
+  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+})
+app.use('/api/', apiLimiter)
+
+// Stricter limit for paid AI endpoint
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Rate limit exceeded for AI endpoint.' },
+})
+app.use('/api/ai/', aiLimiter)
+
+app.use(express.json({ limit: '1mb' }));
 
 // Serve built frontend in production
 const distPath = path.join(__dirname, "..", "alaffia-concierge", "dist")
