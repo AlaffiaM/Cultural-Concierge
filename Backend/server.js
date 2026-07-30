@@ -10,6 +10,7 @@ const app = express();
 
 // Security
 app.use(helmet());
+app.set('trust proxy', 1);
 
 // HTTPS redirect in production (behind Cloudflare/nginx)
 app.use((req, res, next) => {
