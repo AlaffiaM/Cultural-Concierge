@@ -237,7 +237,7 @@ export default function AdminEvents() {
                       type="checkbox"
                       checked={events.length > 0 && selectedIds.size === events.length}
                       onChange={selectAll}
-                      style={{ accentColor: '#B45F2D' }}
+                      style={{ accentColor: 'var(--admin-copper)' }}
                     />
                   </th>
                   <th style={{ width: 50 }}>Image</th>
@@ -260,7 +260,7 @@ export default function AdminEvents() {
                         type="checkbox"
                         checked={selectedIds.has(event._id)}
                         onChange={() => toggleSelect(event._id)}
-                        style={{ accentColor: '#B45F2D' }}
+                        style={{ accentColor: 'var(--admin-copper)' }}
                       />
                     </td>
                     <td>
