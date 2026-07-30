@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cities, cityGradients } from "./data";
+import { cities, cityGradients } from "./lib/data";
 import "./TravelBrief.css";
 
 export default function TravelBrief({ advisory, selectedCity }) {
@@ -18,6 +18,10 @@ export default function TravelBrief({ advisory, selectedCity }) {
 
   const cityMeta = cities.find((c) => c.name === selectedCity);
   const gradient = cityGradients[cityMeta?.iconClass || "culture"];
+
+  const airportTip = advisory.security?.operational_guidelines?.find(
+    g => g.category === "Airport Transit"
+  );
 
   return (
     <div className="travel-brief">
@@ -38,6 +42,15 @@ export default function TravelBrief({ advisory, selectedCity }) {
 
       {advisory.city_overview && (
         <p className="tb-overview">{advisory.city_overview}</p>
+      )}
+
+      {airportTip && (
+        <div className="tb-airport-tip">
+          <span className="tb-airport-icon">&#x2708;&#xFE0F;</span>
+          <div className="tb-airport-text">
+            <strong>{airportTip.category}:</strong> {airportTip.instruction}
+          </div>
+        </div>
       )}
 
       <div className="tb-tabs">
@@ -86,7 +99,7 @@ export default function TravelBrief({ advisory, selectedCity }) {
 
           {advisory.health?.active_outbreaks?.length > 0 && (
             <div className="tb-accordion">
-              <h4 className="tb-subtitle">&#x1F6AB; Active Outbreaks</h4>
+              <h4 className="tb-outbreaks-title">&#x1F6AB; Active Outbreaks</h4>
               {advisory.health.active_outbreaks.map((o, i) => (
                 <details key={i} className="tb-details" open={i === 0}>
                   <summary className="tb-summary">
