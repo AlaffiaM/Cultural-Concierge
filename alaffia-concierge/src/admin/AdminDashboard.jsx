@@ -7,6 +7,8 @@ import AdminTags from './AdminTags'
 import AdminSettings from './AdminSettings'
 import AdminScraper from './AdminScraper'
 import AdminSubscribers from './AdminSubscribers'
+import AdminAdvisories from './AdminAdvisories'
+import { ToastProvider } from './Toast'
 
 import './AdminDashboard.css'
 
@@ -51,6 +53,11 @@ const TABS = [
     label: 'Scraper',
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
   },
+  {
+    key: 'advisories',
+    label: 'Advisories',
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+  },
 ]
 
 const PAGE_TITLES = {
@@ -62,6 +69,7 @@ const PAGE_TITLES = {
   subscribers: 'Subscribers',
   settings: 'Settings',
   scraper: 'Scraper',
+  advisories: 'Advisories',
 }
 
 const PAGE_SUBTITLES = {
@@ -73,6 +81,7 @@ const PAGE_SUBTITLES = {
   subscribers: 'Email subscribers collected via sign-in and newsletter forms',
   settings: 'Admin access and environment info',
   scraper: 'Import events from Ticketsasa, Kenyabuzz, and Mookh',
+  advisories: 'Generate and refresh AI-powered travel advisories',
 }
 
 export default function AdminDashboard({ onBackToApp, user }) {
@@ -116,21 +125,24 @@ export default function AdminDashboard({ onBackToApp, user }) {
       </nav>
 
       <div className="admin-main">
-        <div className="admin-main-header">
-          <div>
-            <h2 className="admin-main-title">{PAGE_TITLES[activeTab]}</h2>
-            <p className="admin-main-subtitle">{PAGE_SUBTITLES[activeTab]}</p>
+        <ToastProvider>
+          <div className="admin-main-header">
+            <div>
+              <h2 className="admin-main-title">{PAGE_TITLES[activeTab]}</h2>
+              <p className="admin-main-subtitle">{PAGE_SUBTITLES[activeTab]}</p>
+            </div>
           </div>
-        </div>
 
-        {activeTab === 'overview' && <AdminOverview onNavigate={setActiveTab} />}
-        {activeTab === 'live-events' && <AdminEvents />}
-        {activeTab === 'pending-events' && <AdminPendingEvents />}
-        {activeTab === 'venues' && <AdminVenues />}
-        {activeTab === 'tags' && <AdminTags />}
-        {activeTab === 'subscribers' && <AdminSubscribers />}
-        {activeTab === 'settings' && <AdminSettings user={user} />}
-        {activeTab === 'scraper' && <AdminScraper />}
+          {activeTab === 'overview' && <AdminOverview onNavigate={setActiveTab} />}
+          {activeTab === 'live-events' && <AdminEvents />}
+          {activeTab === 'pending-events' && <AdminPendingEvents />}
+          {activeTab === 'venues' && <AdminVenues />}
+          {activeTab === 'tags' && <AdminTags />}
+          {activeTab === 'subscribers' && <AdminSubscribers />}
+          {activeTab === 'settings' && <AdminSettings user={user} />}
+          {activeTab === 'scraper' && <AdminScraper />}
+          {activeTab === 'advisories' && <AdminAdvisories />}
+        </ToastProvider>
       </div>
     </div>
   )
