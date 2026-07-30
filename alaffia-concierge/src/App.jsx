@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useUser, useAuth, useSignIn, AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import alaffiaLogo from "./assets/Alaffia Logo New.png";
-import { cities } from "./data";
-import { setTokenProvider } from "./clerk";
+import { cities } from "./lib/data";
+import { setTokenProvider } from "./lib/clerk";
 import CityCards from "./CityCards";
-import SpotsView from "./SpotsView";
+import VenuesView from "./VenuesView";
 import HappeningsView from "./HappeningsView";
 import TravelBrief from "./TravelBrief";
 
 
-import SpotDetailModal from "./SpotDetailModal";
+import VenueDetailModal from "./VenueDetailModal";
 import AdminDashboard from "./admin/AdminDashboard";
 import "./App.css";
 
@@ -38,18 +38,17 @@ function App() {
   const hasNavigatedFromHome = useRef(false);
   const [view, setView] = useState("home");
   const [selectedCity, setSelectedCity] = useState(null);
-  const [interests, setInterests] = useState("");
-  const [allSpots, setAllSpots] = useState([]);
-  const [filteredSpots, setFilteredSpots] = useState([]);
+  const [allVenues, setAllVenues] = useState([]);
+  const [filteredVenues, setFilteredVenues] = useState([]);
   const [events, setEvents] = useState([]);
   const [todayEvents, setTodayEvents] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activePillar, setActivePillar] = useState(null);
   const [activeVibes, setActiveVibes] = useState([]);
-  const [selectedSpot, setSelectedSpot] = useState(null);
+  const [selectedVenue, setSelectedVenue] = useState(null);
   const [viewMode, setViewMode] = useState("places");
   const [advisory, setAdvisory] = useState(null);
-  const [spotsError, setSpotsError] = useState(null);
+  const [venuesError, setVenuesError] = useState(null);
 
   const isCallback = window.location.pathname === '/sso-callback'
 
@@ -80,6 +79,14 @@ function App() {
       gtag("event", "sign_in");
       if (!hasNavigatedFromHome.current) setView("cities");
       hasNavigatedFromHome.current = false;
+      const email = user.primaryEmailAddress?.emailAddress
+      if (email) {
+        fetch(API_BASE + "/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, name: user.fullName || "", source: "signin" }),
+        }).catch(() => {})
+      }
     }
   }, [isSignedIn, user]);
 
@@ -91,28 +98,28 @@ function App() {
   }
 
   useEffect(() => {
-    const cached = sessionStorage.getItem('alaffia_spots')
+    const cached = sessionStorage.getItem('alaffia_venues')
     if (cached) {
       try {
         const parsed = JSON.parse(cached)
-        setAllSpots(Array.isArray(parsed) ? parsed : (parsed.spots || []))
+        setAllVenues(Array.isArray(parsed) ? parsed : (parsed.venues || []))
       } catch {}
     }
 
-    fetch(API_BASE + "/api/spots")
+    fetch(API_BASE + "/api/venues")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
       })
       .then((data) => {
-        const list = Array.isArray(data) ? data : (data.spots || [])
-        setAllSpots(list)
-        setSpotsError(null)
-        sessionStorage.setItem('alaffia_spots', JSON.stringify(list))
+        const list = Array.isArray(data) ? data : (data.venues || [])
+        setAllVenues(list)
+        setVenuesError(null)
+        sessionStorage.setItem('alaffia_venues', JSON.stringify(list))
       })
       .catch((err) => {
-        console.error('[spots] Fetch failed:', err.name, err.message, err.cause || '')
-        setSpotsError(`Could not load spots. Try again. (${err.name}: ${err.message})`)
+        console.error('[venues] Fetch failed:', err.name, err.message, err.cause || '')
+        setVenuesError(`Could not load venues. Try again. (${err.name}: ${err.message})`)
       })
   }, []);
 
@@ -140,13 +147,13 @@ function App() {
 
   useEffect(() => {
     if (!selectedCity) return;
-    const citySpots = allSpots.filter((s) => s.city && s.city.toLowerCase() === selectedCity.toLowerCase());
+    const cityVenues = allVenues.filter((s) => s.city && s.city.toLowerCase() === selectedCity.toLowerCase());
 
-    let spots = citySpots;
+    let venues = cityVenues;
 
     if (activeVibes.length > 0) {
       const lowerVibes = activeVibes.map((v) => v.toLowerCase());
-      spots = spots
+      venues = venues
         .map((s) => {
           const matchCount = (s.vibeTags || []).filter((t) =>
             lowerVibes.includes(t.toLowerCase())
@@ -157,22 +164,23 @@ function App() {
         .sort((a, b) => b.vibeScore - a.vibeScore);
     }
 
-    if (searchQuery && searchQuery.length >= 2) {
+    if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      spots = spots.filter(
+      venues = venues.filter(
         (s) =>
           s.name.toLowerCase().includes(q) ||
+          (s.description && s.description.toLowerCase().includes(q)) ||
           (s.details && s.details.toLowerCase().includes(q)) ||
           (s.vibeTags && s.vibeTags.some((t) => t.toLowerCase().includes(q)))
       );
     }
 
     if (activePillar) {
-      spots = spots.filter((s) => s.pillar === activePillar);
+      venues = venues.filter((s) => s.pillar === activePillar);
     }
 
-    setFilteredSpots(spots);
-  }, [selectedCity, allSpots, activeVibes, searchQuery, activePillar]);
+    setFilteredVenues(venues);
+  }, [selectedCity, allVenues, activeVibes, searchQuery, activePillar]);
 
   useEffect(() => {
     if (!selectedCity || activeVibes.length === 0) return;
@@ -181,8 +189,7 @@ function App() {
 
   function handleSelectCity(city) {
     setSelectedCity(city);
-    setView("spots");
-    setInterests("");
+    setView("venues");
     setActiveVibes([]);
     setSearchQuery("");
     gtag("event", "select_city", { city });
@@ -191,7 +198,6 @@ function App() {
   function handleBack() {
     setView("cities");
     setSelectedCity(null);
-    setInterests("");
     setActiveVibes([]);
     gtag("event", "back_to_cities");
   }
@@ -202,11 +208,11 @@ function App() {
     );
   }
 
-  function handleSpotClick(spot) {
-    setSelectedSpot(spot);
+  function handleVenueClick(venue) {
+    setSelectedVenue(venue);
   }
 
-  const todaySpotIds = new Set(
+  const todayVenueIds = new Set(
     todayEvents.filter((e) => e.linkedSpotId).map((e) => e.linkedSpotId._id)
   );
 
@@ -253,7 +259,10 @@ function App() {
                 <button className="btn-text" onClick={handleSignOut}>Sign out</button>
               </>
             ) : (
-              <button className="btn-text" onClick={handleGoogleSignIn}>Sign in</button>
+              <>
+                <button className="btn-text" onClick={handleGoogleSignIn}>Sign in</button>
+                <span className="header-newsletter-note">Subscribe</span>
+              </>
             )}
           </div>
 
@@ -276,6 +285,7 @@ function App() {
                 <button className="btn btn-primary btn-full" onClick={handleGoogleSignIn}>
                   Sign in with Google
                 </button>
+                <p className="home-newsletter-note">Logging in subscribes you to our monthly newsletter</p>
               </div>
             </div>
           )}
@@ -296,20 +306,22 @@ function App() {
                 <h2 className="section-title">Choose your city</h2>
                 <div className="section-underline" />
               </div>
-              <CityCards allSpots={allSpots} onSelectCity={handleSelectCity} />
+              <CityCards allVenues={allVenues} onSelectCity={handleSelectCity} />
             </>
           )}
 
-          {view === "spots" && (
+          {view === "venues" && (
             <>
-              <div className="city-hero">
-                <h2 className="city-hero-name">{selectedCity}</h2>
-                <span className="city-hero-country">
-                  {cities.find((c) => c.name === selectedCity)?.country}
-                </span>
-              </div>
+              {viewMode !== "travelbrief" && (
+                <div className="city-hero">
+                  <h2 className="city-hero-name">{selectedCity}</h2>
+                  <span className="city-hero-country">
+                    {cities.find((c) => c.name === selectedCity)?.country}
+                  </span>
+                </div>
+              )}
 
-              <div className="spots-header">
+              <div className="venues-header">
                 <div className="segmented-control">
                   <button className={viewMode === "travelbrief" ? "active" : ""} onClick={() => setViewMode("travelbrief")}>&#x1F6F0;&#xFE0F; Travel Brief</button>
                   <button className={viewMode === "places" ? "active" : ""} onClick={() => setViewMode("places")}>&#x1F5FA;&#xFE0F; Places</button>
@@ -320,7 +332,7 @@ function App() {
               </div>
 
               {viewMode === "places" && (
-                <SpotsView
+                <VenuesView
                   selectedCity={selectedCity}
                   todayEvents={todayEvents}
                   events={events}
@@ -330,11 +342,11 @@ function App() {
                   onToggleVibe={handleToggleVibe}
                   activePillar={activePillar}
                   onPillarChange={setActivePillar}
-                  filteredSpots={filteredSpots}
-                  allSpots={allSpots}
-                  spotsError={spotsError}
-                  onSpotClick={handleSpotClick}
-                  todaySpotIds={todaySpotIds}
+                  filteredVenues={filteredVenues}
+                  allVenues={allVenues}
+                  venuesError={venuesError}
+                  onVenueClick={handleVenueClick}
+                  todayVenueIds={todayVenueIds}
                   countdownTo={countdownTo}
                 />
               )}
@@ -342,7 +354,7 @@ function App() {
               {viewMode === "happenings" && (
                 <HappeningsView
                   events={events}
-                  allSpots={allSpots}
+                  allVenues={allVenues}
                   selectedCity={selectedCity}
                   activePillar={activePillar}
                   onPillarChange={setActivePillar}
@@ -365,11 +377,11 @@ function App() {
 
       {view === "admin" && <AdminDashboard onBackToApp={handleBack} user={user} />}
 
-      {view !== "admin" && selectedSpot && (
-        <SpotDetailModal
-          spot={selectedSpot}
+      {view !== "admin" && selectedVenue && (
+        <VenueDetailModal
+          venue={selectedVenue}
           events={events}
-          onClose={() => setSelectedSpot(null)}
+          onClose={() => setSelectedVenue(null)}
         />
       )}
 
