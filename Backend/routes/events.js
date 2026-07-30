@@ -66,10 +66,11 @@ router.get('/upcoming', async (req, res) => {
 })
 
 // GET /api/events/ghosts — all ghost events (pop-ups, no fixed venue)
+const GHOST_VALID_STATUSES = ['draft', 'approved']
 router.get('/ghosts', requireAdmin, async (req, res) => {
   try {
     const filter = { isGhostLocation: true }
-    if (req.query.status && req.query.status !== 'all') {
+    if (req.query.status && req.query.status !== 'all' && GHOST_VALID_STATUSES.includes(req.query.status)) {
       filter.status = req.query.status
     }
     const events = await Event.find(filter).sort({ date: -1 }).populate('linkedSpotId', 'name type')
@@ -168,9 +169,14 @@ router.post('/', requireAdmin, async (req, res) => {
 })
 
 // PUT /api/events/:id — update event fields
+const EVENT_ALLOWED_UPDATES = ['name', 'city', 'coordinates', 'linkedSpotId', 'date', 'endDate', 'time', 'type', 'pillar', 'tags', 'vibe', 'description', 'tip', 'imageUrl', 'venue', 'price', 'status', 'isGhostLocation']
 router.put('/:id', requireAdmin, async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+    const updates = {}
+    for (const key of EVENT_ALLOWED_UPDATES) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key]
+    }
+    const event = await Event.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true })
     if (!event) return res.status(404).json({ message: 'Event not found' })
     res.json(event)
   } catch (err) {
