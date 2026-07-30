@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const Event = require('../models/Event')
+const { requireAdmin } = require('../middleware/admin')
 
 // GET /api/events — list events, filterable by city, with pagination
 router.get('/', async (req, res) => {
@@ -11,6 +12,14 @@ router.get('/', async (req, res) => {
     }
     if (req.query.city) {
       filter.city = { $regex: req.query.city, $options: 'i' }
+    }
+    if (req.query.ghost === 'true') {
+      filter.isGhostLocation = true
+    } else if (req.query.ghost === 'false') {
+      filter.isGhostLocation = { $ne: true }
+    }
+    if (req.query.pillar) {
+      filter.pillar = { $regex: `^${req.query.pillar}$`, $options: 'i' }
     }
 
     const page = Math.max(parseInt(req.query.page) || 1, 1)
@@ -29,16 +38,24 @@ router.get('/', async (req, res) => {
 })
 
 // GET /api/events/upcoming — approved events happening today or later
+// Optional query params: startDate, endDate (ISO strings), city
 router.get('/upcoming', async (req, res) => {
   try {
+    const now = new Date()
+    const dateFilter = { $gte: req.query.startDate ? new Date(req.query.startDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate()) }
+    if (req.query.endDate) {
+      const end = new Date(req.query.endDate)
+      end.setHours(23, 59, 59, 999)
+      dateFilter.$lte = end
+    }
     const filter = {
       status: 'approved',
-      date: { $gte: new Date() },
+      date: dateFilter,
     }
     if (req.query.city) {
       filter.city = { $regex: req.query.city, $options: 'i' }
     }
-    const events = await Event.find(filter).sort({ date: 1 }).limit(20).populate('linkedSpotId', 'name type')
+    const events = await Event.find(filter).sort({ date: 1 }).limit(200).populate('linkedSpotId', 'name type')
     res.json(events)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -46,7 +63,7 @@ router.get('/upcoming', async (req, res) => {
 })
 
 // GET /api/events/ghosts — all ghost events (pop-ups, no fixed venue)
-router.get('/ghosts', async (req, res) => {
+router.get('/ghosts', requireAdmin, async (req, res) => {
   try {
     const filter = { isGhostLocation: true }
     if (req.query.status && req.query.status !== 'all') {
@@ -60,9 +77,12 @@ router.get('/ghosts', async (req, res) => {
 })
 
 // GET /api/events/pending — review queue (all draft/pending events)
-router.get('/pending', async (req, res) => {
+router.get('/pending', requireAdmin, async (req, res) => {
   try {
-    const events = await Event.find({ status: 'draft' }).sort({ createdAt: -1 }).populate('linkedSpotId', 'name type')
+    const filter = { status: 'draft' }
+    if (req.query.ghost === 'true') filter.isGhostLocation = true
+    else if (req.query.ghost === 'false') filter.isGhostLocation = { $ne: true }
+    const events = await Event.find(filter).sort({ createdAt: -1 }).populate('linkedSpotId', 'name type')
     res.json(events)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -103,14 +123,23 @@ router.get('/:id', async (req, res) => {
 })
 
 // POST /api/events — create event (defaults to approved for admin)
-router.post('/', async (req, res) => {
+router.post('/', requireAdmin, async (req, res) => {
   try {
+    const normalizedDate = req.body.date ? new Date(new Date(req.body.date).toISOString().slice(0, 10)) : undefined
+    const existing = await Event.findOne({
+      name: req.body.name,
+      city: req.body.city,
+      date: normalizedDate,
+    }).collation({ locale: 'en', strength: 2 })
+    if (existing) {
+      return res.status(409).json({ message: 'Event already exists', existingId: existing._id })
+    }
     const event = new Event({
       name: req.body.name,
       city: req.body.city,
       coordinates: req.body.coordinates,
       linkedSpotId: req.body.linkedSpotId || null,
-      date: req.body.date,
+      date: normalizedDate,
       endDate: req.body.endDate,
       time: req.body.time,
       type: req.body.type,
@@ -132,7 +161,7 @@ router.post('/', async (req, res) => {
 })
 
 // PUT /api/events/:id — update event fields
-router.put('/:id', async (req, res) => {
+router.put('/:id', requireAdmin, async (req, res) => {
   try {
     const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
     if (!event) return res.status(404).json({ message: 'Event not found' })
@@ -143,7 +172,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // PUT /api/events/:id/approve — set status to approved
-router.put('/:id/approve', async (req, res) => {
+router.put('/:id/approve', requireAdmin, async (req, res) => {
   try {
     const event = await Event.findByIdAndUpdate(
       req.params.id,
@@ -157,8 +186,119 @@ router.put('/:id/approve', async (req, res) => {
   }
 })
 
+function scoreEvent(ev) {
+  let s = 0
+  if (ev.description) s++
+  if (ev.imageUrl) s++
+  if (ev.venue) s++
+  if (ev.price) s++
+  if (ev.pillar) s++
+  if (ev.vibe) s++
+  if (ev.tip) s++
+  if (ev.time) s++
+  if (ev.endDate) s++
+  if (ev.linkedSpotId) s += 2
+  return s
+}
+
+function normalizeNameFuzzy(name) {
+  let n = name.toLowerCase()
+  // Strip trailing date patterns: "31st July", "31 July", "July 31", "July 31st"
+  n = n.replace(/\b\d{1,2}(st|nd|rd|th)?\s+(january|february|march|april|may|june|july|august|september|october|november|december)\b/g, '')
+  n = n.replace(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}(st|nd|rd|th)?\b/g, '')
+  // Strip year patterns: "2026", "2026/27", "2026-27"
+  n = n.replace(/\b20\d{2}(?:\/\d{2,4}|-\d{2,4})?\b/g, '')
+  // Strip edition/volume labels: "Edition 3", "Volume 2", "Series 4"
+  n = n.replace(/\b(edition|volume|vol|series|episode)\s*\d*\b/gi, '')
+  // Strip parenthetical qualifiers: "(Nairobi)", "(August)", "(2026)"
+  n = n.replace(/\([^)]*\)/g, '')
+  return n.replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
+}
+
+function fuzzyMatch(nameA, nameB) {
+  const a = normalizeNameFuzzy(nameA)
+  const b = normalizeNameFuzzy(nameB)
+  if (!a || !b) return false
+  return a === b || a.startsWith(b) || b.startsWith(a)
+}
+
+// POST /api/events/deduplicate — find & remove duplicate events
+router.post('/deduplicate', requireAdmin, async (req, res) => {
+  try {
+    const mode = req.query.mode || 'all'
+    const filter = {}
+    if (req.query.status) filter.status = req.query.status
+
+    const all = await Event.find(filter).sort({ date: -1 }).lean()
+    let removed = 0
+    const dupes = []
+    let deletedIds = new Set()
+
+    async function dedupGroup(g, label) {
+      if (g.length < 2) return
+      g = g.filter(e => !deletedIds.has(String(e._id)))
+      if (g.length < 2) return
+      g.sort((a, b) => scoreEvent(b) - scoreEvent(a))
+      const ids = g.slice(1).map(e => e._id)
+      ids.forEach(id => deletedIds.add(String(id)))
+      const r = await Event.deleteMany({ _id: { $in: ids } })
+      if (r.deletedCount > 0) {
+        dupes.push({ name: g[0].name, city: g[0].city, date: g[0].date, removed: r.deletedCount, type: label })
+        removed += r.deletedCount
+      }
+    }
+
+    function fuzzyGroup(events, includeCity) {
+      const groups = []
+      for (const ev of events) {
+        if (deletedIds.has(String(ev._id))) continue
+        const norm = normalizeNameFuzzy(ev.name)
+        if (!norm) continue
+        const city = (ev.city || '').toLowerCase().trim()
+        const dateStr = ev.date ? new Date(ev.date).toISOString().slice(0, 10) : 'nodate'
+        let matched = false
+        for (const g of groups) {
+          if (fuzzyMatch(g[0].name, ev.name) &&
+              g.dateStr === dateStr &&
+              (!includeCity || g.city === city)) {
+            g.push(ev)
+            matched = true
+            break
+          }
+        }
+        if (!matched) {
+          groups.push([ev])
+          groups[groups.length - 1].dateStr = dateStr
+          groups[groups.length - 1].city = city
+        }
+      }
+      return groups.filter(g => g.length > 1)
+    }
+
+    // Pass 1: exact city match (same fuzzy name + city + date)
+    for (const g of fuzzyGroup(all, true)) {
+      await dedupGroup(g, 'exact')
+    }
+
+    // Pass 2: multi-city (same fuzzy name + date across 2+ cities)
+    if (mode === 'multi-city' || mode === 'all') {
+      const remaining = all.filter(e => !deletedIds.has(String(e._id)))
+      for (const g of fuzzyGroup(remaining, false)) {
+        const cities = new Set(g.map(e => (e.city || '').toLowerCase().trim()))
+        if (cities.size > 1) {
+          await dedupGroup(g, 'multi-city')
+        }
+      }
+    }
+
+    res.json({ mode, duplicatesFound: dupes.length, duplicatesRemoved: removed, groups: dupes })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
 // DELETE /api/events/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdmin, async (req, res) => {
   try {
     const event = await Event.findByIdAndDelete(req.params.id)
     if (!event) return res.status(404).json({ message: 'Event not found' })
