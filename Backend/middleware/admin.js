@@ -1,4 +1,4 @@
-const { verifyFirebaseToken } = require('../verifyToken')
+const { verifyClerkToken } = require('./verifyToken')
 
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
   .split(',')
@@ -13,8 +13,8 @@ async function requireAdmin(req, res, next) {
 
   const token = authHeader.split('Bearer ')[1]
   try {
-    const decoded = await verifyFirebaseToken(token)
-    const { email, email_verified, uid } = decoded
+    const decoded = await verifyClerkToken(token)
+    const { email, uid } = decoded
     if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
       return res.status(403).json({ message: 'Access denied. Not an admin.' })
     }
@@ -22,9 +22,6 @@ async function requireAdmin(req, res, next) {
     next()
   } catch (err) {
     console.error('[admin] Auth error:', err.code || err.name, err.message)
-    if (err.code === 'auth/id-token-expired') {
-      return res.status(401).json({ message: 'Token expired' })
-    }
     return res.status(401).json({ message: err.message || 'Invalid token' })
   }
 }
