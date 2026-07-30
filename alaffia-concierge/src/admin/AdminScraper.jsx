@@ -221,54 +221,11 @@ export default function AdminScraper() {
   }
 
   return (
-    <div>
-      {/* Stats Header */}
-      <div className="admin-stats-grid" style={{ marginBottom: 24 }}>
-        <div className="admin-stat-card">
-          <div className="admin-stat-header">
-            <div className="admin-stat-icon copper">📥</div>
-          </div>
-          <div className="admin-stat-number">{totalFetched || '—'}</div>
-          <div className="admin-stat-label">Events Fetched</div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-header">
-            <div className="admin-stat-icon sage">✨</div>
-          </div>
-          <div className="admin-stat-number">{totalNew || '—'}</div>
-          <div className="admin-stat-label">New Imports</div>
-        </div>
-        <div className="admin-stat-card">
-          <div className="admin-stat-header">
-            <div className="admin-stat-icon white">⏭</div>
-          </div>
-          <div className="admin-stat-number">{totalRejected || '—'}</div>
-          <div className="admin-stat-label">Rejected</div>
-        </div>
-        <div className="admin-stat-card" style={{ borderColor: health.status === 'error' ? 'rgba(220,50,50,0.3)' : health.status === 'running' ? 'rgba(240,180,41,0.3)' : undefined }}>
-          <div className="admin-stat-header">
-            <div style={{
-              width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: health.status === 'error' ? 'rgba(220,50,50,0.15)' : health.status === 'running' ? 'rgba(240,180,41,0.15)' : 'rgba(138,154,91,0.15)',
-              color: health.color,
-              fontSize: 13,
-            }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: '50%',
-                background: health.color,
-                boxShadow: health.status === 'running' ? '0 0 8px rgba(240,180,41,0.5)' : 'none',
-                animation: health.status === 'running' ? 'scraper-pulse-dot 1.2s ease-in-out infinite' : 'none',
-              }} />
-            </div>
-          </div>
-          <div className="admin-stat-number" style={{ color: health.color, fontSize: 20 }}>
-            {health.label}
-          </div>
-          <div className="admin-stat-label">System Health</div>
-        </div>
-      </div>
+    <div className="scraper-page">
 
-      {/* Run All Button */}
+      {/* ── Sources ── */}
+      <div className="settings-group-header">Sources</div>
+
       <div style={{ marginBottom: 20 }}>
         <button
           className="admin-quick-action"
@@ -296,8 +253,7 @@ export default function AdminScraper() {
         </button>
       </div>
 
-      {/* Source Cards */}
-      <div className="admin-stats-grid scraper-cards" style={{ marginBottom: 24 }}>
+      <div className="admin-stats-grid scraper-cards" style={{ marginBottom: 32 }}>
         {SOURCES.map(src => {
           const status = getStatus(src)
           return (
@@ -359,7 +315,103 @@ export default function AdminScraper() {
         })}
       </div>
 
-      {/* Status Feed */}
+      {/* ── Last Run ── */}
+      {(results || lastRefresh) && (
+        <>
+          <div className="settings-group-header">Last Run</div>
+
+          <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
+            <div className="admin-stat-card">
+              <div className="admin-stat-header">
+                <div className="admin-stat-icon copper">📥</div>
+              </div>
+              <div className="admin-stat-number">{totalFetched || '—'}</div>
+              <div className="admin-stat-label">Fetched</div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-header">
+                <div className="admin-stat-icon sage">✨</div>
+              </div>
+              <div className="admin-stat-number">{totalNew || '—'}</div>
+              <div className="admin-stat-label">New</div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-header">
+                <div className="admin-stat-icon white">⏭</div>
+              </div>
+              <div className="admin-stat-number">{totalRejected || '—'}</div>
+              <div className="admin-stat-label">Rejected</div>
+            </div>
+            <div className="admin-stat-card">
+              <div className="admin-stat-header">
+                <div className="admin-stat-icon white">🔁</div>
+              </div>
+              <div className="admin-stat-number">{totalFetched - totalNew - totalRejected || '—'}</div>
+              <div className="admin-stat-label">Dupes Skipped</div>
+            </div>
+          </div>
+
+          {results?.events?.length > 0 && (
+            <div style={{ marginBottom: 32 }}>
+              <div className="admin-toolbar" style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--admin-text)' }}>
+                  Imported Events ({results.events.length})
+                </span>
+              </div>
+              <div className="admin-table-wrap">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: 50 }}>Image</th>
+                      <th>Name</th>
+                      <th>Venue</th>
+                      <th>Price</th>
+                      <th>City</th>
+                      <th>Date</th>
+                      <th>Pillar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.events.map(ev => (
+                      <tr key={ev._id}>
+                        <td>
+                          {ev.imageUrl ? (
+                            <a href={ev.imageUrl} target="_blank" rel="noopener noreferrer">
+                              <img src={ev.imageUrl} alt="" className="admin-thumb" />
+                            </a>
+                          ) : (
+                            <div className="admin-thumb" style={{ background: 'rgba(255,255,255,0.04)' }} />
+                          )}
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{ev.name}</td>
+                        <td style={{ color: 'var(--admin-text-muted)', fontSize: 12, maxWidth: 160 }}>{ev.venue || '—'}</td>
+                        <td style={{ fontSize: 12 }}>{ev.price || '—'}</td>
+                        <td>{ev.city}</td>
+                        <td>{formatDate(ev.date)}</td>
+                        <td>
+                          <span className="admin-status-badge admin-status-approved">{ev.pillar || '—'}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {results?.events?.length === 0 && (
+            <div className="admin-stat-card" style={{ textAlign: 'center', padding: 24, marginBottom: 32 }}>
+              <p style={{ color: 'var(--admin-text-muted)', margin: 0 }}>
+                No new events — all already in the database.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Activity ── */}
+      <div className="settings-group-header">Activity</div>
+
       <div style={{ marginBottom: 24, border: '1px solid var(--admin-border)', borderRadius: 10, overflow: 'hidden' }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px',
@@ -371,7 +423,7 @@ export default function AdminScraper() {
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--admin-text)' }}>Status Feed</span>
               {lastRefresh && (
                 <span style={{ fontSize: 11, color: 'var(--admin-text-muted)', marginLeft: 4 }}>
-                  · Last refresh: {lastRefresh.toLocaleTimeString()}
+                  · {lastRefresh.toLocaleTimeString()}
                 </span>
               )}
               <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -467,7 +519,6 @@ export default function AdminScraper() {
           </div>
         )}
 
-        {/* Footer: Dev Mode toggle + clear */}
         <div className="sf-footer">
           <label className="sf-dev-toggle">
             <input
@@ -488,65 +539,8 @@ export default function AdminScraper() {
         </div>
       </div>
 
-      {/* Results Table */}
-      {results?.events?.length > 0 && (
-        <div style={{ marginBottom: 28 }}>
-          <div className="admin-toolbar" style={{ marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--admin-text)' }}>
-              Imported Events ({results.events.length})
-            </span>
-          </div>
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th style={{ width: 50 }}>Image</th>
-                  <th>Name</th>
-                  <th>Venue</th>
-                  <th>Price</th>
-                  <th>City</th>
-                  <th>Date</th>
-                  <th>Pillar</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.events.map(ev => (
-                  <tr key={ev._id}>
-                    <td>
-                      {ev.imageUrl ? (
-                        <a href={ev.imageUrl} target="_blank" rel="noopener noreferrer">
-                          <img src={ev.imageUrl} alt="" className="admin-thumb" />
-                        </a>
-                      ) : (
-                        <div className="admin-thumb" style={{ background: 'rgba(255,255,255,0.04)' }} />
-                      )}
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{ev.name}</td>
-                    <td style={{ color: 'var(--admin-text-muted)', fontSize: 12, maxWidth: 160 }}>{ev.venue || '—'}</td>
-                    <td style={{ fontSize: 12 }}>{ev.price || '—'}</td>
-                    <td>{ev.city}</td>
-                    <td>{formatDate(ev.date)}</td>
-                    <td>
-                      <span className="admin-status-badge admin-status-approved">{ev.pillar || '—'}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {results?.events?.length === 0 && (
-        <div className="admin-stat-card" style={{ textAlign: 'center', padding: 24, marginBottom: 28 }}>
-          <p style={{ color: 'var(--admin-text-muted)', margin: 0 }}>
-            No new events found — all already in the database.
-          </p>
-        </div>
-      )}
-
       {/* Recent Imports */}
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 32 }}>
         <div className="admin-section-header">
           <h3 className="admin-section-title">Recent Imports</h3>
           <button className="admin-btn-sm admin-btn-edit" onClick={loadHistory}>
@@ -579,10 +573,9 @@ export default function AdminScraper() {
         )}
       </div>
 
-      {/* Venue Scraper */}
-      <div style={{ marginTop: 40, marginBottom: 12 }}>
-        <h3 className="admin-section-title">Venue Scraper</h3>
-      </div>
+      {/* ── Venue Scraper ── */}
+      <div className="settings-group-header">Venue Scraper</div>
+
       <AdminVenueScraper />
     </div>
   )
