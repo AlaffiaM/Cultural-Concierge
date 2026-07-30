@@ -28,7 +28,7 @@ const emptyForm = {
 
 export default function EventEditor({ event, onClose }) {
   const [form, setForm] = useState(emptyForm)
-  const [spots, setSpots] = useState([])
+  const [venues, setVenues] = useState([])
   const [saving, setSaving] = useState(false)
 
   const isEditing = !!event
@@ -56,7 +56,7 @@ export default function EventEditor({ event, onClose }) {
         isGhostLocation: event.isGhostLocation || false,
       })
     }
-    adminFetch('/api/spots').then(setSpots).catch(() => {})
+    adminFetch('/api/venues').then(setVenues).catch(() => {})
   }, [event])
 
   function handleChange(field, value) {
@@ -228,10 +228,10 @@ export default function EventEditor({ event, onClose }) {
 
         {!form.isGhostLocation && (
           <div className="editor-field editor-field-wide">
-            <label>Linked Spot</label>
+            <label>Linked Venue</label>
             <select value={form.linkedSpotId} onChange={e => handleChange('linkedSpotId', e.target.value)}>
               <option value="">— None —</option>
-              {spots.map(s => (
+              {venues.map(s => (
                 <option key={s._id} value={s._id}>{s.name} ({s.city})</option>
               ))}
             </select>
