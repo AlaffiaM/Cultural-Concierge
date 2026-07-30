@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { pillarIcons, pillarColors, sourceLabels } from "./lib/data";
 import "./HappeningsView.css";
 
@@ -14,17 +14,22 @@ export default function HappeningsView({
   countdownTo,
 }) {
   const pillars = ["CULTURE", "WELLNESS", "SOCIAL"];
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [dateRange, setDateRange] = useState(null);
+
   const now = new Date();
   const [calMonth, setCalMonth] = useState(now.getMonth());
   const [calYear, setCalYear] = useState(now.getFullYear());
-  const [dateRange, setDateRange] = useState(null);
 
-  const eventDates = new Set(
-    events.map(e => {
+  const eventDates = useMemo(() => {
+    const s = new Set();
+    events.forEach(e => {
       const d = new Date(e.date);
-      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    })
-  );
+      s.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    });
+    return s;
+  }, [events]);
 
   function toDateKey(d) {
     return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -78,20 +83,19 @@ export default function HappeningsView({
     const opts = { month: 'short', day: 'numeric', year: 'numeric' };
     const start = dateRange.start.toLocaleDateString('en-US', opts);
     if (dateRange.end) {
-      const end = dateRange.end.toLocaleDateString('en-US', opts);
-      return `${start} — ${end}`;
+      return `${start} — ${dateRange.end.toLocaleDateString('en-US', opts)}`;
     }
     return start;
   }
 
   function filteredEvents() {
-    let list = events.filter(e => !activePillar || e.pillar === activePillar);
+    let list = events;
+    if (activePillar) list = list.filter(e => e.pillar === activePillar);
     if (dateRange) {
       const start = new Date(dateRange.start);
       start.setHours(0, 0, 0, 0);
       const end = dateRange.end ? new Date(dateRange.end) : new Date(start);
-      if (dateRange.end) end.setHours(23, 59, 59, 999);
-      else end.setHours(23, 59, 59, 999);
+      end.setHours(23, 59, 59, 999);
       list = list.filter(e => {
         const ed = new Date(e.date);
         return ed >= start && ed <= end;
@@ -120,44 +124,53 @@ export default function HappeningsView({
             {pillarIcons[p]} {p.charAt(0) + p.slice(1).toLowerCase()}
           </button>
         ))}
+        <button
+          className={`pillar-filter-btn cal-filter-btn ${showCalendar ? "active" : ""}`}
+          onClick={() => setShowCalendar(v => !v)}
+        >
+          {showCalendar ? 'Hide Calendar' : 'Filter by Date'}
+        </button>
       </div>
 
-      <div className="happenings-calendar">
-        <div className="cal-header">
-          <button className="cal-nav" onClick={prevMonth}>&lsaquo;</button>
-          <span className="cal-title">{MONTHS[calMonth]} {calYear}</span>
-          <button className="cal-nav" onClick={nextMonth}>&rsaquo;</button>
-          <button className="cal-today-btn" onClick={goToToday}>Today</button>
+      {dateRange && (
+        <div className="cal-range-active">
+          <span>{formatRange()}</span>
+          <button onClick={() => { setDateRange(null); }} className="cal-range-clear">Clear</button>
         </div>
-        {dateRange && (
-          <div className="cal-range-display">
-            <span>{formatRange()}</span>
-            <button className="cal-clear" onClick={() => setDateRange(null)}>Clear</button>
+      )}
+
+      {showCalendar && (
+        <div className="happenings-calendar">
+          <div className="cal-header">
+            <button className="cal-nav" onClick={prevMonth}>&lsaquo;</button>
+            <span className="cal-title">{MONTHS[calMonth]} {calYear}</span>
+            <button className="cal-nav" onClick={nextMonth}>&rsaquo;</button>
+            <button className="cal-today-btn" onClick={goToToday}>Today</button>
           </div>
-        )}
-        <div className="cal-grid">
-          {DAYS.map(d => <div key={d} className="cal-day-name">{d}</div>)}
-          {Array.from({ length: startDay }, (_, i) => <div key={`pad-${i}`} className="cal-day cal-day-empty" />)}
-          {Array.from({ length: dim }, (_, i) => {
-            const day = i + 1;
-            const d = new Date(calYear, calMonth, day);
-            const key = toDateKey(d);
-            const hasEvent = eventDates.has(key);
-            const selected = isInRange(d);
-            const today = isSameDay(d, new Date());
-            return (
-              <div
-                key={key}
-                className={`cal-day${selected ? " cal-day-selected" : ""}${hasEvent ? " cal-day-event" : ""}${today ? " cal-day-today" : ""}`}
-                onClick={() => handleDayClick(day)}
-              >
-                {day}
-                {hasEvent && <span className="cal-dot" />}
-              </div>
-            );
-          })}
+          <div className="cal-grid">
+            {DAYS.map(d => <div key={d} className="cal-day-name">{d}</div>)}
+            {Array.from({ length: startDay }, (_, i) => <div key={`pad-${i}`} className="cal-day cal-day-empty" />)}
+            {Array.from({ length: dim }, (_, i) => {
+              const day = i + 1;
+              const d = new Date(calYear, calMonth, day);
+              const key = toDateKey(d);
+              const hasEvent = eventDates.has(key);
+              const selected = isInRange(d);
+              const today = isSameDay(d, new Date());
+              return (
+                <div
+                  key={key}
+                  className={`cal-day${selected ? " cal-day-selected" : ""}${hasEvent ? " cal-day-event" : ""}${today ? " cal-day-today" : ""}`}
+                  onClick={() => handleDayClick(day)}
+                >
+                  {day}
+                  {hasEvent && <span className="cal-dot" />}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="events-list">
         {visible.length === 0
@@ -182,6 +195,7 @@ export default function HappeningsView({
                   key={event._id}
                   className="event-strip"
                   style={{ borderLeftColor: pillarColors[event.pillar] || 'var(--copper)' }}
+                  onClick={() => setSelectedEvent(event)}
                 >
                   {event.imageUrl && (
                     <img src={event.imageUrl} alt="" className="event-thumb" />
@@ -218,6 +232,87 @@ export default function HappeningsView({
               );
             })}
       </div>
+
+      {selectedEvent && (
+        <div className="event-modal-overlay" onClick={() => setSelectedEvent(null)}>
+          <div className="event-modal" onClick={e => e.stopPropagation()}>
+            <button className="event-modal-close" onClick={() => setSelectedEvent(null)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            {(() => {
+              const ev = selectedEvent;
+              const d = new Date(ev.date);
+              const cd = countdownTo(ev.date);
+              return (
+                <>
+                  {ev.imageUrl && (
+                    <div className="event-modal-media">
+                      <img src={ev.imageUrl} alt={ev.name} />
+                      <div className="event-modal-overlay-grad" />
+                    </div>
+                  )}
+                  <div className="event-modal-body">
+                    <div className="event-modal-date">
+                      <span className="event-modal-day">{DAYS[d.getDay()]}</span>
+                      <span className="event-modal-date-num">{d.getDate()} {MONTHS[d.getMonth()]} {d.getFullYear()}</span>
+                      {ev.time && <span className="event-modal-time">{ev.time}</span>}
+                    </div>
+                    <h3 className="event-modal-name">{ev.name}</h3>
+                    {ev.description && <p className="event-modal-desc">{ev.description}</p>}
+                    <div className="event-modal-details">
+                      {ev.venue && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">Venue</span>
+                          <span>{ev.venue}</span>
+                        </div>
+                      )}
+                      {ev.price && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">Price</span>
+                          <span>{ev.price}</span>
+                        </div>
+                      )}
+                      {ev.type && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">Type</span>
+                          <span>{ev.type}</span>
+                        </div>
+                      )}
+                      {ev.pillar && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">Category</span>
+                          <span>{pillarIcons[ev.pillar]} {ev.pillar.charAt(0) + ev.pillar.slice(1).toLowerCase()}</span>
+                        </div>
+                      )}
+                      {ev.linkedSpotId && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">At</span>
+                          <span>{ev.linkedSpotId.name}</span>
+                        </div>
+                      )}
+                      {ev.source && ev.source !== 'manual' && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">Source</span>
+                          <span>{sourceLabels[ev.source] || ev.source}</span>
+                        </div>
+                      )}
+                      {ev.isGhostLocation && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">Type</span>
+                          <span className="ghost-tag">Pop-up Event</span>
+                        </div>
+                      )}
+                    </div>
+                    {cd && <div className="event-modal-countdown">{cd} away</div>}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
     </>
   );
 }
