@@ -23,7 +23,8 @@ router.post('/run', async (req, res) => {
     const result = await runScrapers(sources)
     res.json(result)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -41,7 +42,8 @@ router.get('/history', async (req, res) => {
 
     res.json(events)
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
@@ -60,7 +62,8 @@ router.post('/approve', async (req, res) => {
 
     res.json({ modified: result.modifiedCount })
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 
