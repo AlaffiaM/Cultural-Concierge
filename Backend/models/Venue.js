@@ -20,5 +20,9 @@ const venueSchema = new mongoose.Schema({
 }, { timestamps: true, collection: 'spots' })
 
 venueSchema.index({ status: 1, city: 1 })
+venueSchema.index({ pillar: 1, status: 1 })
+venueSchema.index({ vibeTags: 1 })
+venueSchema.index({ source: 1 })
+venueSchema.index({ status: 1 })
 
 module.exports = mongoose.model('Venue', venueSchema)
