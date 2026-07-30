@@ -3,7 +3,8 @@ const router = express.Router()
 const mongoose = require('mongoose')
 const { requireAdmin } = require('../middleware/admin')
 const Event = require('../models/Event')
-const Spot = require('../models/Spot')
+const Venue = require('../models/Venue')
+const Email = require('../models/Email')
 
 router.use(requireAdmin)
 
@@ -29,16 +30,16 @@ function normalizeCities(items) {
 
 router.get('/stats', async (req, res) => {
   try {
-    const [totalEvents, approvedEvents, totalSpots, ghosts, eventsByCity, spotsByCity, eventsByPillar, spotsByPillar] = await Promise.all([
+    const [totalEvents, approvedEvents, totalVenues, ghosts, eventsByCity, venuesByCity, eventsByPillar, venuesByPillar, venuesWithoutImages] = await Promise.all([
       Event.countDocuments(),
       Event.countDocuments({ status: 'approved' }),
-      Spot.countDocuments(),
+      Venue.countDocuments(),
       Event.countDocuments({ isGhostLocation: true }),
       Event.aggregate([
         { $group: { _id: '$city', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
-      Spot.aggregate([
+      Venue.aggregate([
         { $group: { _id: '$city', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
@@ -47,11 +48,12 @@ router.get('/stats', async (req, res) => {
         { $group: { _id: { $toUpper: '$pillar' }, count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
-      Spot.aggregate([
+      Venue.aggregate([
         { $match: { pillar: { $exists: true, $ne: '' } } },
         { $group: { _id: { $toUpper: '$pillar' }, count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
+      Venue.countDocuments({ $or: [{ images: { $exists: false } }, { images: { $eq: [] } }] }),
     ])
 
     const now = new Date()
@@ -67,7 +69,7 @@ router.get('/stats', async (req, res) => {
     })
 
     const pillarMap = {}
-    for (const { _id, count } of [...eventsByPillar, ...spotsByPillar]) {
+    for (const { _id, count } of [...eventsByPillar, ...venuesByPillar]) {
       pillarMap[_id] = (pillarMap[_id] || 0) + count
     }
     const pillarBreakdown = Object.entries(pillarMap)
@@ -77,11 +79,12 @@ router.get('/stats', async (req, res) => {
     res.json({
       totalEvents,
       approvedEvents,
-      totalSpots,
+      totalVenues,
       ghostEvents: ghosts,
       eventsThisWeek,
+      venuesWithoutImages,
       eventsByCity: normalizeCities(eventsByCity.map(c => ({ city: c._id, count: c.count }))),
-      spotsByCity: normalizeCities(spotsByCity.map(c => ({ city: c._id, count: c.count }))),
+      venuesByCity: normalizeCities(venuesByCity.map(c => ({ city: c._id, count: c.count }))),
       pillarBreakdown,
     })
   } catch (err) {
@@ -94,7 +97,7 @@ router.get('/stats', async (req, res) => {
 router.get('/tags', async (req, res) => {
   try {
     const allTags = await Event.distinct('tags')
-    const allVibeTags = await Spot.distinct('vibeTags')
+    const allVibeTags = await Venue.distinct('vibeTags')
     const unique = [...new Set([...allTags, ...allVibeTags])].sort()
     res.json(unique)
   } catch (err) {
@@ -108,11 +111,11 @@ router.post('/tags', async (req, res) => {
 
 router.get('/vibe-tags', async (req, res) => {
   try {
-    const [eventTags, spotTags] = await Promise.all([
+    const [eventTags, venueTags] = await Promise.all([
       Event.distinct('tags'),
-      Spot.distinct('vibeTags'),
+      Venue.distinct('vibeTags'),
     ])
-    const all = [...new Set([...eventTags, ...spotTags])].filter(Boolean).sort()
+    const all = [...new Set([...eventTags, ...venueTags])].filter(Boolean).sort()
     res.json(all)
   } catch (err) {
     res.status(500).json({ message: err.message })
@@ -134,7 +137,7 @@ router.get('/health', async (req, res) => {
       .lean()
 
     const eventCount = await Event.countDocuments()
-    const spotCount = await Spot.countDocuments()
+    const venueCount = await Venue.countDocuments()
 
     res.json({
       database: dbStatus,
@@ -142,9 +145,9 @@ router.get('/health', async (req, res) => {
       lastScraperRun: lastScrapedEvent?.createdAt || null,
       lastScraperSource: lastScrapedEvent?.source || null,
       geminiKeyConfigured: !!process.env.GEMINI_API_KEY,
-      firebaseConfigured: true,
+      authConfigured: !!process.env.CLERK_SECRET_KEY,
       eventCount,
-      spotCount,
+      venueCount,
       nodeVersion: process.version,
     })
   } catch (err) {
@@ -189,23 +192,23 @@ router.get('/export/events', async (req, res) => {
   }
 })
 
-router.get('/export/spots', async (req, res) => {
+router.get('/export/venues', async (req, res) => {
   try {
-    const spots = await Spot.find({}).lean().sort({ createdAt: -1 })
+    const venues = await Venue.find({}).lean().sort({ createdAt: -1 })
     const fields = ['name', 'city', 'type', 'pillar', 'source', 'status', 'address', 'createdAt']
     let csv = fields.join(',') + '\n'
-    for (const s of spots) {
-      csv += fields.map(f => `"${(s[f] !== undefined && s[f] !== null ? String(s[f]) : '').replace(/"/g, '""')}"`).join(',') + '\n'
+    for (const v of venues) {
+      csv += fields.map(f => `"${(v[f] !== undefined && v[f] !== null ? String(v[f]) : '').replace(/"/g, '""')}"`).join(',') + '\n'
     }
     res.setHeader('Content-Type', 'text/csv')
-    res.setHeader('Content-Disposition', 'attachment; filename=spots-export.csv')
+    res.setHeader('Content-Disposition', 'attachment; filename=venues-export.csv')
     res.send(csv)
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
 })
 
-// ---------- Danger Zone: Clear Scraped Events ----------
+// ---------- Danger Zone: Clear Events ----------
 
 router.delete('/scraped-events', async (req, res) => {
   try {
@@ -213,6 +216,40 @@ router.delete('/scraped-events', async (req, res) => {
       source: { $in: ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite'] },
     })
     res.json({ deleted: result.deletedCount })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+router.delete('/manual-events', async (req, res) => {
+  try {
+    const result = await Event.deleteMany({ source: 'manual' })
+    res.json({ deleted: result.deletedCount, message: `Deleted ${result.deletedCount} manual/seed events` })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+// ---------- Subscribers ----------
+
+router.get('/subscribers', async (req, res) => {
+  try {
+    const emails = await Email.find({}).sort({ createdAt: -1 }).lean()
+    res.json(emails)
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+router.get('/subscribers/export', async (req, res) => {
+  try {
+    const emails = await Email.find({}).sort({ createdAt: -1 }).lean()
+    const csv = 'email,name,source,subscribedAt\n' + emails.map(e =>
+      `"${e.email}","${(e.name || '').replace(/"/g, '""')}","${e.source}","${e.createdAt}"`
+    ).join('\n')
+    res.setHeader('Content-Type', 'text/csv')
+    res.setHeader('Content-Disposition', 'attachment; filename=subscribers.csv')
+    res.send(csv)
   } catch (err) {
     res.status(500).json({ message: err.message })
   }
