@@ -1,0 +1,96 @@
+.editor-wrap {
+  max-width: 720px;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.editor-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  color: #fff;
+}
+
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.editor-field-wide {
+  grid-column: 1 / -1;
+}
+
+.editor-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-text-muted);
+  margin-bottom: 6px;
+}
+
+.editor-field input,
+.editor-field select,
+.editor-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  font-size: 14px;
+  color: var(--admin-text);
+  background: var(--admin-card);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.editor-field input:focus,
+.editor-field select:focus,
+.editor-field textarea:focus {
+  outline: none;
+  border-color: var(--admin-copper);
+  box-shadow: 0 0 0 3px var(--admin-copper-glow);
+}
+
+.editor-field input::placeholder,
+.editor-field textarea::placeholder {
+  color: var(--admin-text-muted);
+}
+
+.editor-field textarea {
+  resize: vertical;
+}
+
+.editor-ghost {
+  padding: 16px;
+  background: rgba(180,95,45,0.06);
+  border: 1px dashed rgba(180,95,45,0.2);
+  border-radius: var(--admin-radius-sm);
+}
+
+.editor-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.editor-checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--admin-copper);
+  cursor: pointer;
+}
+
+.editor-actions {
+  margin-top: 24px;
+}
+
+
