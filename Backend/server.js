@@ -57,6 +57,13 @@ const distPath = path.join(__dirname, "..", "alaffia-concierge", "dist")
 app.use(express.static(distPath))
 
 // Mount route modules
+app.get('/api/status', (req, res) => {
+  res.json({
+    clerkConfigured: !!process.env.CLERK_SECRET_KEY,
+    clerkKeyPrefix: process.env.CLERK_SECRET_KEY ? process.env.CLERK_SECRET_KEY.slice(0, 7) : null,
+    nodeEnv: process.env.NODE_ENV,
+  })
+})
 const venuesRoute = require("./routes/venues");
 const eventsRoute = require("./routes/events");
 const aiRoute = require("./routes/ai");
