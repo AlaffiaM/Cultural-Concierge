@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: alaffia-cultural-concierge
+    env: node
+    buildCommand: cd alaffia-concierge && npm install && npm run build && cd ../Backend && npm install
+    startCommand: cd Backend && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
