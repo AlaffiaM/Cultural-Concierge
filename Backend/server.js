@@ -53,7 +53,7 @@ app.use('/api/ai/', aiLimiter)
 app.use(express.json({ limit: '1mb' }));
 
 // Serve built frontend in production
-const distPath = path.join(__dirname, "..", "alaffia-concierge", "dist")
+const distPath = path.join(__dirname, "..", "Frontend", "dist")
 app.use(express.static(distPath))
 
 // Mount route modules
