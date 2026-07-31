@@ -1,0 +1,108 @@
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .city-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.city-card {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+}
+
+.city-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-xl);
+}
+
+.city-card:active {
+  transform: translateY(-2px);
+}
+
+.city-card-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: transform 0.4s ease;
+}
+
+.city-card:hover .city-card-bg {
+  transform: scale(1.08);
+}
+
+.city-card-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.15) 0%,
+    rgba(0,0,0,0.5) 50%,
+    rgba(0,0,0,0.8) 100%
+  );
+  z-index: 1;
+}
+
+.city-card-content {
+  position: relative;
+  padding: 36px 24px 28px;
+  text-align: center;
+  z-index: 2;
+}
+
+.city-card-name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+
+.city-card-country {
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.city-card-footer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  z-index: 1;
+}
+
+.city-card-count {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.city-card-arrow {
+  font-size: 16px;
+  color: var(--copper);
+  font-weight: 600;
+  transition: transform 0.25s ease;
+}
+
+.city-card:hover .city-card-arrow {
+  transform: translateX(6px);
+}
