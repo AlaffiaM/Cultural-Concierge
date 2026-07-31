@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: culture-concierge
+    rootDir: Backend
+    env: node
+    buildCommand: cd ../Frontend && npm install && npm run build && cd ../Backend && npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
