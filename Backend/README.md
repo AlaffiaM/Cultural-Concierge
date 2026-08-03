@@ -53,7 +53,7 @@ tests/                    Jest test suites
 | GET | `/api/events/today` | Events happening today |
 | GET | `/api/events/:id` | Single event |
 | GET | `/api/advisories/:city` | Travel advisory for a city |
-| POST | `/api/subscribe` | Email newsletter signup |
+| POST | `/api/subscribe` | Email newsletter signup (rate limited: 5 per 15 min per IP) |
 | GET | `/api/status` | Deploy status (clerk configured, node env) |
 
 ### Admin (requires `Authorization: Bearer <Clerk JWT>` + email in `ADMIN_EMAILS`)
