@@ -1,6 +1,5 @@
 import { getClerkToken } from '../lib/clerk'
-
-const API_BASE = import.meta.env.VITE_API_URL || ''
+import { API_BASE } from '../lib/api'
 
 export async function adminFetch(url, options = {}) {
   const token = await getClerkToken()
