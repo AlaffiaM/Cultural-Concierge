@@ -1,3 +1,5 @@
+// Event scraper pipeline: dedups scraped events (fuzzy name+date+city),
+// rejects unwanted categories, then upserts as draft events for admin review.
 const Event = require('../models/Event')
 
 const REJECTED_TERMS = [
