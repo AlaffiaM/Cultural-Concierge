@@ -2,18 +2,28 @@ import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 
 const STAT_ICONS = {
-  totalEvents: { icon: '📅', color: 'white', nav: 'live-events' },
-  totalVenues: { icon: '📍', color: 'copper', nav: 'venues' },
-  ghostEvents: { icon: '📝', color: 'white', nav: 'pending-events' },
-  eventsThisWeek: { icon: '🔥', color: 'copper', nav: 'live-events' },
+  totalEvents: { icon: '📅', color: 'white', nav: 'events-live' },
+  totalVenues: { icon: '📍', color: 'copper', nav: 'content-venues' },
+  ghostEvents: { icon: '📝', color: 'white', nav: 'events-pending' },
+  eventsThisWeek: { icon: '🔥', color: 'copper', nav: 'events-live' },
+}
+
+function formatDate(d) {
+  if (!d) return ''
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 export default function AdminOverview({ onNavigate }) {
   const [stats, setStats] = useState(null)
+  const [recentEvents, setRecentEvents] = useState([])
   useEffect(() => {
     adminFetch('/api/admin/stats')
       .then(setStats)
       .catch(err => console.error('[AdminOverview] Stats:', err.message))
+
+    adminFetch('/api/events?limit=8')
+      .then(data => setRecentEvents(data.events || []))
+      .catch(() => {})
   }, [])
 
   if (!stats) return <p className="admin-empty">Loading dashboard...</p>
@@ -76,7 +86,7 @@ export default function AdminOverview({ onNavigate }) {
             <p>Manage venues and experiences</p>
           </div>
         </button>
-        <button className="admin-quick-action" onClick={() => onNavigate('analytics')}>
+        <button className="admin-quick-action" onClick={() => onNavigate('tools-analytics')}>
           <div className="admin-quick-action-icon copper">📊</div>
           <div className="admin-quick-action-body">
             <h4>View Analytics</h4>
@@ -84,6 +94,30 @@ export default function AdminOverview({ onNavigate }) {
           </div>
         </button>
       </div>
+
+      {/* Recent Activity */}
+      {recentEvents.length > 0 && (
+        <div style={{ maxWidth: 720, marginBottom: 28 }}>
+          <div className="admin-section-header">
+            <h3 className="admin-section-title">Recent Activity</h3>
+          </div>
+          <div className="admin-activity-feed">
+            {recentEvents.map(ev => (
+              <div key={ev._id} className="admin-activity-item hover-row clickable" onClick={() => onNavigate('events-live')}>
+                <div className={`admin-activity-dot ${ev.status === 'approved' ? 'sage' : 'copper'}`} />
+                <div className="admin-activity-body">
+                  <span className="admin-activity-name">{ev.name}</span>
+                  <span className="admin-activity-meta">
+                    {ev.venue && <span className="admin-activity-venue">{ev.venue}</span>}
+                    <span>{ev.city || '—'}</span>
+                  </span>
+                </div>
+                <span className="admin-activity-date">{formatDate(ev.date)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
