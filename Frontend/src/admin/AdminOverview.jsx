@@ -65,21 +65,21 @@ export default function AdminOverview({ onNavigate }) {
 
       {/* Quick Actions */}
       <div className="admin-quick-actions" style={{ marginBottom: 28 }}>
-        <button className="admin-quick-action" onClick={() => onNavigate('add-event')}>
+        <button className="admin-quick-action" onClick={() => onNavigate('events-add')}>
           <div className="admin-quick-action-icon copper">➕</div>
           <div className="admin-quick-action-body">
             <h4>Add New Event</h4>
             <p>Create a new event listing</p>
           </div>
         </button>
-        <button className="admin-quick-action" onClick={() => onNavigate('scraper')}>
+        <button className="admin-quick-action" onClick={() => onNavigate('tools-scrapers')}>
           <div className="admin-quick-action-icon sage">⚡</div>
           <div className="admin-quick-action-body">
             <h4>Run Scraper</h4>
             <p>Import events from external sources</p>
           </div>
         </button>
-        <button className="admin-quick-action" onClick={() => onNavigate('venues')}>
+        <button className="admin-quick-action" onClick={() => onNavigate('content-venues')}>
           <div className="admin-quick-action-icon white">📍</div>
           <div className="admin-quick-action-body">
             <h4>{stats.totalVenues} Venues</h4>
