@@ -34,4 +34,21 @@ async function getHealth(req, res) {
   }
 }
 
-module.exports = { getHealth }
+async function getAdminEmails(req, res) {
+  try {
+    const emails = (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(Boolean)
+
+    res.json(emails.map((email, i) => ({
+      email,
+      role: i === 0 ? 'Owner' : 'Admin',
+    })))
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
+  }
+}
+
+module.exports = { getHealth, getAdminEmails }
