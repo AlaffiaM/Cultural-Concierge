@@ -1635,23 +1635,69 @@
   max-width: 780px;
 }
 
+.settings-intro {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  margin-bottom: 8px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+}
+
+.settings-intro-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.settings-intro-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--admin-text);
+  margin: 0;
+}
+
+.settings-intro-sub {
+  font-size: 12px;
+  color: var(--admin-text-muted);
+  margin: 3px 0 0;
+  line-height: 1.5;
+}
+
 .settings-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--admin-text-muted);
-  margin: 36px 0 14px;
+  margin: 40px 0 14px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--admin-border);
 }
 
+.settings-group-header::before {
+  content: '';
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background: var(--admin-copper);
+  flex-shrink: 0;
+}
+
 .settings-group-header:first-of-type {
-  margin-top: 0;
+  margin-top: 32px;
 }
 
 .settings-section {
   margin-bottom: 32px;
+  padding: 18px;
+  background: var(--admin-card);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
 }
 
 .settings-grid {
