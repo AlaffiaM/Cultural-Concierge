@@ -52,18 +52,11 @@ export default function AdminEvents() {
     if (filterPillar !== 'All') params.set('pillar', filterPillar)
     if (filterGhost === 'ghost') params.set('ghost', 'true')
     else if (filterGhost === 'venue') params.set('ghost', 'false')
+    if (search) params.set('search', search)
 
     adminFetch(`/api/events?${params}`)
       .then(data => {
-        let filtered = data.events || []
-        if (search) {
-          const q = search.toLowerCase()
-          filtered = filtered.filter(e =>
-            e.name?.toLowerCase().includes(q) ||
-            e.city?.toLowerCase().includes(q)
-          )
-        }
-        setEvents(filtered)
+        setEvents(data.events || [])
         setTotal(data.total || 0)
         setTotalPages(data.totalPages || 1)
         setSelectedIds(new Set())
