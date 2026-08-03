@@ -43,7 +43,7 @@ Entry: `admin/AdminDashboard.jsx`. A dark-themed layout with a fixed sidebar and
 |---|---|---|
 | Dashboard | overview | `AdminOverview` — stat cards, quick actions, recent activity |
 | Content | `AdminHub` grid | Events hub → `AdminEvents` (live), `AdminPendingEvents` (draft review), `AdminAddEvent` (+ `EventEditor`); `AdminVenues` (+ `VenueEditor`); `AdminAdvisories`; `AdminSubscribers` |
-| Tools | `AdminHub` grid | `AdminScraper` (event scrapers + `AdminVenueScraper`), `AdminAITools`, `AdminAnalytics`, `AdminMaintenance` (danger zone + CSV exports + system health), Import/Export uses `AdminMaintenance exportOnly` |
+| Tools | `AdminHub` grid | `AdminScraper` (event scrapers + `AdminVenueScraper`), `AdminAnalytics`, `AdminMaintenance` (danger zone + CSV exports + system health), Import/Export uses `AdminMaintenance exportOnly` |
 | Settings | single page | `AdminSettings` — one scrollable page with General, Admin Accounts, API Keys, Email, Tags (`AdminTags`), About |
 
 Shared admin components: `EventEditor` / `VenueEditor` (create/edit forms with `ImageUploader`), `ConfirmModal` (`useConfirm()` hook), `Toast` (`ToastProvider` / `useToast()`), `AdminHub` (grid of navigation cards), `adminApi` (fetch helper).
