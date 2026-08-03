@@ -13,7 +13,7 @@ import VenueDetailModal from "./VenueDetailModal";
 import AdminDashboard from "./admin/AdminDashboard";
 import "./App.css";
 
-const API_BASE = import.meta.env.VITE_API_URL || "";
+import { API_BASE } from "./lib/api";
 
 
 function countdownTo(dateStr) {
