@@ -72,6 +72,16 @@
   padding: 12px 10px;
 }
 
+.admin-nav-group {
+  padding: 12px 14px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--admin-text-muted);
+  opacity: 0.55;
+}
+
 .admin-sidebar-item {
   display: flex;
   align-items: center;
