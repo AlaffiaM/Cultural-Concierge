@@ -2,7 +2,7 @@ const express = require('express')
 const path = require('path')
 const cors = require('cors')
 const helmet = require('helmet')
-const { apiLimiter, aiLimiter } = require('./middleware/rateLimiter')
+const { apiLimiter, aiLimiter, subscribeLimiter } = require('./middleware/rateLimiter')
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler')
 
 const app = express()
@@ -40,6 +40,7 @@ app.use(cors({
 // Rate limiting
 app.use('/api/', apiLimiter)
 app.use('/api/ai/', aiLimiter)
+app.use('/api/subscribe', subscribeLimiter)
 
 app.use(express.json({ limit: '1mb' }));
 
