@@ -3,14 +3,26 @@ services:
     name: culture-concierge
     rootDir: Backend
     env: node
-    buildCommand: cd ../Frontend && npm install && npm run build && cd ../Backend && npm install && npx puppeteer browsers install chrome
+    buildCommand: cd ../Frontend && npm install && npm run build && cd ../Backend && npm install
     startCommand: node src/server.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: PUPPETEER_CACHE_DIR
         value: /opt/render/.cache/puppeteer
+      - key: MONGO_URI
+        sync: false
       - key: CLERK_SECRET_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false
       - key: CLIENT_ORIGIN
         sync: false
