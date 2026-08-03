@@ -296,6 +296,7 @@ async function runVenueScraper(req, res) {
       return res.status(400).json({ message: `Invalid source. Valid: ${VENUE_SCRAPER_SOURCES.join(', ')}` })
     }
 
+    // Dynamically load `venues-gemini` or `venues-wikipedia` from the source field.
     const scraper = require(`../scrapers/venues-${source}`)
     console.log('[venues] scraper module loaded, running scrape()')
     const scraped = await scraper.scrape()
