@@ -32,6 +32,7 @@ function gtag(...args) {
 }
 
 function App() {
+  // view = 'home' | 'cities' | 'venues' | 'admin' (simple state machine, no router).
   const { isLoaded, isSignedIn, user } = useUser();
   const { getToken, signOut } = useAuth();
   const { signIn } = useSignIn();
