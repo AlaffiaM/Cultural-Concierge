@@ -4,7 +4,7 @@ services:
     rootDir: Backend
     env: node
     buildCommand: cd ../Frontend && npm install && npm run build && cd ../Backend && npm install
-    startCommand: node server.js
+    startCommand: node src/server.js
     envVars:
       - key: NODE_ENV
         value: production
