@@ -199,6 +199,13 @@ function AboutSection() {
 export default function AdminSettings() {
   return (
     <div className="settings-page">
+      <div className="settings-intro">
+        <span className="settings-intro-icon">⚙️</span>
+        <div>
+          <h2 className="settings-intro-title">Settings</h2>
+          <p className="settings-intro-sub">App configuration, access, keys, and product info — all in one place.</p>
+        </div>
+      </div>
       <GeneralSection />
       <AccountsSection />
       <KeysSection />
