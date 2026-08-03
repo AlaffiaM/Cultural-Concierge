@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useToast } from './Toast'
+import { API_BASE } from '../lib/api'
 
 export default function AdminAdvisories() {
   const [loading, setLoading] = useState(false)
@@ -8,7 +9,7 @@ export default function AdminAdvisories() {
   async function handleRefresh() {
     setLoading(true)
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/advisories/run`, {
+      const res = await fetch(`${API_BASE}/api/advisories/run`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${await window.Clerk?.session?.getToken()}` },
       })
