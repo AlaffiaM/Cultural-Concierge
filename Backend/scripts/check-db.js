@@ -1,6 +1,6 @@
 require('dotenv').config()
 const mongoose = require('mongoose')
-const Event = require('../models/Event')
+const Event = require('../src/models/Event')
 
 mongoose.connect(process.env.MONGO_URI).then(async () => {
   const total = await Event.countDocuments()
