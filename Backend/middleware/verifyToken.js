@@ -1,17 +1,18 @@
-const { clerkClient } = require('@clerk/clerk-sdk-node')
+const { verifyToken } = require('@clerk/backend')
 
 async function verifyClerkToken(token) {
   try {
-    const payload = await clerkClient.verifyToken(token)
-    const user = await clerkClient.users.getUser(payload.sub)
-    const primaryEmail = user.emailAddresses?.find(e => e.id === user.primaryEmailAddressId)
-    const email = primaryEmail?.emailAddress || user.emailAddresses?.[0]?.emailAddress
-    if (!email) {
-      throw { code: 'auth/no-email', message: 'No email associated with account' }
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    })
+
+    return {
+      uid: payload.sub,
+      email: payload.email,
+      email_verified: true,
     }
-    return { email, email_verified: true, uid: payload.sub }
   } catch (err) {
-    console.error('[verifyToken] Clerk verify failed:', err.message)
+    console.error('[verifyToken] Clerk verify failed:', err)
     throw err
   }
 }
