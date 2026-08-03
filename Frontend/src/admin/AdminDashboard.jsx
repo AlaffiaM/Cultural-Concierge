@@ -47,6 +47,15 @@ const SETTINGS_CARDS = [
   { key: 'settings-about', label: 'About', sub: 'Product information', icon: 'ℹ️', tone: 'white' },
 ]
 
+const SETTINGS_CARDS = [
+  { key: 'settings-general', label: 'General', sub: 'App and city configuration', icon: '⚙️', tone: 'white' },
+  { key: 'settings-accounts', label: 'Admin Accounts', sub: 'Who has access', icon: '👥', tone: 'white' },
+  { key: 'settings-keys', label: 'API Keys', sub: 'Service configuration status', icon: '🔑', tone: 'white' },
+  { key: 'settings-email', label: 'Email', sub: 'Newsletter and subscribers', icon: '📧', tone: 'white' },
+  { key: 'settings-tags', label: 'Tags', sub: 'Taxonomy and vocabulary', icon: '🏷️', tone: 'white' },
+  { key: 'settings-about', label: 'About', sub: 'Product information', icon: 'ℹ️', tone: 'white' },
+]
+
 const EVENTS_CARDS = [
   { key: 'events-live', label: 'Live Events', sub: 'Approved events in the app', icon: '✅', tone: 'sage' },
   { key: 'events-pending', label: 'Pending Approval', sub: 'Scraped events to review', icon: '⏳', tone: 'copper' },
