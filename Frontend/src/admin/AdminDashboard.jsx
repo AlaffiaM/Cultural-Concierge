@@ -10,119 +10,189 @@ import AdminSubscribers from './AdminSubscribers'
 import AdminAdvisories from './AdminAdvisories'
 import AdminAnalytics from './AdminAnalytics'
 import AdminMaintenance from './AdminMaintenance'
+import AdminAITools from './AdminAITools'
+import AdminHub from './AdminHub'
 import { ToastProvider } from './Toast'
 
 import './AdminDashboard.css'
 
-const TABS = [
+const SECTION_ICONS = {
+  dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+  content: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,
+  tools: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
+  settings: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+}
+
+const CONTENT_CARDS = [
+  { key: 'events-hub', label: 'Events', sub: 'Live, pending, and new events', icon: '📅', tone: 'copper' },
+  { key: 'content-venues', label: 'Venues', sub: 'Venue profiles and images', icon: '📍', tone: 'sage' },
+  { key: 'content-advisories', label: 'Advisories', sub: 'AI city travel advisories', icon: '🧭', tone: 'white' },
+  { key: 'content-subscribers', label: 'Subscribers', sub: 'Email list and signups', icon: '✉️', tone: 'white' },
+]
+
+const TOOLS_CARDS = [
+  { key: 'tools-scrapers', label: 'Scrapers', sub: 'Run imports per source', icon: '⚡', tone: 'sage' },
+  { key: 'tools-ai', label: 'AI Tools', sub: 'Suggest tags and more', icon: '🤖', tone: 'copper' },
+  { key: 'tools-analytics', label: 'Analytics', sub: 'City and pillar insights', icon: '📊', tone: 'white' },
+  { key: 'tools-import-export', label: 'Import / Export', sub: 'CSV backups', icon: '📦', tone: 'white' },
+  { key: 'tools-maintenance', label: 'Maintenance', sub: 'Cleanup and system health', icon: '🧹', tone: 'white' },
+]
+
+const SETTINGS_CARDS = [
+  { key: 'settings-general', label: 'General', sub: 'App and city configuration', icon: '⚙️', tone: 'white' },
+  { key: 'settings-accounts', label: 'Admin Accounts', sub: 'Who has access', icon: '👥', tone: 'white' },
+  { key: 'settings-keys', label: 'API Keys', sub: 'Service configuration status', icon: '🔑', tone: 'white' },
+  { key: 'settings-email', label: 'Email', sub: 'Newsletter and subscribers', icon: '📧', tone: 'white' },
+  { key: 'settings-tags', label: 'Tags', sub: 'Taxonomy and vocabulary', icon: '🏷️', tone: 'white' },
+  { key: 'settings-about', label: 'About', sub: 'Product information', icon: 'ℹ️', tone: 'white' },
+]
+
+const EVENTS_CARDS = [
+  { key: 'events-live', label: 'Live Events', sub: 'Approved events in the app', icon: '✅', tone: 'sage' },
+  { key: 'events-pending', label: 'Pending Approval', sub: 'Scraped events to review', icon: '⏳', tone: 'copper' },
+  { key: 'events-add', label: 'Add Event', sub: 'Create a new listing', icon: '➕', tone: 'white' },
+  { key: 'events-drafts', label: 'Drafts', sub: 'Saved but unpublished', icon: '📝', tone: 'white', disabled: true, badge: 'Soon' },
+]
+
+const SECTIONS = [
   {
-    key: 'overview',
+    key: 'dashboard',
     label: 'Dashboard',
-    group: 'Dashboard',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+    icon: SECTION_ICONS.dashboard,
   },
   {
-    key: 'live-events',
-    label: 'Live Events',
-    group: 'Events',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+    key: 'content',
+    label: 'Content',
+    icon: SECTION_ICONS.content,
+    children: [
+      { key: 'content-events', label: 'Events', icon: '📅', nav: 'events-hub' },
+      { key: 'content-venues', label: 'Venues', icon: '📍', nav: 'content-venues' },
+      { key: 'content-advisories', label: 'Advisories', icon: '🧭', nav: 'content-advisories' },
+      { key: 'content-subscribers', label: 'Subscribers', icon: '✉️', nav: 'content-subscribers' },
+    ],
   },
   {
-    key: 'pending-events',
-    label: 'Pending Approval',
-    group: 'Events',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
-  },
-  {
-    key: 'add-event',
-    label: 'Add Event',
-    group: 'Events',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>,
-  },
-  {
-    key: 'venues',
-    label: 'Venues',
-    group: 'Venues',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-  },
-  {
-    key: 'subscribers',
-    label: 'Subscribers',
-    group: 'Subscribers',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
-  },
-  {
-    key: 'scraper',
-    label: 'Scraper',
-    group: 'Scrapers',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>,
-  },
-  {
-    key: 'advisories',
-    label: 'Advisories',
-    group: 'Scrapers',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
-  },
-  {
-    key: 'analytics',
-    label: 'Analytics',
-    group: 'Analytics',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-  },
-  {
-    key: 'maintenance',
-    label: 'Scraped Events',
-    group: 'Maintenance',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
-  },
-  {
-    key: 'export',
-    label: 'Export Data',
-    group: 'Maintenance',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+    key: 'tools',
+    label: 'Tools',
+    icon: SECTION_ICONS.tools,
+    children: [
+      { key: 'tools-scrapers', label: 'Scrapers', icon: '⚡', nav: 'tools-scrapers' },
+      { key: 'tools-ai', label: 'AI Tools', icon: '🤖', nav: 'tools-ai' },
+      { key: 'tools-analytics', label: 'Analytics', icon: '📊', nav: 'tools-analytics' },
+      { key: 'tools-import-export', label: 'Import / Export', icon: '📦', nav: 'tools-import-export' },
+      { key: 'tools-maintenance', label: 'Maintenance', icon: '🧹', nav: 'tools-maintenance' },
+    ],
   },
   {
     key: 'settings',
     label: 'Settings',
-    group: 'Settings',
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>,
+    icon: SECTION_ICONS.settings,
+    children: [
+      { key: 'settings-general', label: 'General', icon: '⚙️', nav: 'settings-general' },
+      { key: 'settings-accounts', label: 'Admin Accounts', icon: '👥', nav: 'settings-accounts' },
+      { key: 'settings-keys', label: 'API Keys', icon: '🔑', nav: 'settings-keys' },
+      { key: 'settings-email', label: 'Email', icon: '📧', nav: 'settings-email' },
+      { key: 'settings-tags', label: 'Tags', icon: '🏷️', nav: 'settings-tags' },
+      { key: 'settings-about', label: 'About', icon: 'ℹ️', nav: 'settings-about' },
+    ],
   },
 ]
 
 const PAGE_TITLES = {
-  overview: 'Dashboard',
-  'live-events': 'Live Events',
-  'pending-events': 'Pending Events',
-  'add-event': 'Add Event',
-  venues: 'Venues',
-  subscribers: 'Subscribers',
-  scraper: 'Scraper',
-  advisories: 'Advisories',
-  analytics: 'Analytics',
-  maintenance: 'Scraped Events',
-  export: 'Export Data',
+  dashboard: 'Dashboard',
+  content: 'Content',
+  tools: 'Tools',
   settings: 'Settings',
+  'events-hub': 'Events',
+  'content-venues': 'Venues',
+  'content-advisories': 'Advisories',
+  'content-subscribers': 'Subscribers',
+  'tools-scrapers': 'Scrapers',
+  'tools-ai': 'AI Tools',
+  'tools-analytics': 'Analytics',
+  'tools-import-export': 'Import / Export',
+  'tools-maintenance': 'Maintenance',
+  'events-live': 'Live Events',
+  'events-pending': 'Pending Approval',
+  'events-add': 'Add Event',
+  'settings-general': 'General',
+  'settings-accounts': 'Admin Accounts',
+  'settings-keys': 'API Keys',
+  'settings-email': 'Email',
+  'settings-tags': 'Tags',
+  'settings-about': 'About',
 }
 
 const PAGE_SUBTITLES = {
-  overview: 'Overview of your content and activity',
-  'live-events': 'Approved events (venues + pop-ups) visible in the app',
-  'pending-events': 'Scraped events awaiting approval',
-  'add-event': 'Create a new event manually',
-  venues: 'Manage venues',
-  subscribers: 'Email subscribers collected via sign-in and newsletter forms',
-  scraper: 'Import events from Ticketsasa, Kenyabuzz, and Mookh',
-  advisories: 'Generate and refresh AI-powered travel advisories',
-  analytics: 'City distribution, pillar breakdown, and weekly activity',
-  maintenance: 'Danger-zone actions',
-  export: 'Download CSV backups of your content',
-  settings: 'Admin access and environment info',
+  dashboard: 'Overview of your content and activity',
+  content: 'Everything you manage manually',
+  tools: 'Automation and system utilities',
+  settings: 'Configuration',
+  'events-hub': 'Live, pending, and new events',
+  'content-venues': 'Manage venues and experiences',
+  'content-advisories': 'Generate and refresh AI-powered travel advisories',
+  'content-subscribers': 'Email subscribers collected via sign-in and newsletter forms',
+  'tools-scrapers': 'Import events from Ticketsasa, KenyaBuzz, Mookh, and Eventbrite',
+  'tools-ai': 'Gemini-powered helpers',
+  'tools-analytics': 'City distribution, pillar breakdown, and weekly activity',
+  'tools-import-export': 'Download CSV backups of your content',
+  'tools-maintenance': 'Danger-zone actions and system health',
+  'events-live': 'Approved events (venues + pop-ups) visible in the app',
+  'events-pending': 'Scraped events awaiting approval',
+  'events-add': 'Create a new event manually',
+  'settings-general': 'App and city configuration',
+  'settings-accounts': 'Who has access to the CMS',
+  'settings-keys': 'Service configuration status',
+  'settings-email': 'Newsletter and subscriber settings',
+  'settings-tags': 'Tag taxonomy and keyword system',
+  'settings-about': 'Product information',
+}
+
+function sectionFor(tab) {
+  return SECTIONS.find(s =>
+    s.key === tab || (s.children || []).some(c => c.nav === tab)
+  )
 }
 
 export default function AdminDashboard({ onBackToApp, user }) {
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState('dashboard')
+  const [openSection, setOpenSection] = useState('dashboard')
 
-  let lastGroup = null
+  function go(tab) {
+    setActiveTab(tab)
+    const section = sectionFor(tab)
+    if (section?.children) setOpenSection(section.key)
+  }
+
+  const activeSection = sectionFor(activeTab)?.key
+
+  function renderPage() {
+    switch (activeTab) {
+      case 'dashboard': return <AdminOverview onNavigate={go} />
+      case 'content': return <AdminHub cards={CONTENT_CARDS} onNavigate={go} />
+      case 'tools': return <AdminHub cards={TOOLS_CARDS} onNavigate={go} />
+      case 'settings': return <AdminHub cards={SETTINGS_CARDS} onNavigate={go} />
+      case 'events-hub': return <AdminHub cards={EVENTS_CARDS} onNavigate={go} />
+      case 'content-venues': return <AdminVenues />
+      case 'content-advisories': return <AdminAdvisories />
+      case 'content-subscribers': return <AdminSubscribers />
+      case 'tools-scrapers': return <AdminScraper />
+      case 'tools-ai': return <AdminAITools />
+      case 'tools-analytics': return <AdminAnalytics />
+      case 'tools-import-export': return <AdminMaintenance exportOnly />
+      case 'tools-maintenance': return <AdminMaintenance />
+      case 'events-live': return <AdminEvents />
+      case 'events-pending': return <AdminPendingEvents />
+      case 'events-add': return <AdminAddEvent onClose={() => go('events-live')} />
+      case 'settings-general': return <AdminSettings section="general" user={user} />
+      case 'settings-accounts': return <AdminSettings section="accounts" user={user} />
+      case 'settings-keys': return <AdminSettings section="keys" user={user} />
+      case 'settings-email': return <AdminSettings section="email" user={user} />
+      case 'settings-tags': return <AdminSettings section="tags" user={user} />
+      case 'settings-about': return <AdminSettings section="about" user={user} />
+      default: return <AdminOverview onNavigate={go} />
+    }
+  }
 
   return (
     <div className="admin-layout">
@@ -133,38 +203,63 @@ export default function AdminDashboard({ onBackToApp, user }) {
         </div>
 
         <div className="admin-sidebar-nav">
-          {TABS.map(tab => {
-            const showGroup = tab.group !== lastGroup
-            lastGroup = tab.group
+          {SECTIONS.map(section => {
+            const isOpen = openSection === section.key
+            const sectionActive = activeSection === section.key
             return (
-              <div key={tab.key}>
-                {showGroup && <div className="admin-nav-group">{tab.group}</div>}
-                <button
-                  className={`admin-sidebar-item ${activeTab === tab.key ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab.key)}
+              <div key={section.key} className="admin-nav-section">
+                <div
+                  className={`admin-nav-section-header ${sectionActive ? 'active' : ''}`}
+                  onClick={() => go(section.key)}
                 >
-                  {tab.icon}
-                  <span>{tab.label}</span>
-                </button>
+                  <span className="admin-nav-section-icon">{section.icon}</span>
+                  <span className="admin-nav-section-label">{section.label}</span>
+                  {section.children && (
+                    <button
+                      className="admin-nav-chevron"
+                      onClick={e => { e.stopPropagation(); setOpenSection(isOpen ? null : section.key) }}
+                      aria-label={`Toggle ${section.label}`}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {section.children && isOpen && (
+                  <div className="admin-nav-children">
+                    {section.children.map(child => (
+                      <button
+                        key={child.key}
+                        className={`admin-sidebar-item admin-nav-child ${activeTab === child.nav ? 'active' : ''}`}
+                        onClick={() => go(child.nav)}
+                      >
+                        <span className="admin-nav-child-icon">{child.icon}</span>
+                        <span>{child.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
 
-          <div className="admin-sidebar-footer">
-            <button className="admin-sidebar-back" onClick={onBackToApp}>
-              ← Back to App
-            </button>
-            <div className="admin-sidebar-user">
-              {user?.imageUrl && (
-                <img src={user.imageUrl} alt="" className="admin-sidebar-user-avatar" />
-              )}
-              <div className="admin-sidebar-user-info">
-                <div className="admin-sidebar-user-name">{user?.fullName || 'Admin'}</div>
-                <div className="admin-sidebar-user-email">{user?.primaryEmailAddress?.emailAddress || ''}</div>
-              </div>
+        <div className="admin-sidebar-footer">
+          <button className="admin-sidebar-back" onClick={onBackToApp}>
+            ← Back to App
+          </button>
+          <div className="admin-sidebar-user">
+            {user?.imageUrl && (
+              <img src={user.imageUrl} alt="" className="admin-sidebar-user-avatar" />
+            )}
+            <div className="admin-sidebar-user-info">
+              <div className="admin-sidebar-user-name">{user?.fullName || 'Admin'}</div>
+              <div className="admin-sidebar-user-email">{user?.primaryEmailAddress?.emailAddress || ''}</div>
             </div>
           </div>
+        </div>
       </nav>
 
       <div className="admin-main">
@@ -176,18 +271,7 @@ export default function AdminDashboard({ onBackToApp, user }) {
             </div>
           </div>
 
-          {activeTab === 'overview' && <AdminOverview onNavigate={setActiveTab} />}
-          {activeTab === 'live-events' && <AdminEvents />}
-          {activeTab === 'pending-events' && <AdminPendingEvents />}
-          {activeTab === 'add-event' && <AdminAddEvent onClose={() => setActiveTab('live-events')} />}
-          {activeTab === 'venues' && <AdminVenues />}
-          {activeTab === 'subscribers' && <AdminSubscribers />}
-          {activeTab === 'settings' && <AdminSettings user={user} />}
-          {activeTab === 'scraper' && <AdminScraper />}
-          {activeTab === 'advisories' && <AdminAdvisories />}
-          {activeTab === 'analytics' && <AdminAnalytics />}
-          {activeTab === 'maintenance' && <AdminMaintenance onNavigate={setActiveTab} />}
-          {activeTab === 'export' && <AdminMaintenance exportOnly onNavigate={setActiveTab} />}
+          {renderPage()}
         </ToastProvider>
       </div>
     </div>
