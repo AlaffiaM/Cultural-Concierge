@@ -56,7 +56,9 @@ export default function EventEditor({ event, onClose }) {
         isGhostLocation: event.isGhostLocation || false,
       })
     }
-    adminFetch('/api/venues').then(setVenues).catch(() => {})
+    adminFetch('/api/venues')
+      .then(data => setVenues(Array.isArray(data) ? data : data.venues || []))
+      .catch(() => {})
   }, [event])
 
   function handleChange(field, value) {
