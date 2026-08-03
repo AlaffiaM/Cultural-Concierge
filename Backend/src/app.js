@@ -2,7 +2,7 @@ const express = require('express')
 const path = require('path')
 const cors = require('cors')
 const helmet = require('helmet')
-const { apiLimiter, aiLimiter, subscribeLimiter } = require('./middleware/rateLimiter')
+const { apiLimiter, subscribeLimiter } = require('./middleware/rateLimiter')
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler')
 
 const app = express()
@@ -39,7 +39,6 @@ app.use(cors({
 
 // Rate limiting
 app.use('/api/', apiLimiter)
-app.use('/api/ai/', aiLimiter)
 app.use('/api/subscribe', subscribeLimiter)
 
 app.use(express.json({ limit: '1mb' }));
@@ -59,7 +58,6 @@ app.get('/api/status', (req, res) => {
 // Mount route modules
 app.use('/api/venues', require('./routes/venueRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
-app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/system', require('./routes/systemRoutes'));
 app.use('/api/scraper', require('./routes/scraperRoutes'));
