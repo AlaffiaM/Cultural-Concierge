@@ -97,7 +97,7 @@ The CMS (`Frontend/src/admin/AdminDashboard.jsx`) is a dark-themed dashboard wit
 
 - **Dashboard** — overview cards, stats, recent activity
 - **Content** — Events hub (Live / Pending / Add), Venues, Advisories, Subscribers
-- **Tools** — Scrapers, AI Tools, Analytics, Import/Export, Maintenance
+- **Tools** — Scrapers, Analytics, Import/Export, Maintenance
 - **Settings** — single page (general, admin accounts, API keys, email, tags, about)
 
 Admin requests go through `adminFetch()` (`Frontend/src/admin/adminApi.js`), which attaches the Clerk session token. The backend verifies the JWT (`middleware/auth.js`) then checks the `ADMIN_EMAILS` allowlist (`middleware/admin.js`).
