@@ -29,12 +29,12 @@ src/
 ├── app.js                Express app: helmet, HTTPS redirect, CORS, rate limits, route mounting, static frontend
 ├── server.js             Entry point (dotenv, DB connect, cleanup job, listen)
 ├── config/               db.js (Mongo + hourly past-event cleanup), clerk.js, cloudinary.js
-├── controllers/          Route handlers (event, venue, admin, system, ai, scraper, upload, subscribe, advisory)
+├── controllers/          Route handlers (event, venue, admin, system, scraper, upload, subscribe, advisory)
 ├── middleware/           auth.js (Clerk JWT), admin.js (ADMIN_EMAILS allowlist), rateLimiter, errorHandler
 ├── models/               Mongoose schemas: Event, Venue, CityAdvisory, Email
 ├── routes/               Express route modules (all mounted in app.js)
 ├── scrapers/             Event scrapers (ticketsasa, kenyabuzz, mookh, eventbrite), venue scrapers (gemini, wikipedia), advisors-gemini
-├── services/             clerkService (JWT verify + email resolution), scraperService, emailService, aiService
+├── services/             clerkService (JWT verify + email resolution), scraperService, emailService
 └── utils/                sanitize.js (escapeRegex), imageProcessor.js (Cloudinary), travelBriefUpdater.js
 tests/                    Jest test suites
 ```
@@ -73,7 +73,6 @@ tests/                    Jest test suites
 | GET | `/api/scraper/history` | Recently scraped events |
 | POST | `/api/scraper/approve` | Approve multiple scraped events |
 | POST | `/api/advisories/run` | Generate travel advisories via Gemini |
-| POST | `/api/ai/suggest-tags` | Gemini-powered tag suggestions for an event |
 | POST | `/api/uploads` | Upload an image (Cloudinary) |
 | GET | `/api/admin/stats` | Dashboard statistics |
 | GET | `/api/admin/tags` | Tag taxonomy from the database |
