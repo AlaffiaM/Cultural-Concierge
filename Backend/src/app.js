@@ -21,7 +21,6 @@ app.use((req, res, next) => {
 
 const DEFAULT_ORIGINS = [
   'http://localhost:5173',
-  'https://culture-conciage.vercel.app',
   'https://cultural--concierge.vercel.app',
   'https://culture-concierge.onrender.com',
 ]
