@@ -196,19 +196,15 @@ function AboutSection() {
   )
 }
 
-export default function AdminSettings({ section }) {
-  switch (section) {
-    case 'accounts':
-      return <AccountsSection />
-    case 'keys':
-      return <KeysSection />
-    case 'email':
-      return <EmailSection />
-    case 'tags':
-      return <AdminTags />
-    case 'about':
-      return <AboutSection />
-    default:
-      return <GeneralSection />
-  }
+export default function AdminSettings() {
+  return (
+    <div className="settings-page">
+      <GeneralSection />
+      <AccountsSection />
+      <KeysSection />
+      <EmailSection />
+      <AdminTags />
+      <AboutSection />
+    </div>
+  )
 }
