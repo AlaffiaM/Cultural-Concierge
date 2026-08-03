@@ -1,4 +1,3 @@
-const mongoose = require('mongoose')
 const Event = require('../models/Event')
 const Venue = require('../models/Venue')
 const Email = require('../models/Email')
@@ -9,8 +8,6 @@ const CITY_ALIASES = {
   'Federal Capital Territory': 'Abuja',
   'Jabi Abuja': 'Abuja',
 }
-
-const startTime = Date.now()
 
 function normalizeCities(items) {
   const map = {}
@@ -100,72 +97,6 @@ async function getTags(req, res) {
   }
 }
 
-async function createTag(req, res) {
-  res.json({ message: 'Structured tag management coming in Phase 2' })
-}
-
-async function getVibeTags(req, res) {
-  try {
-    const [eventTags, venueTags] = await Promise.all([
-      Event.distinct('tags'),
-      Venue.distinct('vibeTags'),
-    ])
-    const all = [...new Set([...eventTags, ...venueTags])].filter(Boolean).sort()
-    res.json(all)
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: 'Internal server error' })
-  }
-}
-
-async function getHealth(req, res) {
-  try {
-    const dbState = mongoose.connection.readyState
-    const dbStatus = dbState === 1 ? 'connected' : dbState === 2 ? 'connecting' : 'disconnected'
-
-    const lastScrapedEvent = await Event.findOne({ source: { $in: ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'gemini'] } })
-      .sort({ createdAt: -1 })
-      .select('createdAt source')
-      .lean()
-
-    const eventCount = await Event.countDocuments()
-    const venueCount = await Venue.countDocuments()
-
-    res.json({
-      database: dbStatus,
-      uptime: Math.floor((Date.now() - startTime) / 1000),
-      lastScraperRun: lastScrapedEvent?.createdAt || null,
-      lastScraperSource: lastScrapedEvent?.source || null,
-      geminiKeyConfigured: !!process.env.GEMINI_API_KEY,
-      authConfigured: !!process.env.CLERK_SECRET_KEY,
-      eventCount,
-      venueCount,
-      nodeVersion: process.version,
-    })
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: 'Internal server error' })
-  }
-}
-
-async function getTeam(req, res) {
-  try {
-    const emails = (process.env.ADMIN_EMAILS || '')
-      .split(',')
-      .map(e => e.trim().toLowerCase())
-      .filter(Boolean)
-
-    res.json(emails.map((email, i) => ({
-      email,
-      role: i === 0 ? 'Owner' : 'Admin',
-      added: 'Via ADMIN_EMAILS env',
-    })))
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: 'Internal server error' })
-  }
-}
-
 async function exportEvents(req, res) {
   try {
     const events = await Event.find({}).lean().sort({ createdAt: -1 })
@@ -212,16 +143,6 @@ async function deleteScrapedEvents(req, res) {
   }
 }
 
-async function deleteManualEvents(req, res) {
-  try {
-    const result = await Event.deleteMany({ source: 'manual' })
-    res.json({ deleted: result.deletedCount, message: `Deleted ${result.deletedCount} manual/seed events` })
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).json({ success: false, message: 'Internal server error' })
-  }
-}
-
 async function getSubscribers(req, res) {
   try {
     const emails = await Email.find({}).sort({ createdAt: -1 }).lean()
@@ -250,14 +171,9 @@ async function exportSubscribers(req, res) {
 module.exports = {
   getStats,
   getTags,
-  createTag,
-  getVibeTags,
-  getHealth,
-  getTeam,
   exportEvents,
   exportVenues,
   deleteScrapedEvents,
-  deleteManualEvents,
   getSubscribers,
   exportSubscribers,
 }
