@@ -12,7 +12,6 @@ import AdminSubscribers from './AdminSubscribers'
 import AdminAdvisories from './AdminAdvisories'
 import AdminAnalytics from './AdminAnalytics'
 import AdminMaintenance from './AdminMaintenance'
-import AdminAITools from './AdminAITools'
 import AdminHub from './AdminHub'
 import { ToastProvider } from './Toast'
 
@@ -34,7 +33,6 @@ const CONTENT_CARDS = [
 
 const TOOLS_CARDS = [
   { key: 'tools-scrapers', label: 'Scrapers', sub: 'Run imports per source', icon: '⚡', tone: 'sage' },
-  { key: 'tools-ai', label: 'AI Tools', sub: 'Suggest tags and more', icon: '🤖', tone: 'copper' },
   { key: 'tools-analytics', label: 'Analytics', sub: 'City and pillar insights', icon: '📊', tone: 'white' },
   { key: 'tools-import-export', label: 'Import / Export', sub: 'CSV backups', icon: '📦', tone: 'white' },
   { key: 'tools-maintenance', label: 'Maintenance', sub: 'Cleanup and system health', icon: '🧹', tone: 'white' },
@@ -73,7 +71,6 @@ const SECTIONS = [
     icon: SECTION_ICONS.tools,
     children: [
       { key: 'tools-scrapers', label: 'Scrapers', icon: '⚡', nav: 'tools-scrapers' },
-      { key: 'tools-ai', label: 'AI Tools', icon: '🤖', nav: 'tools-ai' },
       { key: 'tools-analytics', label: 'Analytics', icon: '📊', nav: 'tools-analytics' },
       { key: 'tools-import-export', label: 'Import / Export', icon: '📦', nav: 'tools-import-export' },
       { key: 'tools-maintenance', label: 'Maintenance', icon: '🧹', nav: 'tools-maintenance' },
@@ -96,7 +93,6 @@ const PAGE_TITLES = {
   'content-advisories': 'Advisories',
   'content-subscribers': 'Subscribers',
   'tools-scrapers': 'Scrapers',
-  'tools-ai': 'AI Tools',
   'tools-analytics': 'Analytics',
   'tools-import-export': 'Import / Export',
   'tools-maintenance': 'Maintenance',
@@ -115,7 +111,6 @@ const PAGE_SUBTITLES = {
   'content-advisories': 'Generate and refresh AI-powered travel advisories',
   'content-subscribers': 'Email subscribers collected via sign-in and newsletter forms',
   'tools-scrapers': 'Import events from Ticketsasa, KenyaBuzz, Mookh, and Eventbrite',
-  'tools-ai': 'Gemini-powered helpers',
   'tools-analytics': 'City distribution, pillar breakdown, and weekly activity',
   'tools-import-export': 'Download CSV backups of your content',
   'tools-maintenance': 'Danger-zone actions and system health',
@@ -155,7 +150,6 @@ export default function AdminDashboard({ onBackToApp, user }) {
       case 'content-advisories': return <AdminAdvisories />
       case 'content-subscribers': return <AdminSubscribers />
       case 'tools-scrapers': return <AdminScraper />
-      case 'tools-ai': return <AdminAITools />
       case 'tools-analytics': return <AdminAnalytics />
       case 'tools-import-export': return <AdminMaintenance exportOnly />
       case 'tools-maintenance': return <AdminMaintenance />
