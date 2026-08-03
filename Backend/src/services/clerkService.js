@@ -1,3 +1,5 @@
+// Verifies Clerk JWTs and resolves the user's email.
+// JWT may lack an `email` claim, so fall back to the Clerk Users API (cached 5 min).
 const { verifyToken, createClerkClient } = require('@clerk/backend')
 
 const emailCache = new Map()
