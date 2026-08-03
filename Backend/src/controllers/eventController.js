@@ -115,6 +115,9 @@ async function getGhosts(req, res) {
 async function getPending(req, res) {
   try {
     const filter = { status: 'draft' }
+    if (req.query.city) {
+      filter.city = { $regex: escapeRegex(req.query.city), $options: 'i' }
+    }
     if (req.query.ghost === 'true') filter.isGhostLocation = true
     else if (req.query.ghost === 'false') filter.isGhostLocation = { $ne: true }
     const events = await Event.find(filter).sort({ createdAt: -1 }).populate('linkedSpotId', 'name type')
