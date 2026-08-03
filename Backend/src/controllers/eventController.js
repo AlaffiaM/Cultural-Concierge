@@ -57,6 +57,10 @@ async function listEvents(req, res) {
     if (req.query.pillar) {
       filter.pillar = { $regex: `^${escapeRegex(req.query.pillar)}$`, $options: 'i' }
     }
+    if (req.query.search) {
+      const re = { $regex: escapeRegex(req.query.search), $options: 'i' }
+      filter.$or = [{ name: re }, { venue: re }, { city: re }]
+    }
 
     const page = Math.max(parseInt(req.query.page) || 1, 1)
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100)
