@@ -1,6 +1,8 @@
 import { getClerkToken } from '../lib/clerk'
 import { API_BASE } from '../lib/api'
 
+// fetch helper for admin routes: attaches the Clerk session token
+// and throws the server's error message on non-OK responses.
 export async function adminFetch(url, options = {}) {
   const token = await getClerkToken()
   if (!token) {
