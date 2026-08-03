@@ -128,11 +128,13 @@ function sectionFor(tab) {
 export default function AdminDashboard({ onBackToApp, user }) {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [openSection, setOpenSection] = useState('dashboard')
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   function go(tab) {
     setActiveTab(tab)
     const section = sectionFor(tab)
     if (section?.children) setOpenSection(section.key)
+    setMobileNavOpen(false)
   }
 
   const activeSection = sectionFor(activeTab)?.key
@@ -161,7 +163,10 @@ export default function AdminDashboard({ onBackToApp, user }) {
 
   return (
     <div className="admin-layout">
-      <nav className="admin-sidebar">
+      {mobileNavOpen && (
+        <div className="admin-sidebar-backdrop" onClick={() => setMobileNavOpen(false)} />
+      )}
+      <nav className={`admin-sidebar ${mobileNavOpen ? 'open' : ''}`}>
         <div className="admin-sidebar-brand">
           <h1>Alaffia CMS</h1>
           <span>Cultural Concierge</span>
@@ -230,6 +235,17 @@ export default function AdminDashboard({ onBackToApp, user }) {
       <div className="admin-main">
         <ToastProvider>
           <div className="admin-main-header">
+            <button
+              className="admin-menu-btn"
+              onClick={() => setMobileNavOpen(true)}
+              aria-label="Open menu"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
             <div>
               <h2 className="admin-main-title">{PAGE_TITLES[activeTab]}</h2>
               <p className="admin-main-subtitle">{PAGE_SUBTITLES[activeTab]}</p>
