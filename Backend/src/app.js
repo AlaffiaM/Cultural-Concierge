@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 
 const allowedOrigins = process.env.CLIENT_ORIGIN
   ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim())
-  : ['http://localhost:5173', 'https://culture-conciage.vercel.app', 'https://culture-concierge.onrender.com']
+  : ['http://localhost:5173', 'https://culture-conciage.vercel.app', 'https://cultural--concierge.vercel.app', 'https://culture-concierge.onrender.com']
 
 app.use(cors({
   origin: allowedOrigins,
