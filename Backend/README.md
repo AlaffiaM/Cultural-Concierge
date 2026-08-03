@@ -16,7 +16,7 @@ Express REST API with MongoDB (Mongoose), Clerk JWT auth, and automated scrapers
 
 | Command | Description |
 |---|---|
-| `npm start` | Production (node server.js) |
+| `npm start` | Production (node src/server.js) |
 | `npm run dev` | Development (nodemon, auto-restart) |
 | `npm test` | Run Jest tests |
 
@@ -58,10 +58,16 @@ Each scraper module exports `{ scrape, SOURCE }`. Event scrapers run through `sc
 ## Project Structure
 
 ```
-routes/         Express route handlers
-models/         Mongoose schemas (Venue, Event, CityAdvisory, Email)
-scrapers/       Scraper modules (event, venue, advisor)
-middleware/     JWT verification + admin guard
-utils/          Sanitizers, travel brief updater
-__tests__/      Jest test suites
+src/
+├── app.js               Express app (middleware, routes, static)
+├── server.js            Entry point (dotenv, DB connect, listen)
+├── config/              db, clerk, cloudinary config
+├── controllers/         Route handlers (admin, event, venue, ...)
+├── middleware/          auth, admin, errorHandler, rateLimiter
+├── models/              Mongoose schemas (Venue, Event, CityAdvisory, Email, User)
+├── routes/              Express route modules
+├── scrapers/            Scraper modules (event, venue, advisor)
+├── services/            clerk, scraper, email, ai services
+└── utils/               Sanitizers, image processor, travel brief updater
+tests/                   Jest test suites
 ```
