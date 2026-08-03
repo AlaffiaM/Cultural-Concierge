@@ -1,5 +1,6 @@
 const { requireAuth } = require('./auth')
 
+// Admin guard: requires a valid Clerk session AND an email in ADMIN_EMAILS.
 async function requireAdmin(req, res, next) {
   await requireAuth(req, res, () => {
     const adminEmails = (process.env.ADMIN_EMAILS || '')
