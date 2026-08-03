@@ -16,4 +16,16 @@ const aiLimiter = rateLimit({
   message: { success: false, message: 'Rate limit exceeded for AI endpoint.' },
 })
 
-module.exports = { apiLimiter, aiLimiter }
+// Public newsletter signup: strict per-IP limit to stop spam bots.
+// Factory so tests can create a fresh instance (singleton below used by the app).
+const createSubscribeLimiter = () => rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many subscription attempts. Try again later.' },
+})
+
+const subscribeLimiter = createSubscribeLimiter()
+
+module.exports = { apiLimiter, aiLimiter, subscribeLimiter, createSubscribeLimiter }
