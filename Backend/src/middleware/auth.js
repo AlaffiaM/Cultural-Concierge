@@ -1,3 +1,4 @@
+// Verifies Bearer JWT via Clerk; sets req.authUser = { email, uid }.
 const { verifyClerkToken } = require('../services/clerkService')
 
 async function requireAuth(req, res, next) {
