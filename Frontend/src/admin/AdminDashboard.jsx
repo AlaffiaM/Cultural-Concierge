@@ -1,3 +1,5 @@
+// Admin shell: sidebar nav (4 accordion sections) + main content.
+// Below 900px the sidebar becomes a slide-in drawer (see .admin-sidebar in CSS).
 import { useState } from 'react'
 import AdminOverview from './AdminOverview'
 import AdminEvents from './AdminEvents'
@@ -45,6 +47,9 @@ const EVENTS_CARDS = [
   { key: 'events-drafts', label: 'Drafts', sub: 'Saved but unpublished', icon: '📝', tone: 'white', disabled: true, badge: 'Soon' },
 ]
 
+// Sidebar sections. Sections with `children` are accordions; each child's
+// `nav` key maps to a rendered page. Sections without children (dashboard,
+// settings) navigate directly when clicked.
 const SECTIONS = [
   {
     key: 'dashboard',
