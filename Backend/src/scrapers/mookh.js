@@ -1,15 +1,18 @@
 const puppeteer = require('puppeteer')
-const { install } = require('@puppeteer/browsers')
+const { install, getInstalledBrowsers } = require('@puppeteer/browsers')
 
 const SOURCE = 'mookh'
 
+const CHROME_CACHE = process.env.PUPPETEER_CACHE_DIR || '/opt/render/.cache/puppeteer'
+
 async function ensureChrome() {
-  try {
-    puppeteer.executablePath()
-  } catch {
-    console.log('[mookh] Chrome not found — installing...')
-    await install({ browser: 'chrome', buildId: 'latest', cacheDir: '/opt/render/.cache/puppeteer' })
-  }
+  const installed = await getInstalledBrowsers({ cacheDir: CHROME_CACHE })
+  const chrome = installed.find(b => b.browser === 'chrome' && b.buildId === 'latest') || installed[0]
+  if (chrome?.executablePath) return chrome.executablePath
+
+  console.log('[mookh] Chrome not found — installing...')
+  const result = await install({ browser: 'chrome', buildId: 'latest', cacheDir: CHROME_CACHE })
+  return result.executablePath
 }
 
 const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 }
@@ -72,9 +75,10 @@ function extractCity(text) {
 }
 
 async function scrape() {
-  await ensureChrome()
+  const executablePath = await ensureChrome()
   const browser = await puppeteer.launch({
     headless: true,
+    executablePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   })
 
