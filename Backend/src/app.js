@@ -61,6 +61,7 @@ app.use('/api/venues', require('./routes/venueRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/system', require('./routes/systemRoutes'));
 app.use('/api/scraper', require('./routes/scraperRoutes'));
 app.use('/api/uploads', require('./routes/uploadRoutes'));
 app.use('/api/advisories', require('./routes/advisoryRoutes'));
