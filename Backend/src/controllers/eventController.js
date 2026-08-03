@@ -1,3 +1,4 @@
+// Event endpoints. `status`: draft = scraped awaiting approval, approved = live.
 const Event = require('../models/Event')
 const { escapeRegex } = require('../utils/sanitize')
 
