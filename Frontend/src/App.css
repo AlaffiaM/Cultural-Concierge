@@ -295,6 +295,45 @@
   transform: translateY(0);
 }
 
+@media (max-width: 600px) {
+  .header {
+    padding: 8px 12px 20px;
+  }
+
+  .logo-img {
+    width: 112px;
+  }
+
+  .user-area {
+    gap: 4px;
+  }
+
+  .user-avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .btn-text {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+
+  .back-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .logo-img {
+    width: 92px;
+  }
+
+  .user-name {
+    display: none;
+  }
+}
+
 /* ===== Main Content ===== */
 
 .main {
