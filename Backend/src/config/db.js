@@ -6,6 +6,7 @@ async function connectDB() {
   console.log('MongoDB connected')
 }
 
+// Deletes past-dated events on boot (+30s) and hourly.
 function startCleanup() {
   const cleanup = async () => {
     try {
