@@ -1,7 +1,5 @@
 import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
-import { getClerkToken } from '../lib/clerk'
-import { API_BASE } from '../lib/api'
 
 export default function AdminSubscribers() {
   const [subscribers, setSubscribers] = useState([])
@@ -20,25 +18,6 @@ export default function AdminSubscribers() {
     const q = search.toLowerCase()
     return s.email.toLowerCase().includes(q) || (s.name || '').toLowerCase().includes(q)
   })
-
-  async function handleExport() {
-    try {
-      const token = await getClerkToken()
-      const res = await fetch(`${API_BASE}/api/admin/subscribers/export`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error('Export failed')
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'subscribers.csv'
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error('[AdminSubscribers] Export failed:', err.message)
-    }
-  }
 
   if (loading) {
     return (
@@ -75,9 +54,6 @@ export default function AdminSubscribers() {
         <span style={{ fontSize: 13, color: 'var(--admin-text-muted)' }}>
           {subscribers.length} total
         </span>
-        <button className="admin-btn admin-btn-secondary" onClick={handleExport}>
-          Export CSV
-        </button>
       </div>
 
       {filtered.length === 0 ? (
