@@ -38,15 +38,6 @@ const TOOLS_CARDS = [
   { key: 'tools-maintenance', label: 'Maintenance', sub: 'Cleanup and system health', icon: '🧹', tone: 'white' },
 ]
 
-const SETTINGS_CARDS = [
-  { key: 'settings-general', label: 'General', sub: 'App and city configuration', icon: '⚙️', tone: 'white' },
-  { key: 'settings-accounts', label: 'Admin Accounts', sub: 'Who has access', icon: '👥', tone: 'white' },
-  { key: 'settings-keys', label: 'API Keys', sub: 'Service configuration status', icon: '🔑', tone: 'white' },
-  { key: 'settings-email', label: 'Email', sub: 'Newsletter and subscribers', icon: '📧', tone: 'white' },
-  { key: 'settings-tags', label: 'Tags', sub: 'Taxonomy and vocabulary', icon: '🏷️', tone: 'white' },
-  { key: 'settings-about', label: 'About', sub: 'Product information', icon: 'ℹ️', tone: 'white' },
-]
-
 const EVENTS_CARDS = [
   { key: 'events-live', label: 'Live Events', sub: 'Approved events in the app', icon: '✅', tone: 'sage' },
   { key: 'events-pending', label: 'Pending Approval', sub: 'Scraped events to review', icon: '⏳', tone: 'copper' },
@@ -87,14 +78,6 @@ const SECTIONS = [
     key: 'settings',
     label: 'Settings',
     icon: SECTION_ICONS.settings,
-    children: [
-      { key: 'settings-general', label: 'General', icon: '⚙️', nav: 'settings-general' },
-      { key: 'settings-accounts', label: 'Admin Accounts', icon: '👥', nav: 'settings-accounts' },
-      { key: 'settings-keys', label: 'API Keys', icon: '🔑', nav: 'settings-keys' },
-      { key: 'settings-email', label: 'Email', icon: '📧', nav: 'settings-email' },
-      { key: 'settings-tags', label: 'Tags', icon: '🏷️', nav: 'settings-tags' },
-      { key: 'settings-about', label: 'About', icon: 'ℹ️', nav: 'settings-about' },
-    ],
   },
 ]
 
@@ -115,12 +98,6 @@ const PAGE_TITLES = {
   'events-live': 'Live Events',
   'events-pending': 'Pending Approval',
   'events-add': 'Add Event',
-  'settings-general': 'General',
-  'settings-accounts': 'Admin Accounts',
-  'settings-keys': 'API Keys',
-  'settings-email': 'Email',
-  'settings-tags': 'Tags',
-  'settings-about': 'About',
 }
 
 const PAGE_SUBTITLES = {
@@ -140,12 +117,6 @@ const PAGE_SUBTITLES = {
   'events-live': 'Approved events (venues + pop-ups) visible in the app',
   'events-pending': 'Scraped events awaiting approval',
   'events-add': 'Create a new event manually',
-  'settings-general': 'App and city configuration',
-  'settings-accounts': 'Who has access to the CMS',
-  'settings-keys': 'Service configuration status',
-  'settings-email': 'Newsletter and subscriber settings',
-  'settings-tags': 'Tag taxonomy and keyword system',
-  'settings-about': 'Product information',
 }
 
 function sectionFor(tab) {
@@ -171,7 +142,7 @@ export default function AdminDashboard({ onBackToApp, user }) {
       case 'dashboard': return <AdminOverview onNavigate={go} />
       case 'content': return <AdminHub cards={CONTENT_CARDS} onNavigate={go} />
       case 'tools': return <AdminHub cards={TOOLS_CARDS} onNavigate={go} />
-      case 'settings': return <AdminHub cards={SETTINGS_CARDS} onNavigate={go} />
+      case 'settings': return <AdminSettings user={user} />
       case 'events-hub': return <AdminHub cards={EVENTS_CARDS} onNavigate={go} />
       case 'content-venues': return <AdminVenues />
       case 'content-advisories': return <AdminAdvisories />
@@ -184,12 +155,6 @@ export default function AdminDashboard({ onBackToApp, user }) {
       case 'events-live': return <AdminEvents />
       case 'events-pending': return <AdminPendingEvents />
       case 'events-add': return <AdminAddEvent onClose={() => go('events-live')} />
-      case 'settings-general': return <AdminSettings section="general" user={user} />
-      case 'settings-accounts': return <AdminSettings section="accounts" user={user} />
-      case 'settings-keys': return <AdminSettings section="keys" user={user} />
-      case 'settings-email': return <AdminSettings section="email" user={user} />
-      case 'settings-tags': return <AdminSettings section="tags" user={user} />
-      case 'settings-about': return <AdminSettings section="about" user={user} />
       default: return <AdminOverview onNavigate={go} />
     }
   }
