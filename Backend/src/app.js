@@ -19,9 +19,18 @@ app.use((req, res, next) => {
   next()
 })
 
-const allowedOrigins = process.env.CLIENT_ORIGIN
-  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim())
-  : ['http://localhost:5173', 'https://culture-conciage.vercel.app', 'https://cultural--concierge.vercel.app', 'https://culture-concierge.onrender.com']
+const DEFAULT_ORIGINS = [
+  'http://localhost:5173',
+  'https://culture-conciage.vercel.app',
+  'https://cultural--concierge.vercel.app',
+  'https://culture-concierge.onrender.com',
+]
+
+const envOrigins = process.env.CLIENT_ORIGIN
+  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean)
+  : []
+
+const allowedOrigins = [...new Set([...DEFAULT_ORIGINS, ...envOrigins])]
 
 app.use(cors({
   origin: allowedOrigins,
