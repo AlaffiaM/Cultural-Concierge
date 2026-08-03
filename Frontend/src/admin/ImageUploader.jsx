@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { getClerkToken } from '../lib/clerk'
+import { API_BASE } from '../lib/api'
 
 export default function ImageUploader({ onUploaded, label = 'Upload Image' }) {
   const [uploading, setUploading] = useState(false)
@@ -19,7 +20,7 @@ export default function ImageUploader({ onUploaded, label = 'Upload Image' }) {
 
       const token = await getClerkToken()
 
-      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/uploads', {
+      const res = await fetch(`${API_BASE}/api/uploads`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
