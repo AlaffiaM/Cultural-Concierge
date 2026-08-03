@@ -7,6 +7,8 @@ const PILLAR_STYLE = {
   SOCIAL: { bg: 'rgba(91,138,154,0.15)', color: '#5B8A9A' },
 }
 
+const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
+
 function PillarBadge({ pillar }) {
   if (!pillar) return <span style={{ color: 'var(--admin-text-muted)', fontSize: 12 }}>—</span>
   const s = PILLAR_STYLE[pillar] || { bg: 'rgba(255,255,255,0.06)', color: '#888' }
@@ -19,13 +21,18 @@ export default function AdminPendingEvents() {
   const [selected, setSelected] = useState(new Set())
   const [approving, setApproving] = useState(false)
   const [filterGhost, setFilterGhost] = useState('all')
+  const [filterCity, setFilterCity] = useState('All')
 
   async function loadPending() {
     setLoading(true)
     try {
       let url = '/api/events/pending'
-      if (filterGhost === 'ghost') url += '?ghost=true'
-      else if (filterGhost === 'venue') url += '?ghost=false'
+      const params = new URLSearchParams()
+      if (filterCity !== 'All') params.set('city', filterCity)
+      if (filterGhost === 'ghost') params.set('ghost', 'true')
+      else if (filterGhost === 'venue') params.set('ghost', 'false')
+      const qs = params.toString()
+      if (qs) url += `?${qs}`
       const data = await adminFetch(url)
       setPending(data)
     } catch (err) {
@@ -35,7 +42,7 @@ export default function AdminPendingEvents() {
     }
   }
 
-  useEffect(() => { loadPending() }, [filterGhost])
+  useEffect(() => { loadPending() }, [filterGhost, filterCity])
 
   function toggleSelect(id) {
     setSelected(prev => {
@@ -95,6 +102,9 @@ export default function AdminPendingEvents() {
       </div>
 
       <div className="admin-toolbar" style={{ marginBottom: 12 }}>
+        <select value={filterCity} onChange={e => setFilterCity(e.target.value)}>
+          {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
         <div className="filter-pills" style={{ display: 'flex', gap: 4, marginRight: 12 }}>
           {[
             { key: 'all', label: 'All' },
