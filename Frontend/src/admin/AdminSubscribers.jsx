@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 import { getClerkToken } from '../lib/clerk'
-
-const API_BASE = import.meta.env.VITE_API_URL || ''
+import { API_BASE } from '../lib/api'
 
 export default function AdminSubscribers() {
   const [subscribers, setSubscribers] = useState([])
