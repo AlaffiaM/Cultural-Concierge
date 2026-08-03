@@ -19,7 +19,7 @@ export default function AdminTags() {
   }, [])
 
   return (
-    <div className="settings-page">
+    <>
       <div className="settings-group-header">Tag Taxonomy</div>
       <div className="settings-section">
         <p className="settings-note">The standard vocabulary used across events and venues.</p>
@@ -49,6 +49,6 @@ export default function AdminTags() {
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }
