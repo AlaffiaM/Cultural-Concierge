@@ -27,6 +27,7 @@ export const sourceLabels = {
   kenyabuzz: 'KenyaBuzz',
   mookh: 'Mookh',
   ticketsasa: 'Ticketsasa',
+  tixafrica: 'Tix Africa',
   curated: 'Curated',
   manual: 'Manual',
 }
