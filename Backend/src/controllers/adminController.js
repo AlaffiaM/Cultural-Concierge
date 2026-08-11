@@ -134,7 +134,7 @@ async function exportVenues(req, res) {
 async function deleteScrapedEvents(req, res) {
   try {
     const result = await Event.deleteMany({
-      source: { $in: ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite'] },
+      source: { $in: ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'tixafrica'] },
     })
     res.json({ deleted: result.deletedCount })
   } catch (err) {
