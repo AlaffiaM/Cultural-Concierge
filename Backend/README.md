@@ -33,7 +33,7 @@ src/
 ├── middleware/           auth.js (Clerk JWT), admin.js (ADMIN_EMAILS allowlist), rateLimiter, errorHandler
 ├── models/               Mongoose schemas: Event, Venue, CityAdvisory, Email
 ├── routes/               Express route modules (all mounted in app.js)
-├── scrapers/             Event scrapers (ticketsasa, kenyabuzz, mookh, eventbrite), venue scrapers (gemini, wikipedia), advisors-gemini
+├── scrapers/             Event scrapers (ticketsasa, kenyabuzz, mookh, eventbrite, tixafrica), venue scrapers (gemini, wikipedia), advisors-gemini
 ├── services/             clerkService (JWT verify + email resolution), scraperService, emailService
 └── utils/                sanitize.js (escapeRegex), imageProcessor.js (Cloudinary), travelBriefUpdater.js
 tests/                    Jest test suites
@@ -69,7 +69,7 @@ tests/                    Jest test suites
 | POST | `/api/venues/scraper/accept` | Accept scraped venues |
 | POST | `/api/venues/batch-enrich` | Fetch Wikipedia images for venues |
 | GET | `/api/venues/lookup` | Look up a single venue image |
-| POST | `/api/scraper/run` | Run event scrapers (ticketsasa, kenyabuzz, mookh, eventbrite) |
+| POST | `/api/scraper/run` | Run event scrapers (ticketsasa, kenyabuzz, mookh, eventbrite, tixafrica) |
 | GET | `/api/scraper/history` | Recently scraped events |
 | POST | `/api/scraper/approve` | Approve multiple scraped events |
 | POST | `/api/advisories/run` | Generate travel advisories via Gemini |
@@ -91,7 +91,7 @@ tests/                    Jest test suites
 
 ## Scrapers
 
-- **Event scrapers** (`ticketsasa`, `kenyabuzz`, `mookh`, `eventbrite`) each export `{ scrape, SOURCE }` and run through `scrapers/index.js`, which handles fuzzy dedup, rejection terms, and upsert into `Event` as `status: "draft"`, `isGhostLocation: true`.
+- **Event scrapers** (`ticketsasa`, `kenyabuzz`, `mookh`, `eventbrite`, `tixafrica`) each export `{ scrape, SOURCE }` and run through `scrapers/index.js`, which handles fuzzy dedup, ban/core-vibe filtering, past-date blocking, and upsert into `Event` as `status: "draft"`, `isGhostLocation: true`.
 - **Venue scrapers** (`venues-gemini`, `venues-wikipedia`) are loaded dynamically by `venueController.runVenueScraper` from the `source` body field (`gemini` / `wikipedia`), inserting venues with `status: "scraped"`.
 - **Advisory scraper** (`advisors-gemini`) generates a `CityAdvisory` per city via Gemini.
 - **Mookh** requires headless Chrome; Puppeteer's cache dir must point at `PUPPETEER_CACHE_DIR` (see `render.yaml`) so `ensureChrome()` finds the installed binary.
