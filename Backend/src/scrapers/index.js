@@ -53,6 +53,7 @@ async function deduplicate(events) {
 async function runScrapers(sources) {
   const results = {}
   const allNew = []
+  const startOfToday = new Date(new Date().toISOString().slice(0, 10))
 
   for (const source of sources) {
     try {
@@ -65,9 +66,14 @@ async function runScrapers(sources) {
         new: 0,
         skipped: scraped.length - unique.length,
         rejected: 0,
+        past: 0,
       }
 
       for (const ev of unique) {
+        if (ev.date && ev.date < startOfToday) {
+          results[source].past++
+          continue
+        }
         if (isBanned(ev.name, ev.description)) {
           results[source].rejected++
           continue
@@ -115,11 +121,19 @@ async function runScrapers(sources) {
         }
       }
     } catch (err) {
-      results[source] = { fetched: 0, new: 0, skipped: 0, error: err.message }
+      results[source] = { fetched: 0, new: 0, skipped: 0, past: 0, error: err.message }
     }
   }
 
-  return { results, events: allNew, total: allNew.length }
+  let removedPast = 0
+  try {
+    const cleanup = await Event.deleteMany({ date: { $lt: startOfToday } })
+    removedPast = cleanup.deletedCount
+  } catch (err) {
+    console.error('[scrapers] failed to purge past events:', err.message)
+  }
+
+  return { results, events: allNew, total: allNew.length, removedPast }
 }
 
 module.exports = { runScrapers }
