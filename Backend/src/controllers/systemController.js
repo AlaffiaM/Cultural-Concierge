@@ -9,7 +9,7 @@ async function getHealth(req, res) {
     const dbState = mongoose.connection.readyState
     const dbStatus = dbState === 1 ? 'connected' : dbState === 2 ? 'connecting' : 'disconnected'
 
-    const lastScrapedEvent = await Event.findOne({ source: { $in: ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'gemini'] } })
+    const lastScrapedEvent = await Event.findOne({ source: { $in: ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'tixafrica', 'gemini'] } })
       .sort({ createdAt: -1 })
       .select('createdAt source')
       .lean()
