@@ -1,4 +1,5 @@
 const axios = require('axios')
+const { classifyType } = require('../utils/eventClassifier')
 
 const SOURCE = 'kenyabuzz'
 const API_BASE = 'https://api-v3.kenyabuzz.com/events/list'
@@ -61,7 +62,7 @@ async function scrape() {
         description: ev.plain_text_desc || ev.description || '',
         imageUrl: ev.poster || '',
         pillar: classifyPillar(ev.name, `${ev.description || ''} ${ev.category_name || ''}`),
-        type: ev.category_name || '',
+        type: classifyType(ev.name, `${ev.description || ''} ${ev.category_name || ''}`),
         venue: ev.location_name || '',
         price: ev.price || ev.ticket_price || ev.cost || '',
         source: SOURCE,
@@ -98,7 +99,7 @@ async function scrape() {
           description: ev.description || '',
           imageUrl: ev.event_poster || ev.poster || '',
           pillar: classifyPillar(ev.event_name || ev.name, ev.description || ''),
-          type: '',
+          type: classifyType(ev.event_name || ev.name, ev.description || ''),
           venue: ev.event_location || '',
           price: ev.price || ev.ticket_price || ev.cost || '',
           source: SOURCE,
