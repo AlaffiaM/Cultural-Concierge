@@ -82,7 +82,7 @@ Sign in with Google via Clerk. Access to the CMS is authorized in **two places**
 
 | Scraper | Source | What it creates |
 |---|---|---|
-| `ticketsasa` / `kenyabuzz` / `mookh` / `eventbrite` | Event listing sites | Draft events (status `draft`, `isGhostLocation: true`) for admin review |
+| `ticketsasa` / `kenyabuzz` / `mookh` / `eventbrite` / `tixafrica` | Event listing sites | Draft events (status `draft`, `isGhostLocation: true`) for admin review |
 | `venues-gemini` | Google Gemini AI | Venues with name, type, pillar, description, tip, address, vibeTags, coordinates |
 | `venues-wikipedia` | Wikipedia GeoSearch API | Venues with name + city + images (no description/tip) |
 | `advisors-gemini` | Google Gemini AI | City travel advisories (security, health, entry reqs) |
