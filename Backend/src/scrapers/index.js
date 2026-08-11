@@ -1,13 +1,8 @@
 // Event scraper pipeline: dedups scraped events (fuzzy name+date+city),
-// rejects unwanted categories, then upserts as draft events for admin review.
+// hard-rejects banned/corporate events, applies the core-vibe positive filter,
+// assigns an approved admin Type, then upserts as draft events for admin review.
 const Event = require('../models/Event')
-
-const REJECTED_TERMS = [
-  'conference', 'corporate', 'seminar', 'summit', 'business',
-  'hackathon', 'webinar',
-  'book', 'books', 'bookstore', 'bookshop', 'book club', 'bookclub',
-  'literary', 'library', 'storytelling', 'meet the author',
-]
+const { isBanned, matchesCoreVibe, classifyType } = require('../utils/eventClassifier')
 
 const CITY_COORDS = {
   Lagos: { lat: 6.5244, lng: 3.3792 },
@@ -73,8 +68,11 @@ async function runScrapers(sources) {
       }
 
       for (const ev of unique) {
-        const text = `${ev.name} ${ev.description || ''}`.toLowerCase()
-        if (REJECTED_TERMS.some(t => text.includes(t))) {
+        if (isBanned(ev.name, ev.description)) {
+          results[source].rejected++
+          continue
+        }
+        if (!matchesCoreVibe(ev.name, ev.description)) {
           results[source].rejected++
           continue
         }
@@ -93,7 +91,7 @@ async function runScrapers(sources) {
                 description: ev.description || '',
                 imageUrl: ev.imageUrl || '',
                 pillar: ev.pillar || 'CULTURE',
-                type: ev.type || '',
+                type: classifyType(ev.name, ev.description) || ev.type || '',
                 venue: ev.venue || '',
                 price: ev.price || '',
                 source: ev.source || source,
