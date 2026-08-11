@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer')
-const { install, getInstalledBrowsers } = require('@puppeteer/browsers')
+const { install, resolveBuildId, detectBrowserPlatform } = require('@puppeteer/browsers')
 const { classifyType } = require('../utils/eventClassifier')
 
 const SOURCE = 'mookh'
@@ -7,12 +7,10 @@ const SOURCE = 'mookh'
 const CHROME_CACHE = process.env.PUPPETEER_CACHE_DIR || '/opt/render/.cache/puppeteer'
 
 async function ensureChrome() {
-  const installed = await getInstalledBrowsers({ cacheDir: CHROME_CACHE })
-  const chrome = installed.find(b => b.browser === 'chrome' && b.buildId === 'latest') || installed[0]
-  if (chrome?.executablePath) return chrome.executablePath
-
-  console.log('[mookh] Chrome not found — installing...')
-  const result = await install({ browser: 'chrome', buildId: 'latest', cacheDir: CHROME_CACHE })
+  const platform = detectBrowserPlatform()
+  const buildId = await resolveBuildId('chrome', platform, 'stable')
+  console.log(`[mookh] Ensuring Chrome ${buildId} (${platform})...`)
+  const result = await install({ browser: 'chrome', buildId, platform, cacheDir: CHROME_CACHE })
   return result.executablePath
 }
 
