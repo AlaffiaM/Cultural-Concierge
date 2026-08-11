@@ -1,5 +1,6 @@
 const axios = require('axios')
 const cheerio = require('cheerio')
+const { classifyType } = require('../utils/eventClassifier')
 
 const SOURCE = 'ticketsasa'
 const BASE_URL = 'https://www.ticketsasa.com/events'
@@ -129,7 +130,7 @@ async function scrape() {
         description: '',
         imageUrl,
         pillar,
-        type: 'Scraped',
+        type: classifyType(name, ''),
         venue: location,
         source: SOURCE,
         url,
