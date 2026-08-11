@@ -1,13 +1,24 @@
 const axios = require('axios')
 const cheerio = require('cheerio')
+const { classifyType } = require('../utils/eventClassifier')
 
 const SOURCE = 'eventbrite'
 
-const CITY_URLS = {
-  Lagos: 'https://www.eventbrite.com/d/nigeria--lagos/events/',
-  Abuja: 'https://www.eventbrite.com/d/nigeria--abuja/events/',
-  Nairobi: 'https://www.eventbrite.com/d/kenya--nairobi/events/',
-  Kigali: 'https://www.eventbrite.com/d/rwanda--kigali/events/',
+const CATEGORIES = [
+  'music',
+  'food-and-drink',
+  'performing-arts',
+  'visual-arts',
+  'hobbies',
+  'health',
+  'other',
+]
+
+const CITY_CATEGORY_URLS = {
+  Lagos: CATEGORIES.map(c => `https://www.eventbrite.com/d/nigeria--lagos/events/${c}/`),
+  Abuja: CATEGORIES.map(c => `https://www.eventbrite.com/d/nigeria--abuja/events/${c}/`),
+  Nairobi: CATEGORIES.map(c => `https://www.eventbrite.com/d/kenya--nairobi/events/${c}/`),
+  Kigali: CATEGORIES.map(c => `https://www.eventbrite.com/d/rwanda--kigali/events/${c}/`),
 }
 
 function classifyPillar(name, desc) {
@@ -20,60 +31,62 @@ function classifyPillar(name, desc) {
 async function scrape() {
   const events = []
 
-  for (const [city, url] of Object.entries(CITY_URLS)) {
-    try {
-      const { data: html } = await axios.get(url, {
-        timeout: 20000,
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-      })
+  for (const [city, urls] of Object.entries(CITY_CATEGORY_URLS)) {
+    for (const url of urls) {
+      try {
+        const { data: html } = await axios.get(url, {
+          timeout: 20000,
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+        })
 
-      const $ = cheerio.load(html)
-      const ldScript = $('script[type="application/ld+json"]').first()
-      if (!ldScript.length) {
-        console.error(`[eventbrite] ${city}: no JSON-LD found`)
-        continue
-      }
-
-      const data = JSON.parse(ldScript.html().trim())
-
-      for (const entry of (data.itemListElement || [])) {
-        const item = entry.item
-        if (!item || !item.name) continue
-
-        const date = new Date(item.startDate)
-        if (isNaN(date.getTime())) continue
-
-        const location = item.location?.name || ''
-        const addressCity = item.location?.address?.addressLocality || city
-        const geo = item.location?.geo || {}
-
-        let time = ''
-        if (item.startDate) {
-          try {
-            time = new Date(item.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-          } catch (_) {}
+        const $ = cheerio.load(html)
+        const ldScript = $('script[type="application/ld+json"]').first()
+        if (!ldScript.length) {
+          console.error(`[eventbrite] ${city} ${url.split('/').slice(-2, -1)[0]}: no JSON-LD found`)
+          continue
         }
 
-        const price = item.offers?.price?.toString() || ''
+        const data = JSON.parse(ldScript.html().trim())
 
-        events.push({
-          name: item.name,
-          city: addressCity,
-          date,
-          description: item.description || '',
-          imageUrl: item.image || '',
-          pillar: classifyPillar(item.name, item.description),
-          type: '',
-          venue: location,
-          price,
-          source: SOURCE,
-          url: item.url || '',
-          time,
-          coordinates: geo.latitude ? { lat: parseFloat(geo.latitude), lng: parseFloat(geo.longitude) } : null,
-        })
+        for (const entry of (data.itemListElement || [])) {
+          const item = entry.item
+          if (!item || !item.name) continue
+
+          const date = new Date(item.startDate)
+          if (isNaN(date.getTime())) continue
+
+          const location = item.location?.name || ''
+          const addressCity = item.location?.address?.addressLocality || city
+          const geo = item.location?.geo || {}
+
+          let time = ''
+          if (item.startDate) {
+            try {
+              time = new Date(item.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+            } catch (_) {}
+          }
+
+          const price = item.offers?.price?.toString() || ''
+
+          events.push({
+            name: item.name,
+            city: addressCity,
+            date,
+            description: item.description || '',
+            imageUrl: item.image || '',
+            pillar: classifyPillar(item.name, item.description),
+            type: classifyType(item.name, item.description),
+            venue: location,
+            price,
+            source: SOURCE,
+            url: item.url || '',
+            time,
+            coordinates: geo.latitude ? { lat: parseFloat(geo.latitude), lng: parseFloat(geo.longitude) } : null,
+          })
+        }
+      } catch (err) {
+        console.error(`[eventbrite] ${city} ${url} failed:`, err.message)
       }
-    } catch (err) {
-      console.error(`[eventbrite] ${city} failed:`, err.message)
     }
   }
 
