@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 import AdminVenueScraper from './AdminVenueScraper'
 
-const SOURCES = ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite']
+const SOURCES = ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'tixafrica']
 
 const SOURCE_LABELS = {
   ticketsasa: 'Ticketsasa',
   kenyabuzz: 'KenyaBuzz',
   mookh: 'Mookh',
   eventbrite: 'Eventbrite',
+  tixafrica: 'Tix Africa',
 }
 
 const SOURCE_COLORS = {
@@ -16,6 +17,7 @@ const SOURCE_COLORS = {
   kenyabuzz: '#8A9A5B',
   mookh: '#5B8A9A',
   eventbrite: '#9A5B8A',
+  tixafrica: '#3a6b8a',
 }
 
 function sanitize(text) {
