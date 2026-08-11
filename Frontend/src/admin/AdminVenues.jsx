@@ -8,7 +8,7 @@ const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['All', 'CULTURE', 'WELLNESS', 'SOCIAL']
 const PAGE_SIZE = 20
 
-const SCRAPER_SOURCES = ['gemini', 'ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite']
+const SCRAPER_SOURCES = ['gemini', 'ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'tixafrica']
 
 function sourceStyle(source) {
   if (!source) return { bg: 'rgba(255,255,255,0.06)', color: '#666', label: '—' }
