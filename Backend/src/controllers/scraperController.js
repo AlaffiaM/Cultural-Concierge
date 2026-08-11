@@ -1,7 +1,7 @@
 const Event = require('../models/Event')
 const { runScrapers } = require('../services/scraperService')
 
-const SCRAPER_SOURCES = ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite']
+const SCRAPER_SOURCES = ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'tixafrica']
 
 async function runScraper(req, res) {
   try {
