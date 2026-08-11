@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer')
 const { install, getInstalledBrowsers } = require('@puppeteer/browsers')
+const { classifyType } = require('../utils/eventClassifier')
 
 const SOURCE = 'mookh'
 
@@ -140,7 +141,7 @@ async function scrape() {
         description: '',
         imageUrl: card.imageUrl || '',
         pillar: classifyPillar(name, ''),
-        type: '',
+        type: classifyType(name, ''),
         venue,
         source: SOURCE,
         time,
