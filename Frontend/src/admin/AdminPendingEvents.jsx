@@ -79,6 +79,42 @@ export default function AdminPendingEvents() {
     }
   }
 
+  async function handleDelete() {
+    const ids = Array.from(selected)
+    if (ids.length === 0) return
+    if (!confirm(`Permanently delete ${ids.length} event${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      await adminFetch('/api/scraper/reject', {
+        method: 'POST',
+        body: JSON.stringify({ eventIds: ids }),
+      })
+      setPending(prev => prev.filter(e => !ids.includes(e._id)))
+      setSelected(new Set())
+    } catch (err) {
+      console.error('[AdminPendingEvents] Delete failed:', err.message)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  async function handleDeleteSingle(id) {
+    if (!confirm('Permanently delete this event? This cannot be undone.')) return
+    setDeleting(true)
+    try {
+      await adminFetch('/api/scraper/reject', {
+        method: 'POST',
+        body: JSON.stringify({ eventIds: [id] }),
+      })
+      setPending(prev => prev.filter(e => e._id !== id))
+      setSelected(prev => { const next = new Set(prev); next.delete(id); return next })
+    } catch (err) {
+      console.error('[AdminPendingEvents] Delete failed:', err.message)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   if (loading) {
     return <p className="admin-empty">Loading pending events...</p>
   }
@@ -132,6 +168,14 @@ export default function AdminPendingEvents() {
           style={{ padding: '4px 14px', fontSize: 12, marginLeft: 'auto' }}
         >
           {approving ? 'Approving...' : `Approve (${selected.size})`}
+        </button>
+        <button
+          className="admin-btn"
+          onClick={handleDelete}
+          disabled={selected.size === 0 || deleting}
+          style={{ padding: '4px 14px', fontSize: 12, marginLeft: 6, background: 'rgba(220,50,50,0.15)', color: '#dc3232', border: '1px solid rgba(220,50,50,0.3)', borderRadius: 6, cursor: selected.size === 0 || deleting ? 'not-allowed' : 'pointer', opacity: selected.size === 0 || deleting ? 0.4 : 1 }}
+        >
+          {deleting ? 'Deleting...' : `Delete (${selected.size})`}
         </button>
       </div>
 
