@@ -127,7 +127,9 @@ async function fetchCity(city) {
 }
 
 async function scrape() {
+  let error = null
   const events = []
+  const errors = []
 
   for (const city of Object.keys(CITY_COUNTRY)) {
     try {
@@ -136,17 +138,20 @@ async function scrape() {
       console.log(`[tixafrica] ${city}: ${cityEvents.length} events`)
     } catch (err) {
       console.error(`[tixafrica] ${city} failed:`, err.message)
+      errors.push(`${city}: ${err.message}`)
     }
   }
 
-  return events
+  error = errors.length ? errors.join('; ') : null
+  return { events, error }
 }
 
 module.exports = { scrape, SOURCE }
 
 if (require.main === module) {
-  scrape().then(r => {
-    console.log(`Got ${r.length} events from Tix Africa`)
-    r.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(6)} | ${e.name.slice(0, 60)}`))
+  scrape().then(({ events, error }) => {
+    if (error) console.error(`[tixafrica] Error: ${error}`)
+    console.log(`Got ${events.length} events from Tix Africa`)
+    events.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(6)} | ${e.name.slice(0, 60)}`))
   }).catch(e => console.error(e))
 }
