@@ -22,7 +22,10 @@ const BANNED_TERMS = [
   'conference', 'corporate', 'seminar', 'summit', 'business',
   'hackathon', 'webinar', 'expo', 'forum', 'symposium', 'b2b',
   'trade show', 'panel', 'networking', 'delegate',
-  'book', 'books', 'bookstore', 'bookshop', 'book club', 'bookclub',
+  // book-related promo (narrowed: 'book'/'book club' removed — they catch
+  // legitimate social reading groups like "Silent Book Club Gathering").
+  // Keep venue/promo signals; add explicit promo event types.
+  'bookstore', 'bookshop', 'book launch', 'book signing', 'book fair',
   'literary', 'library', 'storytelling', 'meet the author',
 
   // professional training / technical / B2B:
@@ -67,7 +70,7 @@ const CORE_VIBE_REGEX = new RegExp(
     // Wellness
     '\\b(wellness|yoga|meditation|retreat|spa|fitness|pilates|reiki|breathwork|mindfulness|self.?care|healing|recovery|run.?club|workout)\\b',
     // Sip & paint / visual art
-    '\\b(sip.{0,3}paint|paint.{0,3}sip|painting|art class|art workshop|arts? and crafts?)\\b',
+    '\\b(sip.{0,5}paint|paint.{0,5}sip|painting|art class|art workshop|arts? and crafts?)\\b',
     // Exhibitions / galleries
     '\\b(exhibition|gallery|art show|art fair|museum|vernissage|open.?studio)\\b',
     // Festivals / fairs
@@ -78,8 +81,10 @@ const CORE_VIBE_REGEX = new RegExp(
     '\\b(pop.?up|popup|market|food fair|night market|stall|vendors?|boutique)\\b',
     // Food & drink
     '\\b(brunch|sundowner|dinner|degustation|wine tasting|tasting menu|food|dining|chef|cuisine)\\b',
-    // Workshops / classes
-    '\\b(workshop|masterclass|pottery|ceramics|craft|class|learn|course|journaling|knitting)\\b',
+    // Workshops / classes / social groups
+    '\\b(workshop|masterclass|pottery|ceramics|craft|class|learn|course|journaling|knitting|book club|reading group)\\b',
+    // Outdoor / nature activities
+    '\\b(walk|walking|hike|hiking|trail|outdoor|nature walk)\\b',
     // Performance / entertainment
     '\\b(comedy|theatre|theater|play|ballet|opera|dance|kizomba|performing arts|stand.?up)\\b',
   ].join('|'),
@@ -87,11 +92,11 @@ const CORE_VIBE_REGEX = new RegExp(
 )
 
 const TYPE_RULES = [
-  { type: 'Wellness', regex: /\b(wellness|yoga|meditation|retreat|spa|fitness|pilates|reiki|breathwork|mindfulness|self.?care|healing|recovery|run.?club|workout)\b/ },
+  { type: 'Wellness', regex: /\b(wellness|yoga|meditation|retreat|spa|fitness|pilates|reiki|breathwork|mindfulness|self.?care|healing|recovery|run.?club|workout|walk|walking|hike|hiking|trail)\b/ },
   { type: 'Brunch', regex: /\bbrunch\b/ },
   { type: 'Sundowner', regex: /\b(sundowner|sunset)\b/ },
   { type: 'Exhibition', regex: /\b(exhibition|gallery|art show|art fair|museum|vernissage|open.?studio)\b/ },
-  { type: 'Workshop', regex: /\b(sip.{0,3}paint|paint.{0,3}sip|workshop|masterclass|pottery|ceramics|craft|class|learn|course|journaling|knitting)\b/ },
+  { type: 'Workshop', regex: /\b(sip.{0,5}paint|paint.{0,5}sip|workshop|masterclass|pottery|ceramics|craft|class|learn|course|journaling|knitting|book club|reading group)\b/ },
   { type: 'Festival', regex: /\b(festival|fayre|fest|bazaar)\b/ },
   { type: 'Pop-up', regex: /\b(pop.?up|popup|market|food fair|night market|stall|vendors?|boutique)\b/ },
   { type: 'Dining', regex: /\b(dinner|degustation|wine tasting|tasting menu|food|dining|chef|cuisine)\b/ },
