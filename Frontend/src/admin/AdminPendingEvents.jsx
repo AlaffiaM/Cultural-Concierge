@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
+import { useToast } from './Toast'
+import SelectAllCheckbox from './components/SelectAllCheckbox'
 
 const PILLAR_STYLE = {
   CULTURE: { bg: 'rgba(180,95,45,0.12)', color: '#B45F2D', border: '#B45F2D' },
@@ -39,6 +41,7 @@ function SourceBadge({ source }) {
 }
 
 export default function AdminPendingEvents() {
+  const { addToast } = useToast()
   const [pending, setPending] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(new Set())
@@ -61,6 +64,7 @@ export default function AdminPendingEvents() {
       setPending(data)
     } catch (err) {
       console.error('[AdminPendingEvents] Load failed:', err.message)
+      addToast('Failed to load pending events', 'error')
     } finally {
       setLoading(false)
     }
@@ -95,8 +99,10 @@ export default function AdminPendingEvents() {
       })
       setPending(prev => prev.filter(e => !ids.includes(e._id)))
       setSelected(new Set())
+      addToast(`${ids.length} event${ids.length > 1 ? 's' : ''} approved`, 'success')
     } catch (err) {
       console.error('[AdminPendingEvents] Approve failed:', err.message)
+      addToast('Failed to approve events', 'error')
     } finally {
       setApproving(false)
     }
@@ -114,8 +120,10 @@ export default function AdminPendingEvents() {
       })
       setPending(prev => prev.filter(e => !ids.includes(e._id)))
       setSelected(new Set())
+      addToast(`${ids.length} event${ids.length > 1 ? 's' : ''} deleted`, 'success')
     } catch (err) {
       console.error('[AdminPendingEvents] Delete failed:', err.message)
+      addToast('Failed to delete events', 'error')
     } finally {
       setDeleting(false)
     }
@@ -131,8 +139,10 @@ export default function AdminPendingEvents() {
       })
       setPending(prev => prev.filter(e => e._id !== id))
       setSelected(prev => { const next = new Set(prev); next.delete(id); return next })
+      addToast('Event deleted', 'success')
     } catch (err) {
       console.error('[AdminPendingEvents] Delete failed:', err.message)
+      addToast('Failed to delete event', 'error')
     } finally {
       setDeleting(false)
     }
@@ -190,9 +200,6 @@ export default function AdminPendingEvents() {
             </button>
           ))}
         </div>
-        <button className="admin-btn-sm admin-btn-edit" onClick={selectAll} style={{ fontSize: 11, padding: '5px 10px' }}>
-          {selected.size === pending.length ? 'Deselect All' : 'Select All'}
-        </button>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
           <button
@@ -218,7 +225,13 @@ export default function AdminPendingEvents() {
         <table className="admin-table" style={{ fontSize: 12 }}>
           <thead>
             <tr>
-              <th style={{ width: 32, textAlign: 'center' }}></th>
+              <th style={{ width: 32, textAlign: 'center' }}>
+                <SelectAllCheckbox
+                  checked={pending.length > 0 && selected.size === pending.length}
+                  indeterminate={selected.size > 0 && selected.size < pending.length}
+                  onChange={selectAll}
+                />
+              </th>
               <th style={{ width: 48 }}></th>
               <th>Name</th>
               <th>Venue</th>
