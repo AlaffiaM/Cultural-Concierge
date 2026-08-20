@@ -2279,3 +2279,112 @@
   flex-shrink: 0;
   opacity: 0.75;
 }
+
+/* ─── Editor shared styles ─── */
+.editor-wrap {
+  max-width: 720px;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.editor-title {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  color: #fff;
+}
+
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.editor-field-wide {
+  grid-column: 1 / -1;
+}
+
+.editor-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-text-muted);
+  margin-bottom: 6px;
+}
+
+.editor-field input,
+.editor-field select,
+.editor-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  font-size: 14px;
+  color: var(--admin-text);
+  background: var(--admin-card);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.editor-field input:focus,
+.editor-field select:focus,
+.editor-field textarea:focus {
+  outline: none;
+  border-color: var(--admin-copper);
+  box-shadow: 0 0 0 3px var(--admin-copper-glow);
+}
+
+.editor-field input::placeholder,
+.editor-field textarea::placeholder {
+  color: var(--admin-text-muted);
+}
+
+.editor-field textarea {
+  resize: vertical;
+}
+
+.editor-actions {
+  margin-top: 24px;
+}
+
+/* ─── Confirm Modal ─── */
+.confirm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+}
+
+.confirm-modal-card {
+  background: var(--admin-card);
+  border-radius: 12px;
+  padding: 28px 24px 20px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  border: 1px solid var(--admin-border);
+}
+
+.confirm-modal-message {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--admin-text);
+}
+
+.confirm-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
