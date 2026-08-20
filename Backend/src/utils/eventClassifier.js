@@ -18,11 +18,26 @@ const ALLOWED_TYPES = [
 ]
 
 const BANNED_TERMS = [
+  // existing:
   'conference', 'corporate', 'seminar', 'summit', 'business',
   'hackathon', 'webinar', 'expo', 'forum', 'symposium', 'b2b',
   'trade show', 'panel', 'networking', 'delegate',
   'book', 'books', 'bookstore', 'bookshop', 'book club', 'bookclub',
   'literary', 'library', 'storytelling', 'meet the author',
+
+  // professional training / technical / B2B:
+  'training', 'skills training', 'certification', 'certified',
+  'installation', 'technician', 'compliance', 'audit', 'regulatory',
+  'human resource', 'hr management', 'recruitment', 'hiring',
+  'career fair', 'job fair', 'bootcamp', 'onboarding', 'accreditation',
+  'cctv', 'biometric', 'access control', 'project management',
+  'procurement', 'logistics', 'supply chain', 'engineering skills',
+
+  // AI / tech-professional:
+  'ai masterclass', 'ai training', 'ai bootcamp', 'ai certification',
+  'ai course', 'ai workshop', 'ai content creation', 'ai for business',
+  'ai solutions', 'ai tools', 'ai skills', 'artificial intelligence',
+  'machine learning', 'data science', 'generative ai',
 ]
 
 const CORE_VIBE_REGEX = new RegExp(
