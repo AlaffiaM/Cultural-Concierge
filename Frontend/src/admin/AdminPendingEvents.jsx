@@ -1,21 +1,9 @@
 import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 import { useToast } from './Toast'
+import { useConfirm } from './ConfirmModal'
 import SelectAllCheckbox from './components/SelectAllCheckbox'
-
-const PILLAR_STYLE = {
-  CULTURE: { bg: 'rgba(180,95,45,0.12)', color: '#B45F2D', border: '#B45F2D' },
-  WELLNESS: { bg: 'rgba(138,154,91,0.12)', color: '#8A9A5B', border: '#8A9A5B' },
-  SOCIAL: { bg: 'rgba(91,138,154,0.12)', color: '#5B8A9A', border: '#5B8A9A' },
-}
-
-const SOURCE_STYLE = {
-  ticketsasa: { bg: 'rgba(180,95,45,0.12)', color: '#B45F2D' },
-  kenyabuzz: { bg: 'rgba(138,154,91,0.12)', color: '#8A9A5B' },
-  mookh: { bg: 'rgba(91,138,154,0.12)', color: '#5B8A9A' },
-  eventbrite: { bg: 'rgba(154,91,138,0.12)', color: '#9A5B8A' },
-  tixafrica: { bg: 'rgba(58,107,138,0.12)', color: '#3a6b8a' },
-}
+import { PILLAR_STYLE, SOURCE_STYLE } from './components/adminStyles'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 
@@ -42,6 +30,7 @@ function SourceBadge({ source }) {
 
 export default function AdminPendingEvents() {
   const { addToast } = useToast()
+  const { showConfirm, ConfirmModal } = useConfirm()
   const [pending, setPending] = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(new Set())
@@ -111,7 +100,7 @@ export default function AdminPendingEvents() {
   async function handleDelete() {
     const ids = Array.from(selected)
     if (ids.length === 0) return
-    if (!confirm(`Permanently delete ${ids.length} event${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return
+    if (!await showConfirm(`Permanently delete ${ids.length} event${ids.length > 1 ? 's' : ''}? This cannot be undone.`)) return
     setDeleting(true)
     try {
       await adminFetch('/api/scraper/reject', {
@@ -130,7 +119,7 @@ export default function AdminPendingEvents() {
   }
 
   async function handleDeleteSingle(id) {
-    if (!confirm('Permanently delete this event? This cannot be undone.')) return
+    if (!await showConfirm('Permanently delete this event? This cannot be undone.')) return
     setDeleting(true)
     try {
       await adminFetch('/api/scraper/reject', {
@@ -302,6 +291,7 @@ export default function AdminPendingEvents() {
           </tbody>
         </table>
       </div>
+      {ConfirmModal}
     </div>
   )
 }
