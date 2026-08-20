@@ -37,6 +37,8 @@ function extractTime(dateStr) {
 }
 
 async function scrape() {
+  let error = null
+  const errors = []
   const seen = new Set()
   const events = []
 
@@ -72,6 +74,7 @@ async function scrape() {
     }
   } catch (err) {
     console.error('[kenyabuzz] featured-events failed:', err.message)
+    errors.push(`featured-events: ${err.message}`)
   }
 
   // Fetch all events (paginated)
@@ -109,18 +112,21 @@ async function scrape() {
       }
     } catch (err) {
       console.error(`[kenyabuzz] all-events page ${page} failed:`, err.message)
+      errors.push(`all-events page ${page}: ${err.message}`)
       break
     }
   }
 
-  return events
+  error = errors.length ? errors.join('; ') : null
+  return { events, error }
 }
 
 module.exports = { scrape, SOURCE }
 
 if (require.main === module) {
-  scrape().then(r => {
-    console.log(`Got ${r.length} events from KenyaBuzz`)
-    r.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(6)} | ${e.name.slice(0, 50)}`))
+  scrape().then(({ events, error }) => {
+    if (error) console.error(`[kenyabuzz] Error: ${error}`)
+    console.log(`Got ${events.length} events from KenyaBuzz`)
+    events.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(6)} | ${e.name.slice(0, 50)}`))
   }).catch(e => console.error(e))
 }
