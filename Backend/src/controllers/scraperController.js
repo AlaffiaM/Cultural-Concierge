@@ -63,4 +63,20 @@ async function approveScrapedEvents(req, res) {
   }
 }
 
-module.exports = { runScraper, getScraperHistory, approveScrapedEvents }
+async function rejectScrapedEvents(req, res) {
+  try {
+    const { eventIds } = req.body
+    if (!eventIds || !Array.isArray(eventIds) || eventIds.length === 0) {
+      return res.status(400).json({ message: 'eventIds array is required' })
+    }
+
+    const result = await Event.deleteMany({ _id: { $in: eventIds } })
+
+    res.json({ deleted: result.deletedCount })
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
+  }
+}
+
+module.exports = { runScraper, getScraperHistory, approveScrapedEvents, rejectScrapedEvents }
