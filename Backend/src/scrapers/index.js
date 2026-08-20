@@ -58,7 +58,7 @@ async function runScrapers(sources) {
   for (const source of sources) {
     try {
       const scraper = require(`./${source}`)
-      const scraped = await scraper.scrape()
+      const { events: scraped, error: scrapeError } = await scraper.scrape()
       const unique = await deduplicate(scraped)
 
       results[source] = {
@@ -67,6 +67,7 @@ async function runScrapers(sources) {
         skipped: scraped.length - unique.length,
         rejected: 0,
         past: 0,
+        error: scrapeError || null,
       }
 
       for (const ev of unique) {
