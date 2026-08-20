@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
-
-const PILLAR_STYLES = {
-  WELLNESS: { bg: 'rgba(138,154,91,0.15)', text: '#8A9A5B', label: 'Wellness' },
-  CULTURE: { bg: 'rgba(180,95,45,0.15)', text: '#B45F2D', label: 'Culture' },
-  SOCIAL: { bg: 'rgba(91,138,154,0.15)', text: '#5B8A9A', label: 'Social' },
-}
+import { PILLAR_STYLE } from './components/adminStyles'
 
 const CITY_COLORS = ['#B45F2D', '#8A9A5B', '#5B8A9A', '#9A5B8A', '#B48A5B', '#5B9A8A']
 
@@ -124,18 +119,18 @@ export default function AdminAnalytics({ onNavigate }) {
           </div>
           <div className="pillar-breakdown-card">
             {stats.pillarBreakdown.map(p => {
-              const s = PILLAR_STYLES[p.pillar] || { bg: 'rgba(255,255,255,0.06)', text: '#888', label: p.pillar }
+              const s = PILLAR_STYLE[p.pillar] || { bg: 'rgba(255,255,255,0.06)', text: '#888', label: p.pillar }
               const total = stats.pillarBreakdown.reduce((sum, x) => sum + x.count, 0)
               const pct = Math.round((p.count / total) * 100)
               return (
                 <div key={p.pillar} className="pillar-row">
                   <div className="pillar-row-header">
-                    <span className="pillar-row-label" style={{ color: s.text }}>{s.label}</span>
+                    <span className="pillar-row-label" style={{ color: s.color }}>{s.label}</span>
                     <span className="pillar-row-count">{p.count}</span>
                     <span className="pillar-row-pct">{pct}%</span>
                   </div>
                   <div className="pillar-track">
-                    <div className="pillar-fill" style={{ width: `${pct}%`, background: s.text }} />
+                    <div className="pillar-fill" style={{ width: `${pct}%`, background: s.color }} />
                   </div>
                 </div>
               )
