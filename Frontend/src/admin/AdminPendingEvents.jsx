@@ -225,6 +225,18 @@ export default function AdminPendingEvents() {
                 <td>
                   <PillarBadge pillar={ev.pillar} />
                 </td>
+                <td>
+                  <button
+                    onClick={() => handleDeleteSingle(ev._id)}
+                    disabled={deleting}
+                    title="Delete event"
+                    style={{ background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer', color: '#dc3232', opacity: deleting ? 0.4 : 0.6, padding: '2px 6px', borderRadius: 4, fontSize: 14, lineHeight: 1 }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                      <path d="M3 3.5h8M5.5 3.5V2.5a1 1 0 011-1h1a1 1 0 011 1v1M6 5.5v3.5M8 5.5v3.5M4 3.5l.5 8a1 1 0 001 1h3a1 1 0 001-1l.5-8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
