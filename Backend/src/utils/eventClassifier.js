@@ -38,6 +38,13 @@ const BANNED_TERMS = [
   'ai course', 'ai workshop', 'ai content creation', 'ai for business',
   'ai solutions', 'ai tools', 'ai skills', 'artificial intelligence',
   'machine learning', 'data science', 'generative ai',
+
+  // real estate / property:
+  'real estate', 'property expo', 'buy & sell', 'buy and sell',
+
+  // agriculture / industrial trade:
+  'agro', 'poultry', 'agriculture expo', 'agtech',
+  'interplast', 'interplastpack', 'packaging expo', 'industrial expo', 'manufacturing expo',
 ]
 
 const CORE_VIBE_REGEX = new RegExp(
