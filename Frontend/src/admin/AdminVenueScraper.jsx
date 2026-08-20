@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { adminFetch } from './adminApi'
 import { useToast } from './Toast'
+import SelectAllCheckbox from './components/SelectAllCheckbox'
 
 const SOURCE_LABELS = {
   gemini: 'AI Research',
@@ -44,6 +45,7 @@ export default function AdminVenueScraper() {
       setScraperSelected(new Set())
     } catch (err) {
       console.error('[AdminVenueScraper] Load existing failed:', err.message)
+      addToast('Failed to load existing scraped venues', 'error')
     } finally {
       setLoadingExisting(false)
     }
@@ -87,22 +89,21 @@ export default function AdminVenueScraper() {
       addToast(`${ids.length} venue(s) accepted`, 'success')
     } catch (err) {
       console.error('[AdminVenueScraper] Accept failed:', err.message)
+      addToast('Failed to accept venues', 'error')
     } finally {
       setAccepting(false)
     }
   }
 
   function renderTable(items, title) {
+    const selectableItems = items.filter(s => s.status === 'scraped')
     return (
       <div>
         <div className="admin-toolbar" style={{ marginBottom: 8 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--admin-text)' }}>
             {title} ({items.length})
           </span>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="admin-btn-sm admin-btn-edit" onClick={() => selectAllScraper(items)}>
-              {scraperSelected.size === items.length ? 'Deselect All' : 'Select All'}
-            </button>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
             <button
               className="admin-btn admin-btn-primary"
               onClick={() => handleAccept()}
@@ -118,7 +119,13 @@ export default function AdminVenueScraper() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th style={{ width: 28 }}></th>
+                <th style={{ width: 28 }}>
+                  <SelectAllCheckbox
+                    checked={selectableItems.length > 0 && scraperSelected.size === selectableItems.length}
+                    indeterminate={scraperSelected.size > 0 && scraperSelected.size < selectableItems.length}
+                    onChange={() => selectAllScraper(selectableItems)}
+                  />
+                </th>
                 <th style={{ width: 180 }}>Images</th>
                 <th>Venue</th>
                 <th>Address</th>
