@@ -191,6 +191,7 @@ export default function AdminPendingEvents() {
               <th>City</th>
               <th>Date</th>
               <th>Pillar</th>
+              <th style={{ width: 32 }}></th>
             </tr>
           </thead>
           <tbody>
