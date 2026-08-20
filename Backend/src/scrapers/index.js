@@ -72,17 +72,24 @@ async function runScrapers(sources) {
 
       for (const ev of unique) {
         if (ev.date && ev.date < startOfToday) {
+          console.log(`[classify] SKIP (past): "${ev.name}" date=${ev.date?.toISOString?.()?.slice(0,10)}`)
           results[source].past++
           continue
         }
-        if (isBanned(ev.name, ev.description)) {
+        const banned = isBanned(ev.name, ev.description)
+        const vibe = matchesCoreVibe(ev.name, ev.description)
+        console.log(`[classify] "${ev.name}" | banned=${banned} | vibe=${vibe} | desc="${(ev.description || '').slice(0, 60)}"`)
+        if (banned) {
+          console.log(`[classify] REJECT (banned): "${ev.name}"`)
           results[source].rejected++
           continue
         }
-        if (!matchesCoreVibe(ev.name, ev.description)) {
+        if (!vibe) {
+          console.log(`[classify] REJECT (no vibe): "${ev.name}"`)
           results[source].rejected++
           continue
         }
+        console.log(`[classify] ACCEPT: "${ev.name}"`)
 
         const coords = ev.coordinates || CITY_COORDS[ev.city] || CITY_COORDS.Nairobi
         const normalizedDate = ev.date ? new Date(new Date(ev.date).toISOString().slice(0, 10)) : new Date()
