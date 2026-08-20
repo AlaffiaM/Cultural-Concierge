@@ -3,16 +3,12 @@ import { adminFetch } from './adminApi'
 import EventEditor from './EventEditor'
 import { useConfirm } from './ConfirmModal'
 import SelectAllCheckbox from './components/SelectAllCheckbox'
+import Pagination from './components/Pagination'
+import { PILLAR_STYLE } from './components/adminStyles'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['All', 'CULTURE', 'WELLNESS', 'SOCIAL']
 const PAGE_SIZE = 20
-
-const PILLAR_STYLE = {
-  CULTURE: { bg: 'rgba(180,95,45,0.15)', color: '#B45F2D' },
-  WELLNESS: { bg: 'rgba(138,154,91,0.15)', color: '#8A9A5B' },
-  SOCIAL: { bg: 'rgba(91,138,154,0.15)', color: '#5B8A9A' },
-}
 
 function PillarBadge({ pillar }) {
   if (!pillar) return <span style={{ color: 'var(--admin-text-muted)', fontSize: 12 }}>—</span>
@@ -139,32 +135,6 @@ export default function AdminEvents() {
     return <span className="vibe-pill" style={{ background: s.bg, color: s.color }}>{vibe}</span>
   }
 
-  function Pagination() {
-    if (totalPages <= 1) return null
-    const from = (page - 1) * PAGE_SIZE + 1
-    const to = Math.min(page * PAGE_SIZE, total)
-    const pages = []
-    const maxVisible = 5
-    let start = Math.max(1, page - Math.floor(maxVisible / 2))
-    let end = Math.min(totalPages, start + maxVisible - 1)
-    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1)
-
-    for (let i = start; i <= end; i++) pages.push(i)
-
-    return (
-      <div className="pagination-bar">
-        <span className="pagination-info">Showing {from}–{to} of {total}</span>
-        <div className="pagination-controls">
-          <button className="pagination-btn" disabled={page <= 1} onClick={() => goToPage(page - 1)}>‹</button>
-          {start > 1 && <><button className="pagination-btn" onClick={() => goToPage(1)}>1</button><span className="pagination-ellipsis">…</span></>}
-          {pages.map(p => <button key={p} className={`pagination-btn ${p === page ? 'pagination-active' : ''}`} onClick={() => goToPage(p)}>{p}</button>)}
-          {end < totalPages && <><span className="pagination-ellipsis">…</span><button className="pagination-btn" onClick={() => goToPage(totalPages)}>{totalPages}</button></>}
-          <button className="pagination-btn" disabled={page >= totalPages} onClick={() => goToPage(page + 1)}>›</button>
-        </div>
-      </div>
-    )
-  }
-
   if (showEditor) {
     return <EventEditor event={editingEvent} onClose={handleEditorClose} />
   }
@@ -220,7 +190,7 @@ export default function AdminEvents() {
             </div>
           )}
 
-          <Pagination />
+          <Pagination page={page} totalPages={totalPages} total={total} pageSize={PAGE_SIZE} onPageChange={goToPage} />
 
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -300,7 +270,7 @@ export default function AdminEvents() {
             </table>
           </div>
 
-          <Pagination />
+          <Pagination page={page} totalPages={totalPages} total={total} pageSize={PAGE_SIZE} onPageChange={goToPage} />
         </>
       )}
       {ConfirmModal}
