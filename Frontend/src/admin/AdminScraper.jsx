@@ -142,7 +142,7 @@ export default function AdminScraper() {
         const rejected = r?.rejected || 0
 
         if (r?.error) {
-          setStatus(src, { state: 'error', count: 0, error: r.error })
+          setStatus(src, { state: 'done', count: newCount, fetched: r.fetched, skipped, rejected, error: r.error })
           addLog(src, r.error, 'error')
         } else {
           setStatus(src, { state: 'done', count: newCount, fetched: r.fetched, skipped, rejected })
@@ -263,7 +263,7 @@ export default function AdminScraper() {
               key={src}
               className="admin-stat-card scraper-source-card"
               style={{
-                borderColor: status.state === 'running' ? 'rgba(240,180,41,0.3)' : status.state === 'done' ? 'rgba(138,154,91,0.3)' : status.state === 'error' ? 'rgba(220,50,50,0.3)' : undefined,
+                borderColor: status.state === 'running' ? 'rgba(240,180,41,0.3)' : status.state === 'error' ? 'rgba(220,50,50,0.3)' : status.state === 'done' && status.error ? 'rgba(220,50,50,0.3)' : status.state === 'done' ? 'rgba(138,154,91,0.3)' : undefined,
                 transition: 'all 0.3s ease',
               }}
             >
@@ -306,6 +306,11 @@ export default function AdminScraper() {
                       {status.skipped > 0 && <span style={{ marginLeft: 8, opacity: 0.6 }}>{status.skipped} dupes</span>}
                       {status.rejected > 0 && <span style={{ marginLeft: 8, opacity: 0.6 }}>{status.rejected} filtered</span>}
                     </span>
+                  )}
+                  {status.state === 'done' && status.error && (
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#dc3232', lineHeight: 1.4 }}>
+                      {status.error}
+                    </div>
                   )}
                   {status.state === 'error' && (
                     <span style={{ color: '#dc3232' }}>{status.error || 'Failed'}</span>
