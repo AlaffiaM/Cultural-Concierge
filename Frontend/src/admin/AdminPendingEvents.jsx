@@ -20,6 +20,7 @@ export default function AdminPendingEvents() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(new Set())
   const [approving, setApproving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [filterGhost, setFilterGhost] = useState('all')
   const [filterCity, setFilterCity] = useState('All')
 
