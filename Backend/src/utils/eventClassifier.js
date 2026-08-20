@@ -45,6 +45,21 @@ const BANNED_TERMS = [
   // agriculture / industrial trade:
   'agro', 'poultry', 'agriculture expo', 'agtech',
   'interplast', 'interplastpack', 'packaging expo', 'industrial expo', 'manufacturing expo',
+
+  // private / personal celebrations:
+  // NOTE: 'wedding' is safe because 'expo' is already banned above,
+  // so "Wedding Expo" is already rejected. Only catches private weddings.
+  'birthday', 'birthday party', 'birthday lunch', 'birthday dinner',
+  'wedding', 'bridal shower', 'baby shower',
+  'anniversary celebration', 'anniversary gala',
+  'private celebration', 'private party',
+  'invite only', 'by invitation',
+
+  // tech-industry / corporate events:
+  // NOTE: 'summit' and 'conference' already banned above — these are
+  // explicit for grep-ability and catch compound forms like "tech summit".
+  'tech fest', 'tech summit', 'tech exchange', 'tech conference',
+  'the lagos exchange',
 ]
 
 const CORE_VIBE_REGEX = new RegExp(
