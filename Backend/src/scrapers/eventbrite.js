@@ -29,6 +29,8 @@ function classifyPillar(name, desc) {
 }
 
 async function scrape() {
+  let error = null
+  const errors = []
   const events = []
 
   for (const [city, urls] of Object.entries(CITY_CATEGORY_URLS)) {
@@ -86,18 +88,21 @@ async function scrape() {
         }
       } catch (err) {
         console.error(`[eventbrite] ${city} ${url} failed:`, err.message)
+        errors.push(`${city} ${url.split('/').slice(-2, -1)[0]}: ${err.message}`)
       }
     }
   }
 
-  return events
+  error = errors.length ? errors.join('; ') : null
+  return { events, error }
 }
 
 module.exports = { scrape, SOURCE }
 
 if (require.main === module) {
-  scrape().then(r => {
-    console.log(`Got ${r.length} events from Eventbrite`)
-    r.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(6)} | ${e.name.slice(0, 60)}`))
+  scrape().then(({ events, error }) => {
+    if (error) console.error(`[eventbrite] Error: ${error}`)
+    console.log(`Got ${events.length} events from Eventbrite`)
+    events.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(6)} | ${e.name.slice(0, 60)}`))
   }).catch(e => console.error(e))
 }
