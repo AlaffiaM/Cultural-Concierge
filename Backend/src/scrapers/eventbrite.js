@@ -21,6 +21,9 @@ const CITY_CATEGORY_URLS = {
   Kigali: CATEGORIES.map(c => `https://www.eventbrite.com/d/rwanda--kigali/events/${c}/`),
 }
 
+const DELAY_MS = 1500
+const RATE_LIMIT_DELAY_MS = 10000
+
 function classifyPillar(name, desc) {
   const text = `${name} ${desc || ''}`.toLowerCase()
   if (/\b(wellness|yoga|meditation|spa|fitness|marathon|health|run|workout|sports?|pilates|retreat|massage|beauty|gym|exercise|nutrition|skincare|self.?care|mindfulness|therapy|healing|breathwork|recovery|stretch|body|soul)\b/.test(text)) return 'WELLNESS'
@@ -32,15 +35,32 @@ async function scrape() {
   let error = null
   const errors = []
   const events = []
+  let consecutiveRateLimits = 0
 
   for (const [city, urls] of Object.entries(CITY_CATEGORY_URLS)) {
     for (const url of urls) {
+      if (consecutiveRateLimits >= 3) {
+        console.warn(`[eventbrite] ${city}: skipping remaining categories — too many consecutive 429s`)
+        errors.push(`${city}: skipped (rate limited)`)
+        break
+      }
+
       try {
-        const { data: html } = await axios.get(url, {
+        const { data: html, status } = await axios.get(url, {
           timeout: 20000,
           headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+          validateStatus: s => s < 500,
         })
 
+        if (status === 429) {
+          consecutiveRateLimits++
+          console.warn(`[eventbrite] ${city} ${url.split('/').slice(-2, -1)[0]}: 429 rate limited (consecutive: ${consecutiveRateLimits}), backing off ${RATE_LIMIT_DELAY_MS}ms`)
+          errors.push(`${city} ${url.split('/').slice(-2, -1)[0]}: 429 rate limited`)
+          await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY_MS))
+          continue
+        }
+
+        consecutiveRateLimits = 0
         const $ = cheerio.load(html)
         const ldScript = $('script[type="application/ld+json"]').first()
         if (!ldScript.length) {
@@ -90,6 +110,8 @@ async function scrape() {
         console.error(`[eventbrite] ${city} ${url} failed:`, err.message)
         errors.push(`${city} ${url.split('/').slice(-2, -1)[0]}: ${err.message}`)
       }
+
+      await new Promise(r => setTimeout(r, DELAY_MS))
     }
   }
 
