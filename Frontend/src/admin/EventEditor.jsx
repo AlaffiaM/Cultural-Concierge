@@ -242,7 +242,7 @@ export default function EventEditor({ event, onClose }) {
       </div>
 
       <div className="editor-actions">
-        <button className="btn btn-primary" onClick={handleSave} disabled={saving || !form.name || !form.date}>
+        <button className="admin-btn admin-btn-primary" onClick={handleSave} disabled={saving || !form.name || !form.date}>
           {saving ? 'Saving...' : isEditing ? 'Update Event' : 'Create Event'}
         </button>
       </div>
