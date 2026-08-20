@@ -246,7 +246,7 @@ export default function VenueEditor({ venue, onClose }) {
       </div>
 
       <div className="editor-actions">
-        <button className="btn btn-primary" onClick={handleSave} disabled={saving || !form.name}>
+        <button className="admin-btn admin-btn-primary" onClick={handleSave} disabled={saving || !form.name}>
           {saving ? 'Saving...' : isEditing ? 'Update Venue' : 'Create Venue'}
         </button>
       </div>
