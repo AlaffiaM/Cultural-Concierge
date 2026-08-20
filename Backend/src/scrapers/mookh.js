@@ -74,6 +74,7 @@ function extractCity(text) {
 }
 
 async function scrape() {
+  let error = null
   const executablePath = await ensureChrome()
   const browser = await puppeteer.launch({
     headless: true,
@@ -148,18 +149,20 @@ async function scrape() {
     }
   } catch (err) {
     console.error('[mookh] Scrape failed:', err.message)
+    error = err.message
   } finally {
     await browser.close()
   }
 
-  return events
+  return { events, error }
 }
 
 module.exports = { scrape, SOURCE }
 
 if (require.main === module) {
-  scrape().then(r => {
-    console.log(`Got ${r.length} events from Mookh`)
-    r.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(8)} | ${e.name.slice(0, 50)}`))
+  scrape().then(({ events, error }) => {
+    if (error) console.error(`[mookh] Error: ${error}`)
+    console.log(`Got ${events.length} events from Mookh`)
+    events.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(8)} | ${e.name.slice(0, 50)}`))
   }).catch(e => console.error(e))
 }
