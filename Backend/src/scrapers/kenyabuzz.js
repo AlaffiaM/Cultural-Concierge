@@ -4,6 +4,21 @@ const { classifyType } = require('../utils/eventClassifier')
 const SOURCE = 'kenyabuzz'
 const API_BASE = 'https://api-v3.kenyabuzz.com/events/list'
 
+async function fetchWithRetry(url, opts = {}, retries = 1, delayMs = 2000) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await axios.get(url, opts)
+    } catch (err) {
+      if (attempt < retries) {
+        console.warn(`[kenyabuzz] ${url} attempt ${attempt + 1} failed (${err.message}), retrying in ${delayMs}ms...`)
+        await new Promise(r => setTimeout(r, delayMs))
+      } else {
+        throw err
+      }
+    }
+  }
+}
+
 function classifyPillar(name, desc) {
   const text = `${name} ${desc || ''}`.toLowerCase()
   if (/\b(wellness|yoga|meditation|spa|fitness|marathon|health|run|workout|sports?|pilates|retreat|massage|beauty|gym|exercise|nutrition|skincare|self.?care|mindfulness|therapy|healing|breathwork|recovery|stretch|body|soul)\b/.test(text)) return 'WELLNESS'
@@ -44,7 +59,7 @@ async function scrape() {
 
   // Fetch featured events (full details)
   try {
-    const { data } = await axios.get(`${API_BASE}/featured-events`, {
+    const { data } = await fetchWithRetry(`${API_BASE}/featured-events`, {
       timeout: 15000,
       headers: { 'Accept': 'application/json' },
     })
@@ -80,7 +95,7 @@ async function scrape() {
   // Fetch all events (paginated)
   for (let page = 1; page <= 5; page++) {
     try {
-      const { data } = await axios.get(`${API_BASE}/all-events/${page}`, {
+      const { data } = await fetchWithRetry(`${API_BASE}/all-events/${page}`, {
         timeout: 15000,
         headers: { 'Accept': 'application/json' },
       })
@@ -113,11 +128,10 @@ async function scrape() {
     } catch (err) {
       console.error(`[kenyabuzz] all-events page ${page} failed:`, err.message)
       errors.push(`all-events page ${page}: ${err.message}`)
-      break
     }
   }
 
-  error = errors.length ? errors.join('; ') : null
+  error = errors.length ? `partial failure (${errors.length} page(s) failed: ${errors.join('; ')})` : null
   return { events, error }
 }
 
