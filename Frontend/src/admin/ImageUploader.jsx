@@ -53,10 +53,9 @@ export default function ImageUploader({ onUploaded, label = 'Upload Image' }) {
       />
       <button
         type="button"
-        className="btn btn-sm"
+        className="admin-btn admin-btn-sm"
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
-        style={{ fontSize: 12, padding: '4px 10px' }}
       >
         {uploading ? 'Uploading...' : label}
       </button>
