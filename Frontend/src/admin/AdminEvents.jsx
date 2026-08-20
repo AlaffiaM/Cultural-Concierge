@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { adminFetch } from './adminApi'
 import EventEditor from './EventEditor'
 import { useConfirm } from './ConfirmModal'
+import SelectAllCheckbox from './components/SelectAllCheckbox'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['All', 'CULTURE', 'WELLNESS', 'SOCIAL']
@@ -226,11 +227,10 @@ export default function AdminEvents() {
               <thead>
                 <tr>
                   <th style={{ width: 32 }}>
-                    <input
-                      type="checkbox"
+                    <SelectAllCheckbox
                       checked={events.length > 0 && selectedIds.size === events.length}
+                      indeterminate={selectedIds.size > 0 && selectedIds.size < events.length}
                       onChange={selectAll}
-                      style={{ accentColor: 'var(--admin-copper)' }}
                     />
                   </th>
                   <th style={{ width: 50 }}>Image</th>
