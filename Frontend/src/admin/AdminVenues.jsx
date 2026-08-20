@@ -3,6 +3,7 @@ import { adminFetch } from './adminApi'
 import VenueEditor from './VenueEditor'
 import { useConfirm } from './ConfirmModal'
 import { useToast } from './Toast'
+import SelectAllCheckbox from './components/SelectAllCheckbox'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['All', 'CULTURE', 'WELLNESS', 'SOCIAL']
@@ -243,11 +244,10 @@ export default function AdminVenues() {
               <thead>
                 <tr>
                   <th style={{ width: 32 }}>
-                    <input
-                      type="checkbox"
+                    <SelectAllCheckbox
                       checked={venues.length > 0 && selectedIds.size === venues.length}
+                      indeterminate={selectedIds.size > 0 && selectedIds.size < venues.length}
                       onChange={selectAll}
-                      style={{ accentColor: 'var(--admin-copper)' }}
                     />
                   </th>
                   <th style={{ width: 50 }}>Image</th>
