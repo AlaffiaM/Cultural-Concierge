@@ -93,6 +93,7 @@ function extractImageMapFromPayload(html) {
 }
 
 async function scrape() {
+  let error = null
   const events = []
   let imageMap = {}
 
@@ -139,16 +140,18 @@ async function scrape() {
     })
   } catch (err) {
     console.error('[ticketsasa] Scrape failed:', err.message)
+    error = err.message
   }
 
-  return events
+  return { events, error }
 }
 
 module.exports = { scrape, SOURCE }
 
 if (require.main === module) {
-  scrape().then(r => {
-    console.log(`Got ${r.length} events from ticketsasa`)
-    r.forEach(e => console.log(`  ${e.date.toISOString().slice(0,10)} | ${e.name} | venue:${(e.venue || '').slice(0,40)} | img:${e.imageUrl ? 'YES' : 'no'}`))
+  scrape().then(({ events, error }) => {
+    if (error) console.error(`[ticketsasa] Error: ${error}`)
+    console.log(`Got ${events.length} events from ticketsasa`)
+    events.forEach(e => console.log(`  ${e.date.toISOString().slice(0,10)} | ${e.name} | venue:${(e.venue || '').slice(0,40)} | img:${e.imageUrl ? 'YES' : 'no'}`))
   }).catch(e => console.error(e))
 }
