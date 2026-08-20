@@ -4,6 +4,7 @@ import VenueEditor from './VenueEditor'
 import { useConfirm } from './ConfirmModal'
 import { useToast } from './Toast'
 import SelectAllCheckbox from './components/SelectAllCheckbox'
+import Pagination from './components/Pagination'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['All', 'CULTURE', 'WELLNESS', 'SOCIAL']
@@ -166,31 +167,6 @@ export default function AdminVenues() {
     loadVenues()
   }
 
-  function Pagination() {
-    if (totalPages <= 1) return null
-    const from = (page - 1) * PAGE_SIZE + 1
-    const to = Math.min(page * PAGE_SIZE, total)
-    const pages = []
-    const maxVisible = 5
-    let start = Math.max(1, page - Math.floor(maxVisible / 2))
-    let end = Math.min(totalPages, start + maxVisible - 1)
-    if (end - start + 1 < maxVisible) start = Math.max(1, end - maxVisible + 1)
-    for (let i = start; i <= end; i++) pages.push(i)
-
-    return (
-      <div className="pagination-bar">
-        <span className="pagination-info">Showing {from}–{to} of {total}</span>
-        <div className="pagination-controls">
-          <button className="pagination-btn" disabled={page <= 1} onClick={() => goToPage(page - 1)}>‹</button>
-          {start > 1 && <><button className="pagination-btn" onClick={() => goToPage(1)}>1</button><span className="pagination-ellipsis">…</span></>}
-          {pages.map(p => <button key={p} className={`pagination-btn ${p === page ? 'pagination-active' : ''}`} onClick={() => goToPage(p)}>{p}</button>)}
-          {end < totalPages && <><span className="pagination-ellipsis">…</span><button className="pagination-btn" onClick={() => goToPage(totalPages)}>{totalPages}</button></>}
-          <button className="pagination-btn" disabled={page >= totalPages} onClick={() => goToPage(page + 1)}>›</button>
-        </div>
-      </div>
-    )
-  }
-
   if (showEditor) {
     return <VenueEditor venue={editingVenue} onClose={handleEditorClose} />
   }
@@ -199,7 +175,7 @@ export default function AdminVenues() {
     <div>
       <div className="admin-toolbar">
         <button className="admin-btn admin-btn-primary" onClick={handleCreate}>+ Create Venue</button>
-        <button className="admin-btn admin-btn-secondary" onClick={handleEnrichImages} disabled={enriching} style={{ fontSize: 11, padding: '4px 10px' }}>
+        <button className="admin-btn-sm admin-btn-secondary" onClick={handleEnrichImages} disabled={enriching}>
           {enriching ? 'Enriching...' : 'Enrich Images'}
         </button>
         <select value={filterCity} onChange={e => { setFilterCity(e.target.value); setPage(1) }}>
@@ -237,7 +213,7 @@ export default function AdminVenues() {
             </div>
           )}
 
-          <Pagination />
+          <Pagination page={page} totalPages={totalPages} total={total} pageSize={PAGE_SIZE} onPageChange={goToPage} />
 
           <div className="admin-table-wrap">
             <table className="admin-table">
@@ -354,7 +330,7 @@ export default function AdminVenues() {
             </table>
           </div>
 
-          <Pagination />
+          <Pagination page={page} totalPages={totalPages} total={total} pageSize={PAGE_SIZE} onPageChange={goToPage} />
         </>
       )}
       {ConfirmModal}
