@@ -2179,97 +2179,9 @@
 .admin-tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
 .admin-tag-chip { padding: 5px 12px; border-radius: 999px; background: rgba(180,95,45,0.12); border: 1px solid rgba(180,95,45,0.25); color: var(--admin-copper); font-size: 12px; font-weight: 500; }
 
-/* ===== Accordion Nav ===== */
+/* ===== Flat Nav ===== */
 
-.admin-nav-section {
-  display: flex;
-  flex-direction: column;
-}
-
-.admin-nav-section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
-  border-radius: var(--admin-radius-sm);
-  cursor: pointer;
-  color: var(--admin-text-muted);
-  transition: all 0.15s;
-  user-select: none;
-}
-
-.admin-nav-section-header:hover {
-  background: rgba(255,255,255,0.04);
-  color: var(--admin-text);
-}
-
-.admin-nav-section-header.active {
-  color: var(--admin-copper);
-  font-weight: 600;
-}
-
-.admin-nav-section-icon {
-  display: flex;
-  align-items: center;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.admin-nav-section-icon svg {
-  width: 18px;
-  height: 18px;
-}
-
-.admin-nav-section-header.active .admin-nav-section-icon {
-  opacity: 1;
-}
-
-.admin-nav-section-label {
-  font-size: 13px;
-  font-weight: 600;
-  flex: 1;
-}
-
-.admin-nav-chevron {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border: none;
-  background: transparent;
-  color: var(--admin-text-muted);
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.admin-nav-chevron svg {
-  width: 14px;
-  height: 14px;
-}
-
-.admin-nav-chevron:hover {
-  color: var(--admin-text);
-}
-
-.admin-nav-children {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding-left: 16px;
-  margin-bottom: 4px;
-}
-
-.admin-nav-child {
-  gap: 10px;
-  padding: 8px 12px;
-  font-size: 12.5px;
-}
-
-.admin-nav-child-icon {
+.admin-nav-icon {
   width: 16px;
   height: 16px;
   display: flex;
@@ -2278,6 +2190,10 @@
   font-size: 13px;
   flex-shrink: 0;
   opacity: 0.75;
+}
+
+.admin-sidebar-item.active .admin-nav-icon {
+  opacity: 1;
 }
 
 /* ─── Editor shared styles ─── */
