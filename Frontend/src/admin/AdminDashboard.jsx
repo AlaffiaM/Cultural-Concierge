@@ -18,19 +18,34 @@ import './AdminDashboard.css'
 
 // Flat sidebar nav. Every item navigates directly to its page — no
 // accordions, no hub/landing pages.
+const ICONS = {
+  dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="8" height="8" rx="1" /><rect x="13" y="3" width="8" height="8" rx="1" /><rect x="3" y="13" width="8" height="8" rx="1" /><rect x="13" y="13" width="8" height="8" rx="1" /></svg>,
+  check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12.5l5 5 11-11" /></svg>,
+  clock: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>,
+  plus: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>,
+  pin: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg>,
+  compass: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5l-2 5-5 2 2-5 5-2z" /></svg>,
+  mail: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="1" /><path d="M3 7l9 6 9-6" /></svg>,
+  bolt: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" /></svg>,
+  chart: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" /></svg>,
+  box: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" /><path d="M3 8l9 5 9-5M12 13v8" /></svg>,
+  wrench: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4L15 12l-3-3 2.7-2.7z" /></svg>,
+  gear: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z" /></svg>,
+};
+
 const NAV_ITEMS = [
-  { tab: 'dashboard', label: 'Dashboard', icon: '🏠' },
-  { tab: 'events-live', label: 'Live Events', icon: '✅' },
-  { tab: 'events-pending', label: 'Pending Approval', icon: '⏳' },
-  { tab: 'events-add', label: 'Add Event', icon: '➕' },
-  { tab: 'content-venues', label: 'Venues', icon: '📍' },
-  { tab: 'content-advisories', label: 'Advisories', icon: '🧭' },
-  { tab: 'content-subscribers', label: 'Subscribers', icon: '✉️' },
-  { tab: 'tools-scrapers', label: 'Scrapers', icon: '⚡' },
-  { tab: 'tools-analytics', label: 'Analytics', icon: '📊' },
-  { tab: 'tools-import-export', label: 'Import / Export', icon: '📦' },
-  { tab: 'tools-maintenance', label: 'Maintenance', icon: '🧹' },
-  { tab: 'settings', label: 'Settings', icon: '⚙️' },
+  { tab: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { tab: 'events-live', label: 'Live Events', icon: 'check' },
+  { tab: 'events-pending', label: 'Pending Approval', icon: 'clock' },
+  { tab: 'events-add', label: 'Add Event', icon: 'plus' },
+  { tab: 'content-venues', label: 'Venues', icon: 'pin' },
+  { tab: 'content-advisories', label: 'Advisories', icon: 'compass' },
+  { tab: 'content-subscribers', label: 'Subscribers', icon: 'mail' },
+  { tab: 'tools-scrapers', label: 'Scrapers', icon: 'bolt' },
+  { tab: 'tools-analytics', label: 'Analytics', icon: 'chart' },
+  { tab: 'tools-import-export', label: 'Import / Export', icon: 'box' },
+  { tab: 'tools-maintenance', label: 'Maintenance', icon: 'wrench' },
+  { tab: 'settings', label: 'Settings', icon: 'gear' },
 ]
 
 const PAGE_TITLES = {
@@ -108,7 +123,7 @@ export default function AdminDashboard({ onBackToApp, user }) {
               className={`admin-sidebar-item ${activeTab === item.tab ? 'active' : ''}`}
               onClick={() => go(item.tab)}
             >
-              <span className="admin-nav-icon">{item.icon}</span>
+              <span className="admin-nav-icon">{ICONS[item.icon]}</span>
               <span>{item.label}</span>
             </button>
           ))}
