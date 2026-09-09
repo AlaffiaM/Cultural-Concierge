@@ -246,7 +246,7 @@ export default function AdminScraper() {
             background: anyRunning ? 'rgba(240,180,41,0.15)' : 'rgba(180,95,45,0.2)',
             fontSize: 16,
           }}>
-            {anyRunning ? <div className="admin-spinner" /> : '⚡'}
+            {anyRunning ? <div className="admin-spinner" /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" /></svg>}
           </div>
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontWeight: 600, fontSize: 13 }}>{anyRunning ? 'Scraping...' : 'Run All Sources'}</div>
@@ -330,28 +330,28 @@ export default function AdminScraper() {
           <div className="admin-stats-grid" style={{ marginBottom: 20 }}>
             <div className="admin-stat-card">
               <div className="admin-stat-header">
-                <div className="admin-stat-icon copper">📥</div>
+                <div className="admin-stat-icon copper"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z" /><path d="M3 8l9 5 9-5M12 13v8" /><path d="M7 6l10 5.5" /></svg></div>
               </div>
               <div className="admin-stat-number">{totalFetched || '—'}</div>
               <div className="admin-stat-label">Fetched</div>
             </div>
             <div className="admin-stat-card">
               <div className="admin-stat-header">
-                <div className="admin-stat-icon sage">✨</div>
+                <div className="admin-stat-icon sage"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.8 5.6L20 10l-6.2 1.4L12 17l-1.8-5.6L4 10l6.2-1.4L12 3z" /></svg></div>
               </div>
               <div className="admin-stat-number">{totalNew || '—'}</div>
               <div className="admin-stat-label">New</div>
             </div>
             <div className="admin-stat-card">
               <div className="admin-stat-header">
-                <div className="admin-stat-icon white">⏭</div>
+                <div className="admin-stat-icon white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 12h12" /></svg></div>
               </div>
               <div className="admin-stat-number">{totalRejected || '—'}</div>
               <div className="admin-stat-label">Rejected</div>
             </div>
             <div className="admin-stat-card">
               <div className="admin-stat-header">
-                <div className="admin-stat-icon white">🔁</div>
+                <div className="admin-stat-icon white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v4a4 4 0 0 0 4 4 4 4 0 0 0-4 4v4M20 4v4a4 4 0 0 1-4 4 4 4 0 0 1 4 4v4M4 12h16" /></svg></div>
               </div>
               <div className="admin-stat-number">{totalFetched - totalNew - totalRejected || '—'}</div>
               <div className="admin-stat-label">Dupes Skipped</div>
