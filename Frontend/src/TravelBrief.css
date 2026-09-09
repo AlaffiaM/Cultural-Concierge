@@ -11,10 +11,17 @@
 }
 
 .empty-state-icon {
-  font-size: 48px;
+  width: 44px;
+  height: 44px;
   display: block;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
   opacity: 0.6;
+  color: var(--text-muted);
+}
+
+.empty-state-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .empty-state p {
@@ -26,9 +33,9 @@
 /* ===== Hero ===== */
 
 .tb-hero {
-  border-radius: var(--radius-lg);
-  padding: 32px 28px 24px;
-  margin-bottom: 20px;
+  border-radius: var(--radius);
+  padding: 34px 30px 26px;
+  margin-bottom: 22px;
   position: relative;
   overflow: hidden;
 }
@@ -37,7 +44,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.55) 100%);
+  background: linear-gradient(180deg, rgba(20, 16, 10, 0.16) 0%, rgba(20, 16, 10, 0.55) 100%);
   pointer-events: none;
 }
 
@@ -45,7 +52,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 30% 40%, rgba(255,255,255,0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 30% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -58,44 +65,49 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .tb-hero-name {
   font-family: var(--heading);
-  font-size: 32px;
-  font-weight: 800;
+  font-size: 38px;
+  font-weight: 700;
   color: #fff;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.005em;
   margin: 0;
-  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
-  line-height: 1.1;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
+  line-height: 1.08;
 }
 
 .tb-hero-country {
-  font-size: 14px;
-  color: rgba(255,255,255,0.75);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.82);
   font-weight: 500;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.26em;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .tb-hero-updated {
   font-size: 10px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.85);
   font-weight: 500;
-  background: rgba(0,0,0,0.2);
-  padding: 3px 10px;
-  border-radius: 8px;
+  background: rgba(20, 16, 10, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .tb-badge-static {
-  background: rgba(255,255,255,0.18) !important;
+  background: rgba(255, 255, 255, 0.16) !important;
   color: #fff !important;
   font-size: 10px !important;
-  padding: 4px 12px !important;
-  border-radius: 8px !important;
+  padding: 5px 12px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   backdrop-filter: blur(4px);
 }
 
@@ -103,14 +115,15 @@
 
 .tb-overview {
   font-size: 14px;
-  line-height: 1.8;
+  line-height: 1.85;
   color: var(--text);
-  margin: 0 0 20px;
-  padding: 18px 22px;
+  margin: 0 0 22px;
+  padding: 20px 24px;
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  border-left: 3px solid var(--brass);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
 }
 
 .tb-overview strong {
@@ -124,73 +137,87 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 14px 18px;
-  margin-bottom: 20px;
-  background: linear-gradient(135deg, rgba(46,125,50,0.07) 0%, rgba(46,125,50,0.12) 100%);
-  border: 1px solid rgba(46,125,50,0.2);
-  border-radius: var(--radius);
+  padding: 15px 18px;
+  margin-bottom: 22px;
+  background: var(--card-bg);
+  border: 1px solid rgba(126, 140, 88, 0.22);
+  border-left: 3px solid var(--sage);
+  border-radius: var(--radius-sm);
   font-size: 13px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--text);
 }
 
 .tb-airport-icon {
-  font-size: 20px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   margin-top: 1px;
+  color: var(--sage-deep);
+}
+
+.tb-airport-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .tb-airport-text strong {
-  color: #2d7a31;
+  color: var(--sage-deep);
   font-weight: 700;
 }
 
-/* ===== Tab Bar (pill-style toggle) ===== */
+/* ===== Tab Bar (classic underline toggle) ===== */
 
 .tb-tabs {
   display: flex;
   gap: 0;
-  margin-bottom: 20px;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  padding: 4px;
-  position: relative;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--border);
 }
 
 .tb-tab {
   flex: 1;
-  padding: 10px 12px;
+  padding: 12px 12px;
   border: none;
-  border-radius: 9px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
   background: transparent;
   color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   font-family: inherit;
   position: relative;
-  z-index: 1;
 }
 
 .tb-tab-icon {
-  font-size: 15px;
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+}
+
+.tb-tab-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .tb-tab:hover {
-  color: var(--copper);
+  color: var(--text);
 }
 
 .tb-tab.active {
-  background: var(--card-bg);
   color: var(--copper);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-bottom-color: var(--copper);
+  font-weight: 700;
 }
 
 /* ===== Section ===== */
@@ -198,7 +225,7 @@
 .tb-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 /* ===== Badge Row ===== */
@@ -211,23 +238,33 @@
 }
 
 .tb-badge {
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  border: 1px solid transparent;
+}
+
+.tb-badge svg {
+  width: 15px;
+  height: 15px;
 }
 
 .tb-badge-green {
-  background: rgba(46,125,50,0.1);
-  color: #2d7a31;
+  background: rgba(126, 140, 88, 0.1);
+  border-color: rgba(126, 140, 88, 0.22);
+  color: var(--sage-deep);
 }
 
 .tb-badge-amber {
-  background: rgba(232,154,34,0.1);
-  color: #c47e14;
+  background: rgba(196, 126, 20, 0.1);
+  border-color: rgba(196, 126, 20, 0.24);
+  color: #a86a10;
 }
 
 .tb-crime {
@@ -245,12 +282,13 @@
 }
 
 .tb-outbreaks-title {
+  font-family: var(--body);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 8px 0 2px;
+  letter-spacing: 0.18em;
+  margin: 10px 0 2px;
 }
 
 .tb-details {
@@ -262,16 +300,16 @@
 }
 
 .tb-details:hover {
-  border-color: var(--copper-subtle);
+  border-color: rgba(180, 95, 45, 0.25);
 }
 
 .tb-details[open] {
-  border-color: var(--border);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border-color: rgba(180, 95, 45, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .tb-summary {
-  padding: 14px 16px;
+  padding: 15px 18px;
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
@@ -295,6 +333,7 @@
 
 .tb-summary::after {
   content: '+';
+  font-family: var(--heading);
   font-size: 18px;
   font-weight: 400;
   color: var(--text-faint);
@@ -305,39 +344,44 @@
 
 .tb-details[open] .tb-summary::after {
   content: '−';
-  transform: rotate(90deg);
 }
 
 .tb-instruction {
-  padding: 0 16px 16px;
+  padding: 0 18px 16px;
   margin: 0;
   font-size: 13px;
   color: var(--text-muted);
-  line-height: 1.7;
+  line-height: 1.75;
+  border-top: 1px solid var(--border-light);
+  padding-top: 12px;
 }
 
 /* ===== Risk Badge ===== */
 
 .tb-risk {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--copper);
   background: var(--copper-subtle);
-  padding: 3px 10px;
-  border-radius: 10px;
+  border: 1px solid rgba(180, 95, 45, 0.16);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
   white-space: nowrap;
   flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 /* ===== Subtitle ===== */
 
 .tb-subtitle {
+  font-family: var(--body);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 12px 0 6px;
+  letter-spacing: 0.18em;
+  margin: 14px 0 8px;
 }
 
 /* ===== Entry Requirements ===== */
@@ -345,29 +389,29 @@
 .tb-entry {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .tb-entry-block {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 18px;
+  padding: 20px;
   transition: box-shadow 0.2s;
 }
 
 .tb-entry-block:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-sm);
 }
 
 .tb-entry-label {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.12em;
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .tb-entry-items {
@@ -382,13 +426,13 @@
   color: var(--text);
   background: var(--bg);
   padding: 6px 14px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   transition: all 0.2s;
 }
 
 .tb-entry-item:hover {
-  border-color: var(--copper-subtle);
+  border-color: rgba(180, 95, 45, 0.3);
   color: var(--copper);
 }
 
@@ -396,16 +440,16 @@
 
 @media (max-width: 600px) {
   .tb-hero {
-    padding: 24px 20px 20px;
+    padding: 26px 20px 22px;
     border-radius: var(--radius);
   }
 
   .tb-hero-name {
-    font-size: 26px;
+    font-size: 30px;
   }
 
   .tb-overview {
-    padding: 14px 16px;
+    padding: 16px 18px;
     font-size: 13px;
   }
 }
