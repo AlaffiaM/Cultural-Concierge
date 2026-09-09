@@ -30,21 +30,21 @@ export default function AdminAnalytics({ onNavigate }) {
       {stats.eventsThisWeek > 0 && (
         <div className="admin-insights-row" style={{ marginBottom: 28 }}>
           <div className="admin-insight-card">
-            <span className="admin-insight-icon">📈</span>
+            <span className="admin-insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 17l6-6 4 4 8-8" /><path d="M15 7h6v6" /></svg></span>
             <div>
               <span className="admin-insight-value">+{stats.eventsThisWeek}</span>
               <span className="admin-insight-label">events this week</span>
             </div>
           </div>
           <div className="admin-insight-card">
-            <span className="admin-insight-icon">📊</span>
+            <span className="admin-insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" /></svg></span>
             <div>
               <span className="admin-insight-value">{allCities.length}</span>
               <span className="admin-insight-label">cities covered</span>
             </div>
           </div>
           <div className="admin-insight-card">
-            <span className="admin-insight-icon">🏷️</span>
+            <span className="admin-insight-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7" /><path d="M4 13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2M9 9h6M9 13h6" /></svg></span>
             <div>
               <span className="admin-insight-value">{totalContent}</span>
               <span className="admin-insight-label">events & venues tracked</span>
