@@ -324,10 +324,17 @@ function App() {
 
               <div className="venues-header">
                 <div className="segmented-control">
-                  <button className={viewMode === "travelbrief" ? "active" : ""} onClick={() => setViewMode("travelbrief")}>&#x1F6F0;&#xFE0F; Travel Brief</button>
-                  <button className={viewMode === "places" ? "active" : ""} onClick={() => setViewMode("places")}>&#x1F5FA;&#xFE0F; Venues</button>
+                  <button className={viewMode === "travelbrief" ? "active" : ""} onClick={() => setViewMode("travelbrief")}>
+                    <span className="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg></span>
+                    Travel Brief
+                  </button>
+                  <button className={viewMode === "places" ? "active" : ""} onClick={() => setViewMode("places")}>
+                    <span className="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.5" /></svg></span>
+                    Venues
+                  </button>
                   <button className={viewMode === "happenings" ? "active" : ""} onClick={() => setViewMode("happenings")}>
-                    &#x1F4C5; Happenings{events.length > 0 ? ` (${events.length})` : ""}
+                    <span className="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="17" rx="1" /><path d="M3 9h18M8 2v4M16 2v4" /></svg></span>
+                    Happenings{events.length > 0 ? ` (${events.length})` : ""}
                   </button>
                 </div>
               </div>
