@@ -63,6 +63,9 @@ const BANNED_TERMS = [
   // explicit for grep-ability and catch compound forms like "tech summit".
   'tech fest', 'tech summit', 'tech exchange', 'tech conference',
   'the lagos exchange',
+
+  // specific known offenders / NGO & institute seminars:
+  'initiatives of change', 'digital bridge institute', 'living differently',
 ]
 
 const CORE_VIBE_REGEX = new RegExp(
