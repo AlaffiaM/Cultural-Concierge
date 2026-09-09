@@ -105,7 +105,7 @@ export default function AdminMaintenance({ exportOnly }) {
                 onClick={() => handleExport(endpoint, filename)}
                 disabled={!!exporting}
               >
-                <div className="admin-quick-action-icon white">⬇️</div>
+                <div className="admin-quick-action-icon white"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12M7 9l5 5 5-5M4 19h16" /></svg></div>
                 <div className="admin-quick-action-body">
                   <h4>{exporting === endpoint ? 'Downloading...' : `Export ${label}`}</h4>
                   <p>Download {label.toLowerCase()} as CSV</p>
