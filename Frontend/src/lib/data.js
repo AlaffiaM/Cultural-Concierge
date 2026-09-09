@@ -5,16 +5,16 @@ export const cities = [
   { name: "Nairobi", country: "Kenya", icon: "🌿", iconClass: "wellness", city_id: "NBO-KEN" },
 ];
 
-export const pillarIcons = { CULTURE: "🎭", WELLNESS: "🧘", SOCIAL: "🎨" };
+export const pillarIcons = { CULTURE: "◆", WELLNESS: "✦", SOCIAL: "●" };
 export const pillarColors = { CULTURE: "#B45F2D", WELLNESS: "#8A9A5B", SOCIAL: "#5B8A9A" };
 
 export const vibeMeta = {
-  "Premium":       { icon: "✨", color: "#B45F2D", bg: "rgba(180,95,45,0.12)" },
-  "Chic":          { icon: "🖤", color: "#8A9A5B", bg: "rgba(138,154,91,0.15)" },
-  "Serene":        { icon: "🌊", color: "#3a6b8a", bg: "rgba(100,130,180,0.12)" },
-  "Intimate":      { icon: "🕯️", color: "#8a4a6a", bg: "rgba(160,100,140,0.12)" },
-  "Vibrant":       { icon: "🔥", color: "#c07020", bg: "rgba(200,120,50,0.12)" },
-  "Curated":       { icon: "🎯", color: "#555",    bg: "rgba(80,80,100,0.1)" },
+  "Premium":       { icon: "✦", color: "#B45F2D", bg: "rgba(180,95,45,0.08)" },
+  "Chic":          { icon: "◆", color: "#7E8C58", bg: "rgba(126,140,88,0.12)" },
+  "Serene":        { icon: "◦", color: "#3a6b8a", bg: "rgba(100,130,180,0.1)" },
+  "Intimate":      { icon: "✧", color: "#8a4a6a", bg: "rgba(160,100,140,0.1)" },
+  "Vibrant":       { icon: "❖", color: "#b06a1e", bg: "rgba(200,120,50,0.1)" },
+  "Curated":       { icon: "●", color: "#575760", bg: "rgba(80,80,96,0.1)" },
 };
 
 export const cityGradients = {
