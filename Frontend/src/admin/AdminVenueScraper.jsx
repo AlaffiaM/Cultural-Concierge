@@ -232,7 +232,7 @@ export default function AdminVenueScraper() {
           disabled={scraperRunning !== null}
         >
           <div className="admin-quick-action-icon sage">
-            {scraperRunning === 'gemini' ? <div className="admin-spinner" /> : '🤖'}
+            {scraperRunning === 'gemini' ? <div className="admin-spinner" /> : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="8" width="16" height="12" rx="2" /><path d="M12 8V4M8 4h8" /><path d="M9 14l2 2 4-4" /></svg>}
           </div>
           <div className="admin-quick-action-body">
             <h4>{scraperRunning === 'gemini' ? 'Researching...' : 'AI Research Venues'}</h4>
