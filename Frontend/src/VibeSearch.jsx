@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { vibeMeta, moodPresets } from "./lib/data";
+import { vibeMeta } from "./lib/data";
 import "./VibeSearch.css";
 
 const VIBE_ORDER = ["Premium", "Chic", "Serene", "Intimate", "Vibrant", "Curated"];
