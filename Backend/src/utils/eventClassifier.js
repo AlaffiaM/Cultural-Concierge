@@ -3,20 +3,6 @@
 // 2. Positive whitelist (core vibe) so only lifestyle events survive.
 // 3. Type taxonomy enforced to the approved admin Types.
 
-const ALLOWED_TYPES = [
-  'Festival',
-  'Exhibition',
-  'Workshop',
-  'Performance',
-  'Dining',
-  'Wellness',
-  'Music',
-  'Art',
-  'Pop-up',
-  'Brunch',
-  'Sundowner',
-]
-
 const BANNED_TERMS = [
   // existing:
   'conference', 'corporate', 'seminar', 'summit', 'business',
@@ -129,4 +115,4 @@ function classifyType(name, description) {
   return ''
 }
 
-module.exports = { ALLOWED_TYPES, BANNED_TERMS, isBanned, matchesCoreVibe, classifyType }
+module.exports = { isBanned, matchesCoreVibe, classifyType }
