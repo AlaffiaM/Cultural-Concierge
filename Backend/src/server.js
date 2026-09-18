@@ -7,6 +7,14 @@ const { connectDB, startCleanup } = require('./config/db')
 
 const PORT = process.env.PORT || 5000
 
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err)
+})
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[unhandledRejection]', reason)
+})
+
 // Server still boots so /api/status can report health if Mongo is down.
 connectDB()
   .then(() => {
