@@ -1,7 +1,6 @@
 const axios = require('axios')
 const CityAdvisory = require('../models/CityAdvisory')
 
-const SOURCE = 'advisors-gemini'
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 
 async function callGemini(prompt, retries = 2) {
@@ -104,7 +103,7 @@ async function scrape() {
   return { updated, cities: cities.map(c => c.city_id) }
 }
 
-module.exports = { scrape, SOURCE }
+module.exports = { scrape }
 
 if (require.main === module) {
   scrape().then(r => console.log(r)).catch(e => console.error(e))
