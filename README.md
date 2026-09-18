@@ -8,14 +8,14 @@ AI-powered cultural discovery platform for African cities — Lagos, Abuja, Nair
 ├── Backend/           Express + Mongoose API (port 5000)
 │   ├── src/app.js     Express app: security, CORS, rate limits, route mounting
 │   ├── src/server.js  Entry point (dotenv, DB connect, listen)
-│   ├── src/config/    db, clerk, cloudinary config
+│   ├── src/config/    db, cloudinary config
 │   ├── src/controllers/  Route handlers (events, venues, admin, ai, system, ...)
 │   ├── src/middleware/   Clerk JWT auth, admin guard, rate limiter, error handling
 │   ├── src/models/    Mongoose schemas (Event, Venue, CityAdvisory, Email)
 │   ├── src/routes/    Express route modules (mounted in app.js)
 │   ├── src/scrapers/  Event + venue + advisory importers
 │   ├── src/services/  clerk, scraper, email, ai services
-│   ├── src/utils/     Sanitizers, image processor, travel brief updater
+│   ├── src/utils/     Sanitizers, image processor
 │   └── render.yaml    Render deploy config (builds frontend + installs Chrome)
 │
 └── Frontend/          React + Vite SPA (port 5173)
@@ -111,13 +111,6 @@ Admin requests go through `adminFetch()` (`Frontend/src/admin/adminApi.js`), whi
 - Env secrets live in `.env` (git-ignored) / Render dashboard — never committed
 
 **Rotate secrets immediately** if `.env` values are compromised.
-
-## Testing
-
-```bash
-cd Backend
-npm test
-```
 
 ## Production Deploy
 
