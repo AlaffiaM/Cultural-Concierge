@@ -21,22 +21,4 @@ function upload(buffer, options = {}) {
   })
 }
 
-function url(publicId, transformations = []) {
-  return cloudinary.url(publicId, {
-    quality: 'auto',
-    fetch_format: 'auto',
-    transformation,
-  })
-}
-
-function uploadFromUrl(imageUrl, options = {}) {
-  return cloudinary.uploader.upload(imageUrl, {
-    folder: options.folder || 'alaffia',
-    resource_type: 'image',
-    quality: 'auto',
-    fetch_format: 'auto',
-    ...options,
-  })
-}
-
-module.exports = { cloudinary, upload, url, uploadFromUrl }
+module.exports = { upload }
