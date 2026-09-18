@@ -7,6 +7,14 @@ const { errorHandler, notFoundHandler } = require('./middleware/errorHandler')
 
 const app = express()
 
+app.use((req, res, next) => {
+  const startedAt = Date.now()
+  res.on('finish', () => {
+    console.log(`[request] ${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - startedAt}ms`)
+  })
+  next()
+})
+
 // Security
 app.use(helmet());
 app.set('trust proxy', 1);
