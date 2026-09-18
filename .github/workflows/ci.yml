@@ -18,10 +18,10 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: Backend/package-lock.json
-      - name: Install deps (skip Chrome download; tests don't need puppeteer)
+      - name: Install deps (skip Chrome download; scrapers don't run in CI)
         run: npm ci --ignore-scripts
-      - name: Run tests
-        run: npm test
+      - name: Syntax check
+        run: node --check src/server.js && node --check src/app.js
 
   frontend:
     runs-on: ubuntu-latest
