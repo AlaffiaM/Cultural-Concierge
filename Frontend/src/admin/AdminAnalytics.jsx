@@ -4,7 +4,7 @@ import { PILLAR_STYLE } from './components/adminStyles'
 
 const CITY_COLORS = ['#B45F2D', '#8A9A5B', '#5B8A9A', '#9A5B8A', '#B48A5B', '#5B9A8A']
 
-export default function AdminAnalytics({ onNavigate }) {
+export default function AdminAnalytics() {
   const [stats, setStats] = useState(null)
   useEffect(() => {
     adminFetch('/api/admin/stats')
