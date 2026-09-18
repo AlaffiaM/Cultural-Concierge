@@ -31,12 +31,3 @@ export const sourceLabels = {
   curated: 'Curated',
   manual: 'Manual',
 }
-
-export const moodPresets = [
-  { label: "Chill & Relaxed",   icon: "😌", query: "deep relaxation, spa, quiet cafes, wellness retreats" },
-  { label: "Artsy & Cultural",  icon: "🎨", query: "art galleries, museums, theatre, cultural festivals" },
-  { label: "Party & Social",    icon: "🎉", query: "nightlife, live music, dancing, social venues" },
-  { label: "Foodie",            icon: "🍽️", query: "fine dining, local cuisine, food markets, cafes" },
-  { label: "Active & Outdoors", icon: "🌿", query: "hiking, nature, outdoor activities, adventure" },
-  { label: "Hidden Gems",       icon: "💎", query: "off the beaten path, secret venues, unique experiences" },
-];
