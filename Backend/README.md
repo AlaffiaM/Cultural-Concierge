@@ -11,7 +11,6 @@ Express REST API with MongoDB (Mongoose), Clerk JWT auth, and automated scrapers
 - **express-rate-limit** — rate limiting
 - **Axios** — HTTP client (scrapers, Gemini API)
 - **Puppeteer** — headless Chrome (Mookh scraper)
-- **Jest + Supertest** — testing
 
 ## Scripts
 
@@ -19,7 +18,6 @@ Express REST API with MongoDB (Mongoose), Clerk JWT auth, and automated scrapers
 |---|---|
 | `npm start` | Production (`node src/server.js`) |
 | `npm run dev` | Development (nodemon, auto-restart) |
-| `npm test` | Run Jest tests |
 | `postinstall` | Installs Puppeteer Chrome into `PUPPETEER_CACHE_DIR` |
 
 ## Project Structure
@@ -28,15 +26,14 @@ Express REST API with MongoDB (Mongoose), Clerk JWT auth, and automated scrapers
 src/
 ├── app.js                Express app: helmet, HTTPS redirect, CORS, rate limits, route mounting, static frontend
 ├── server.js             Entry point (dotenv, DB connect, cleanup job, listen)
-├── config/               db.js (Mongo + hourly past-event cleanup), clerk.js, cloudinary.js
+├── config/               db.js (Mongo + hourly past-event cleanup), cloudinary.js
 ├── controllers/          Route handlers (event, venue, admin, system, scraper, upload, subscribe, advisory)
 ├── middleware/           auth.js (Clerk JWT), admin.js (ADMIN_EMAILS allowlist), rateLimiter, errorHandler
 ├── models/               Mongoose schemas: Event, Venue, CityAdvisory, Email
 ├── routes/               Express route modules (all mounted in app.js)
 ├── scrapers/             Event scrapers (ticketsasa, kenyabuzz, mookh, eventbrite, tixafrica), venue scrapers (gemini, wikipedia), advisors-gemini
 ├── services/             clerkService (JWT verify + email resolution), scraperService, emailService
-└── utils/                sanitize.js (escapeRegex), imageProcessor.js (Cloudinary), travelBriefUpdater.js
-tests/                    Jest test suites
+└── utils/                sanitize.js (escapeRegex), imageProcessor.js (Cloudinary)
 ```
 
 ## API Endpoints
@@ -91,7 +88,7 @@ tests/                    Jest test suites
 
 ## Scrapers
 
-- **Event scrapers** (`ticketsasa`, `kenyabuzz`, `mookh`, `eventbrite`, `tixafrica`) each export `{ scrape, SOURCE }` and run through `scrapers/index.js`, which handles fuzzy dedup, ban/core-vibe filtering, past-date blocking, and upsert into `Event` as `status: "draft"`, `isGhostLocation: true`.
+- **Event scrapers** (`ticketsasa`, `kenyabuzz`, `mookh`, `eventbrite`, `tixafrica`) each export `{ scrape }` and run through `scrapers/index.js`, which handles fuzzy dedup, ban/core-vibe filtering, past-date blocking, and upsert into `Event` as `status: "draft"`, `isGhostLocation: true`.
 - **Venue scrapers** (`venues-gemini`, `venues-wikipedia`) are loaded dynamically by `venueController.runVenueScraper` from the `source` body field (`gemini` / `wikipedia`), inserting venues with `status: "scraped"`.
 - **Advisory scraper** (`advisors-gemini`) generates a `CityAdvisory` per city via Gemini.
 - **Mookh** requires headless Chrome; Puppeteer's cache dir must point at `PUPPETEER_CACHE_DIR` (see `render.yaml`) so `ensureChrome()` finds the installed binary.
