@@ -48,4 +48,4 @@ function uploadImage(req, res) {
   })
 }
 
-module.exports = { uploadImage, uploadMiddleware }
+module.exports = { uploadImage }
