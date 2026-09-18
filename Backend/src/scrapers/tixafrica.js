@@ -146,7 +146,7 @@ async function scrape() {
   return { events, error }
 }
 
-module.exports = { scrape, SOURCE }
+module.exports = { scrape }
 
 if (require.main === module) {
   scrape().then(({ events, error }) => {
