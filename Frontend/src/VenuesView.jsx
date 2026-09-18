@@ -38,7 +38,6 @@ function VenueImage({ venue, pillarColors, pillarIcons }) {
 }
 
 export default function VenuesView({
-  selectedCity,
   todayEvents,
   events,
   searchQuery,
