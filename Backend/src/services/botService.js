@@ -5,7 +5,6 @@ const RunLog = require('../models/RunLog')
 const { sendRunSummary } = require('./emailService')
 
 let running = false
-let lastRunAt = null
 
 async function executeSources(sources, trigger = 'manual') {
   if (running) {
@@ -16,7 +15,6 @@ async function executeSources(sources, trigger = 'manual') {
   const startedAt = new Date()
   try {
     const result = await runScrapers(sources)
-    lastRunAt = new Date()
     await recordLogs(result.results, trigger, startedAt)
     if (trigger === 'scheduled') {
       try {
@@ -59,12 +57,4 @@ async function recordLogs(results, trigger, startedAt) {
   }
 }
 
-function isRunning() {
-  return running
-}
-
-function getLastRunAt() {
-  return lastRunAt
-}
-
-module.exports = { executeSources, isRunning, getLastRunAt }
+module.exports = { executeSources }
