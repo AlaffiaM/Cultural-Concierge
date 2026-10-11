@@ -38,7 +38,9 @@ function App() {
   const { getToken, signOut } = useAuth();
   const { signIn } = useSignIn();
   const hasNavigatedFromHome = useRef(false);
+  const submissionReturnView = useRef("home");
   const [view, setView] = useState("home");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedCity, setSelectedCity] = useState(null);
   const [allVenues, setAllVenues] = useState([]);
   const [filteredVenues, setFilteredVenues] = useState([]);
@@ -59,6 +61,7 @@ function App() {
   }, [getToken])
 
   async function handleGoogleSignIn() {
+    setMobileMenuOpen(false);
     if (!signIn) return
     try {
       await signIn.authenticateWithRedirect({
@@ -94,6 +97,7 @@ function App() {
 
   async function handleSignOut() {
     await signOut();
+    setMobileMenuOpen(false);
     setView("home");
     hasNavigatedFromHome.current = true;
     gtag("event", "sign_out");
@@ -190,6 +194,7 @@ function App() {
   }, [activeVibes, selectedCity]);
 
   function handleSelectCity(city) {
+    setMobileMenuOpen(false);
     setSelectedCity(city);
     setView("venues");
     setActiveVibes([]);
@@ -198,11 +203,19 @@ function App() {
   }
 
   function handleSubmitEvent() {
+    setMobileMenuOpen(false);
+    submissionReturnView.current = view;
     setView("submit-event");
     gtag("event", "open_event_submission");
   }
 
+  function handleSubmissionBack() {
+    setMobileMenuOpen(false);
+    setView(submissionReturnView.current);
+  }
+
   function handleBack() {
+    setMobileMenuOpen(false);
     setView("cities");
     setSelectedCity(null);
     setActiveVibes([]);
@@ -239,11 +252,11 @@ function App() {
   return (
     <div className="app">
       {view !== "home" && view !== "admin" && (
-        <header className="header">
+        <header className={`header${mobileMenuOpen ? " mobile-menu-open" : ""}`}>
           {view !== "cities" && (
             <button
               className="back-btn"
-              onClick={handleBack}
+              onClick={view === "submit-event" ? handleSubmissionBack : handleBack}
               aria-label="Go back"
             >
               Back
@@ -256,24 +269,34 @@ function App() {
             {view !== "submit-event" && (
               <button className="btn-text submit-event-nav" onClick={handleSubmitEvent}>Share an event</button>
             )}
-            {isSignedIn ? (
-              <>
-                {user?.imageUrl && <img src={user.imageUrl} alt="" className="user-avatar" />}
-                <span className="user-name">{user?.fullName || "User"}</span>
-                {isAdmin && view !== "admin" && (
-                  <button className="btn-text" onClick={() => setView("admin")} style={{ borderColor: "var(--sage)" }}>Admin</button>
-                )}
-                {isAdmin && view === "admin" && (
-                  <button className="btn-text" onClick={handleBack}>App</button>
-                )}
-                <button className="btn-text" onClick={handleSignOut}>Sign out</button>
-              </>
-            ) : (
-              <>
-                <button className="btn-text" onClick={handleGoogleSignIn}>Sign in</button>
-                <span className="header-newsletter-note">Subscribe</span>
-              </>
-            )}
+            <button
+              className="mobile-menu-toggle"
+              type="button"
+              aria-label={mobileMenuOpen ? "Close profile menu" : "Open profile menu"}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen(open => !open)}
+            >
+              <span /><span /><span />
+            </button>
+            <div className="user-menu">
+              {isSignedIn ? (
+                <>
+                  <div className="user-menu-profile">
+                    {user?.imageUrl && <img src={user.imageUrl} alt="" className="user-avatar" />}
+                    <span className="user-name">{user?.fullName || "User"}</span>
+                  </div>
+                  {isAdmin && (
+                    <button className="btn-text" onClick={() => { setMobileMenuOpen(false); setView("admin") }} style={{ borderColor: "var(--sage)" }}>Admin</button>
+                  )}
+                  <button className="btn-text" onClick={handleSignOut}>Sign out</button>
+                </>
+              ) : (
+                <>
+                  <button className="btn-text" onClick={handleGoogleSignIn}>Sign in</button>
+                  <span className="header-newsletter-note">Subscribe</span>
+                </>
+              )}
+            </div>
           </div>
 
         </header>
@@ -321,6 +344,10 @@ function App() {
             </>
           )}
 
+          {view === "submit-event" && (
+            <EventSubmissionForm city={selectedCity} onBack={handleSubmissionBack} />
+          )}
+
           {view === "venues" && (
             <>
               {viewMode !== "travelbrief" && (
@@ -330,10 +357,6 @@ function App() {
                     {cities.find((c) => c.name === selectedCity)?.country}
                   </span>
                 </div>
-              )}
-
-              {view === "submit-event" && (
-                <EventSubmissionForm city={selectedCity} onBack={handleBack} />
               )}
 
               <div className="venues-header">
