@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { adminFetch } from './adminApi'
 import { useToast } from './Toast'
+import { useConfirm } from './ConfirmModal'
 import SelectAllCheckbox from './components/SelectAllCheckbox'
 
 const SOURCE_LABELS = {
@@ -12,10 +13,12 @@ export default function AdminVenueScraper() {
   const [scraperResults, setScraperResults] = useState(null)
   const [scraperSelected, setScraperSelected] = useState(new Set())
   const [accepting, setAccepting] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
   const [venueExpanded, setVenueExpanded] = useState(new Set())
   const [existingVenues, setExistingVenues] = useState(null)
   const [loadingExisting, setLoadingExisting] = useState(false)
   const { addToast } = useToast()
+  const { showConfirm, ConfirmModal } = useConfirm()
 
   async function handleRunScraper(source) {
     setScraperRunning(source)
@@ -95,6 +98,37 @@ export default function AdminVenueScraper() {
     }
   }
 
+  async function handleReject(idsOverride) {
+    const ids = idsOverride || Array.from(scraperSelected)
+    if (ids.length === 0) return
+    setRejecting(true)
+    try {
+      await adminFetch('/api/venues/scraper/reject', {
+        method: 'POST',
+        body: JSON.stringify({ venueIds: ids }),
+      })
+      const removeIds = new Set(ids)
+      if (scraperResults?.venues) {
+        setScraperResults(prev => ({ ...prev, venues: prev.venues.filter(v => !removeIds.has(v._id)) }))
+      }
+      if (existingVenues) {
+        setExistingVenues(prev => prev.filter(v => !removeIds.has(v._id)))
+      }
+      setScraperSelected(new Set())
+      addToast(`${ids.length} venue(s) rejected and removed`, 'success')
+    } catch (err) {
+      console.error('[AdminVenueScraper] Reject failed:', err.message)
+      addToast('Failed to reject venues', 'error')
+    } finally {
+      setRejecting(false)
+    }
+  }
+
+  async function handleRejectOne(venue) {
+    if (!(await showConfirm(`Reject "${venue.name}"? It will be deleted and skip-listed.`))) return
+    await handleReject([venue._id])
+  }
+
   function renderTable(items, title) {
     const selectableItems = items.filter(s => s.status === 'scraped')
     return (
@@ -104,6 +138,16 @@ export default function AdminVenueScraper() {
             {title} ({items.length})
           </span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              className="admin-btn admin-btn-delete"
+              onClick={async () => {
+                if (await showConfirm(`Reject ${scraperSelected.size} venue(s)? They will be deleted and skip-listed.`)) handleReject()
+              }}
+              disabled={scraperSelected.size === 0 || rejecting || accepting}
+              style={{ padding: '4px 14px', fontSize: 12 }}
+            >
+              {rejecting ? 'Rejecting...' : `Reject (${scraperSelected.size})`}
+            </button>
             <button
               className="admin-btn admin-btn-primary"
               onClick={() => handleAccept()}
@@ -132,7 +176,7 @@ export default function AdminVenueScraper() {
                 <th>City</th>
                 <th>Tags</th>
                 <th>Source</th>
-                <th style={{ width: 80 }}>Accept</th>
+                <th style={{ width: 120 }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -197,18 +241,28 @@ export default function AdminVenueScraper() {
                         {SOURCE_LABELS[venue.source] || venue.source}
                       </span>
                     </td>
-                    <td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
                       {canAccept ? (
-                        <button
-                          className="admin-btn-sm admin-btn-approve"
-                          onClick={() => {
-                            setScraperSelected(new Set([venue._id]))
-                            handleAccept([venue._id])
-                          }}
-                          disabled={accepting}
-                        >
-                          Accept
-                        </button>
+                        <>
+                          <button
+                            className="admin-btn-sm admin-btn-approve"
+                            onClick={() => {
+                              setScraperSelected(new Set([venue._id]))
+                              handleAccept([venue._id])
+                            }}
+                            disabled={accepting || rejecting}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="admin-btn-sm admin-btn-delete"
+                            onClick={() => handleRejectOne(venue)}
+                            disabled={accepting || rejecting}
+                            style={{ marginLeft: 6 }}
+                          >
+                            Reject
+                          </button>
+                        </>
                       ) : (
                         <span className="admin-status-badge admin-status-inactive">Accepted</span>
                       )}
@@ -271,6 +325,8 @@ export default function AdminVenueScraper() {
           </p>
         </div>
       )}
+
+      {ConfirmModal}
     </div>
   )
 }
