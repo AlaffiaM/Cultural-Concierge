@@ -71,6 +71,10 @@ export default function TravelBrief({ advisory, selectedCity }) {
         <p className="tb-overview">{advisory.city_overview}</p>
       )}
 
+      <p className="tb-advisory-note">
+        General travel guidance, not a real-time alert. Verify current safety, health, and entry requirements with official government sources before travelling.
+      </p>
+
       {airportTip && (
         <div className="tb-airport-tip">
           <span className="tb-airport-icon"><PlaneIcon /></span>
