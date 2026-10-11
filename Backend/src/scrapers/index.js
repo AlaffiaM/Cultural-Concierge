@@ -4,7 +4,7 @@
 const Event = require('../models/Event')
 const { getEntries, isBlocked } = require('../services/blocklistService')
 const { isBanned, matchesCoreVibe, classifyType } = require('../utils/eventClassifier')
-const { isValidHttpUrl } = require('../utils/sanitize')
+const { escapeRegex, isValidHttpUrl, validateEventPayload } = require('../utils/sanitize')
 
 const CITY_COORDS = {
   Lagos: { lat: 6.5244, lng: 3.3792 },
@@ -41,13 +41,13 @@ async function deduplicate(events) {
     if (seen.has(key)) continue
     seen.add(key)
 
-    const escaped = fuzzy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const escaped = escapeRegex(fuzzy)
     const eventDate = ev.date ? new Date(ev.date) : null
     const normalizedDate = eventDate && !Number.isNaN(eventDate.getTime())
       ? new Date(eventDate.toISOString().slice(0, 10))
       : null
     const existing = await Event.findOne({
-      city: { $regex: `^${cityKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+      city: { $regex: `^${escapeRegex(cityKey)}$`, $options: 'i' },
       date: normalizedDate,
       name: { $regex: `^${escaped}`, $options: 'i' },
     })
@@ -71,7 +71,35 @@ async function runScrapers(sources) {
     try {
       const scraper = require(`./${source}`)
       const { events: scraped, error: scrapeError, skipped: sourceSkipped } = await scraper.scrape()
-      const unique = await deduplicate(scraped)
+      if (!Array.isArray(scraped)) {
+        throw new Error('Scraper returned an invalid event list.')
+      }
+      const validEvents = []
+      for (const ev of scraped) {
+        if (!ev || typeof ev.name !== 'string' || typeof ev.city !== 'string' ||
+            ev.date === undefined || ev.date === null || ev.date === '') {
+          continue
+        }
+        const city = Object.keys(CITY_COORDS).find(
+          candidate => candidate.toLowerCase() === ev.city.trim().toLowerCase()
+        )
+        const date = new Date(ev.date)
+        if (!city || Number.isNaN(date.getTime())) continue
+
+        const validation = validateEventPayload({
+          ...ev,
+          name: ev.name,
+          city,
+          date: date.toISOString(),
+          coordinates: ev.coordinates || CITY_COORDS[city],
+        })
+        if (!validation.isValid) {
+          console.warn(`[scrapers] skipped invalid event from ${source}: "${ev.name.slice(0, 120)}"`)
+          continue
+        }
+        validEvents.push({ ...ev, ...validation.sanitized, date })
+      }
+      const unique = await deduplicate(validEvents)
 
       results[source] = {
         fetched: scraped.length,
