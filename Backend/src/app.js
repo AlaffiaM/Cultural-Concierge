@@ -29,6 +29,9 @@ app.use((req, res, next) => {
 
 const DEFAULT_ORIGINS = [
   'http://localhost:5173',
+  'http://localhost:4173',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:4173',
   'https://cultural--concierge.vercel.app',
   'https://culture-concierge.onrender.com',
 ]
@@ -38,9 +41,17 @@ const envOrigins = process.env.CLIENT_ORIGIN
   : []
 
 const allowedOrigins = [...new Set([...DEFAULT_ORIGINS, ...envOrigins])]
+const isLocalDevOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || '')
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || isLocalDevOrigin(origin)) {
+      callback(null, true)
+      return
+    }
+
+    callback(new Error('Origin not allowed by CORS'))
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
