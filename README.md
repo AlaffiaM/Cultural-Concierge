@@ -87,7 +87,9 @@ Sign in with Google via Clerk. Access to the CMS is authorized in **two places**
 | `venues-wikipedia` | Wikipedia GeoSearch API | Venues with name + city + images (no description/tip) |
 | `advisors-gemini` | Google Gemini AI | City travel advisories (security, health, entry reqs) |
 
-**Event flow**: Scraped events → `status: "draft"` → Admin reviews in **Pending Approval** → Approve (→ `status: "approved"`, becomes a live event) or delete. `scrapers/index.js` handles fuzzy dedup + rejection terms + upsert.
+**Event flow**: Scraped events → `status: "draft"` → Admin reviews in **Pending Approval** → Approve (→ `status: "approved"`, becomes a live event) or delete. `scrapers/index.js` handles fuzzy dedup + relevance filtering + upsert. Booking/event URLs are retained when the source provides them and shown on the public event detail.
+
+The Happenings view supports keyword search across event names, venues, descriptions, types, and tags, alongside pillar and date filters. The event classifier includes film/cinema listings and avoids treating generic “masterclass,” “class,” or “course” wording as sufficient evidence that an event is relevant.
 
 **Venue flow**: Scraped venues → `status: "scraped"` → Admin reviews in the CMS venue scraper → Accept (→ `"inactive"`) or Edit (→ `"active"`).
 
