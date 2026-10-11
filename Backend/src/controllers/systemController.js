@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const Event = require('../models/Event')
 const Venue = require('../models/Venue')
+const RunLog = require('../models/RunLog')
 
 const startTime = Date.now()
 
@@ -9,9 +10,9 @@ async function getHealth(req, res) {
     const dbState = mongoose.connection.readyState
     const dbStatus = dbState === 1 ? 'connected' : dbState === 2 ? 'connecting' : 'disconnected'
 
-    const lastScrapedEvent = await Event.findOne({ source: { $in: ['ticketsasa', 'kenyabuzz', 'mookh', 'eventbrite', 'tixafrica', 'gemini'] } })
+    const lastRun = await RunLog.findOne({})
       .sort({ createdAt: -1 })
-      .select('createdAt source')
+      .select('status source error trigger createdAt')
       .lean()
 
     const eventCount = await Event.countDocuments()
@@ -20,8 +21,9 @@ async function getHealth(req, res) {
     res.json({
       database: dbStatus,
       uptime: Math.floor((Date.now() - startTime) / 1000),
-      lastScraperRun: lastScrapedEvent?.createdAt || null,
-      lastScraperSource: lastScrapedEvent?.source || null,
+      lastScraperRun: lastRun?.createdAt || null,
+      lastScraperSource: lastRun?.source || null,
+      lastScraperStatus: lastRun?.status || null,
       geminiKeyConfigured: !!process.env.GEMINI_API_KEY,
       authConfigured: !!process.env.CLERK_SECRET_KEY,
       eventCount,
