@@ -83,6 +83,7 @@ async function scrape() {
         venue: ev.location_name || '',
         price: ev.price || ev.ticket_price || ev.cost || '',
         source: SOURCE,
+        url: ev.url || ev.event_url || ev.event_link || '',
         time: extractTime(ev.start_date),
         coordinates: null,
       })
@@ -121,6 +122,7 @@ async function scrape() {
           venue: ev.event_location || '',
           price: ev.price || ev.ticket_price || ev.cost || '',
           source: SOURCE,
+          url: ev.url || ev.event_url || ev.event_link || '',
           time: extractTime(ev.start_date),
           coordinates: null,
         })
