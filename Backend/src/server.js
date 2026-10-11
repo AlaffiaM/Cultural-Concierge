@@ -3,7 +3,11 @@
 require('dotenv').config()
 
 const app = require('./app')
+const { validateEnvironment } = require('./config/env')
 const { connectDB, startCleanup } = require('./config/db')
+const { startBotScheduler } = require('./services/botScheduler')
+
+validateEnvironment()
 
 const PORT = process.env.PORT || 5000
 
@@ -19,6 +23,8 @@ process.on('unhandledRejection', (reason) => {
 connectDB()
   .then(() => {
     startCleanup()
+    console.log('[startup] MongoDB connected; starting bot scheduler')
+    startBotScheduler()
   })
   .catch((err) => console.log('MongoDB connection failed:', err.message));
 
