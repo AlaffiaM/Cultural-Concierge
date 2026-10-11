@@ -1,81 +1,24 @@
-const axios = require('axios')
 const Venue = require('../models/Venue')
 const Event = require('../models/Event')
 const { escapeRegex } = require('../utils/sanitize')
+const { rememberRejection } = require('../services/blocklistService')
+const { ingestScrapedVenues, enrichApprovedVenue } = require('../services/venueService')
+const { lookupVenueImages } = require('../services/venueImageService')
 
 const VENUE_SCRAPER_SOURCES = ['gemini', 'wikipedia']
-
-const WIKI_API = 'https://en.wikipedia.org/w/api.php'
-const UA = 'CultureConcierge/1.0 (venue lookup; contact@cultureconcierge.com)'
-
 const VENUE_ALLOWED_UPDATES = ['name', 'city', 'type', 'pillar', 'vibeTags', 'tags', 'description', 'tip', 'address', 'images', 'coordinates', 'status']
-
-async function findImage(title) {
-  const { data } = await axios.get(WIKI_API, {
-    headers: { 'User-Agent': UA },
-    params: { action: 'query', titles: title, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600, format: 'json', origin: '*' },
-    timeout: 10000,
-  })
-  const pages = data.query?.pages
-  if (!pages) return ''
-  for (const id of Object.keys(pages)) {
-    const p = pages[id]
-    if (p.thumbnail?.source) return p.thumbnail.source
-  }
-  return ''
-}
-
-async function searchImage(query, city) {
-  const { data } = await axios.get(WIKI_API, {
-    headers: { 'User-Agent': UA },
-    params: { action: 'query', generator: 'search', gsrsearch: query, gsrlimit: 5, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600, exlimit: 5, format: 'json', origin: '*' },
-    timeout: 10000,
-  })
-  const pages = data.query?.pages
-  if (!pages) return ''
-  for (const id of Object.keys(pages)) {
-    const p = pages[id]
-    if (!p.thumbnail?.source) continue
-    if (city && p.title.toLowerCase() === city.toLowerCase()) continue
-    return p.thumbnail.source
-  }
-  return ''
-}
 
 async function lookupVenueImage(req, res) {
   try {
     const { name, city } = req.query
     if (!name) return res.status(400).json({ message: 'name query param required' })
 
-    let imageUrl = ''
-    if (city) imageUrl = await findImage(`${name}, ${city}`)
-    if (!imageUrl) imageUrl = await findImage(name)
-    if (!imageUrl && city) imageUrl = await searchImage(`"${name}" ${city}`, city)
-    if (!imageUrl) imageUrl = await searchImage(name, city)
+    const imageUrl = (await lookupVenueImages(name, city))[0] || ''
 
     res.json({ imageUrl })
   } catch (err) {
     console.error('[venues] lookup error:', err.message)
     res.status(500).json({ message: err.message })
-  }
-}
-
-async function wikiGet(params) {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      const { data } = await axios.get(WIKI_API, { headers: { 'User-Agent': UA }, params: { ...params, format: 'json', origin: '*' }, timeout: 10000 })
-      return data
-    } catch (err) {
-      const status = err.response?.status
-      const retryAfter = parseInt(err.response?.headers?.['retry-after'] || '0', 10) || 5
-      if (status === 429 && attempt < 2) {
-        const wait = retryAfter * 1000 + attempt * 2000
-        console.log(`[batch-enrich] rate limited, waiting ${wait}ms before retry ${attempt + 1}`)
-        await new Promise(r => setTimeout(r, wait))
-        continue
-      }
-      throw err
-    }
   }
 }
 
@@ -88,56 +31,32 @@ async function batchEnrichVenues(req, res) {
     const venues = await Venue.find(filter).select('name city images').lean()
     if (venues.length === 0) return res.json({ enriched: 0, skipped: 0, total: 0, message: 'All venues already have images.' })
 
-    let enriched = 0, skipped = 0, rateLimited = 0, notFound = 0
+    let enriched = 0, skipped = 0, notFound = 0
 
     for (let i = 0; i < venues.length; i++) {
       const v = venues[i]
-      let imageUrl = ''
-      let reason = ''
+      let urls = []
       try {
-        const data = await wikiGet({ action: 'query', titles: `${v.name}, ${v.city}`, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600 })
-        const pages = data.query?.pages
-        if (pages) {
-          for (const id of Object.keys(pages)) {
-            const p = pages[id]
-            if (p.thumbnail?.source) { imageUrl = p.thumbnail.source; break }
-          }
-        }
-        if (!imageUrl) {
-          const sdata = await wikiGet({ action: 'query', generator: 'search', gsrsearch: `"${v.name}" ${v.city}`, gsrlimit: 5, prop: 'pageimages', piprop: 'thumbnail', pithumbsize: 600, exlimit: 5 })
-          const spages = sdata.query?.pages
-          if (spages) {
-            for (const id of Object.keys(spages)) {
-              const p = spages[id]
-              if (!p.thumbnail?.source) continue
-              if (p.title.toLowerCase() === v.city.toLowerCase()) continue
-              imageUrl = p.thumbnail.source
-              break
-            }
-          }
-        }
-        if (!imageUrl) { reason = 'no image found on Wikipedia'; notFound++ }
+        // Wikipedia -> Wikimedia Commons chain, no API key required.
+        urls = await lookupVenueImages(v.name, v.city)
       } catch (err) {
-        if (err.response?.status === 429) { rateLimited++; reason = 'rate limited after retries' }
-        else { reason = err.message }
-        console.log(`[batch-enrich] failed for "${v.name}": ${reason}`)
+        console.log(`[batch-enrich] failed for "${v.name}": ${err.message}`)
       }
 
-      if (imageUrl) {
-        await Venue.findByIdAndUpdate(v._id, { $push: { images: imageUrl } })
+      if (urls.length) {
+        await Venue.findByIdAndUpdate(v._id, { $set: { images: urls } })
         enriched++
       } else {
         skipped++
+        notFound++
       }
 
-      if (i % 5 === 0 || imageUrl) console.log(`[batch-enrich] ${i + 1}/${venues.length}: "${v.name}" -> ${imageUrl ? 'image found' : 'skipped (' + reason + ')'}`)
-      await new Promise(r => setTimeout(r, 2000 + Math.random() * 1000))
+      if (i % 5 === 0 || urls.length) console.log(`[batch-enrich] ${i + 1}/${venues.length}: "${v.name}" -> ${urls.length ? `image found (${urls[0]})` : 'not found'}`)
+      await new Promise(r => setTimeout(r, 1500 + Math.random() * 1000))
     }
 
     let message = `Enriched: ${enriched}, Skipped: ${skipped}`
-    if (rateLimited > 0) message += ` (${rateLimited} rate-limited)`
-
-    res.json({ enriched, skipped, total: venues.length, rateLimited, notFound, message })
+    res.json({ enriched, skipped, total: venues.length, notFound, message })
   } catch (err) {
     console.error('[venues] batch-enrich error:', err.message)
     res.status(500).json({ message: err.message })
@@ -281,6 +200,13 @@ async function deleteVenue(req, res) {
   try {
     const venue = await Venue.findByIdAndDelete(req.params.id)
     if (!venue) return res.status(404).json({ message: 'Venue not found' })
+    if (venue.source && venue.source !== 'manual') {
+      try {
+        await rememberRejection('venue', { name: venue.name, city: venue.city, source: venue.source })
+      } catch (err) {
+        console.warn(`[venues] could not skip-list "${venue.name}": ${err.message}`)
+      }
+    }
     res.json({ message: 'Venue deleted' })
   } catch (err) {
     console.error(err.message);
@@ -296,50 +222,10 @@ async function runVenueScraper(req, res) {
       return res.status(400).json({ message: `Invalid source. Valid: ${VENUE_SCRAPER_SOURCES.join(', ')}` })
     }
 
-    // Dynamically load `venues-gemini` or `venues-wikipedia` from the source field.
-    const scraper = require(`../scrapers/venues-${source}`)
-    console.log('[venues] scraper module loaded, running scrape()')
-    const scraped = await scraper.scrape()
-    console.log('[venues] scrape() returned', scraped.length, 'results')
-
-    const newVenues = []
-    for (const data of scraped) {
-      const slug = data.name.toLowerCase().trim().slice(0, 60)
-      const existing = await Venue.findOne({
-        name: { $regex: `^${slug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, $options: 'i' },
-        city: data.city,
-      })
-      if (!existing) {
-        const venue = new Venue({
-          name: data.name,
-          city: data.city,
-          type: data.type || 'Venue',
-          pillar: data.pillar || 'CULTURE',
-          tags: data.tags || [],
-          vibeTags: data.vibeTags || [],
-          description: data.description || '',
-          tip: data.tip || '',
-          address: data.address || '',
-          images: data.images || [],
-          coordinates: data.coordinates || null,
-          source: data.source || source,
-          status: 'scraped',
-        })
-        await venue.save()
-        newVenues.push(venue)
-      }
-    }
-
-    res.json({
-      source,
-      fetched: scraped.length,
-      new: newVenues.length,
-      skipped: scraped.length - newVenues.length,
-      venues: newVenues,
-    })
+    const result = await ingestScrapedVenues(source)
+    res.json(result)
   } catch (err) {
     console.error('[venues] scraper/run error:', err.stack || err)
-    console.error(err.message);
     res.status(500).json({ success: false, message: 'Internal server error' })
   }
 }
@@ -353,10 +239,71 @@ async function acceptScrapedVenues(req, res) {
 
     const result = await Venue.updateMany(
       { _id: { $in: venueIds } },
-      { $set: { status: 'inactive' } }
+      { $set: { status: 'active' } }
     )
 
-    res.json({ modified: result.modifiedCount })
+    // Auto-fill images (and descriptions where possible) for just-approved venues.
+    const approved = await Venue.find({ _id: { $in: venueIds } }).lean()
+    let enriched = 0
+    await Promise.allSettled(approved.map(async v => {
+      const updates = await enrichApprovedVenue(v)
+      if (Object.keys(updates).length) enriched++
+    }))
+
+    res.json({ modified: result.modifiedCount, enriched })
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
+  }
+}
+
+async function rejectScrapedVenues(req, res) {
+  try {
+    const { venueIds } = req.body
+    if (!venueIds || !Array.isArray(venueIds) || venueIds.length === 0) {
+      return res.status(400).json({ message: 'venueIds array is required' })
+    }
+
+    const venues = await Venue.find({ _id: { $in: venueIds } }).lean()
+    for (const v of venues) {
+      try {
+        await rememberRejection('venue', { name: v.name, city: v.city, source: v.source })
+      } catch (err) {
+        console.warn(`[venues] could not skip-list "${v.name}": ${err.message}`)
+      }
+    }
+
+    const result = await Venue.deleteMany({ _id: { $in: venueIds } })
+
+    res.json({ deleted: result.deletedCount })
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ success: false, message: 'Internal server error' })
+  }
+}
+
+async function bulkDeleteVenues(req, res) {
+  try {
+    const { venueIds } = req.body
+    if (!venueIds || !Array.isArray(venueIds) || venueIds.length === 0) {
+      return res.status(400).json({ message: 'venueIds array is required' })
+    }
+
+    // Skip-list bot-sourced venues so they don't re-import on the next run.
+    const venues = await Venue.find({ _id: { $in: venueIds } }).lean()
+    for (const v of venues) {
+      if (v.source && v.source !== 'manual') {
+        try {
+          await rememberRejection('venue', { name: v.name, city: v.city, source: v.source })
+        } catch (err) {
+          console.warn(`[venues] could not skip-list "${v.name}": ${err.message}`)
+        }
+      }
+    }
+
+    const result = await Venue.deleteMany({ _id: { $in: venueIds } })
+
+    res.json({ deleted: result.deletedCount })
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ success: false, message: 'Internal server error' })
@@ -375,4 +322,6 @@ module.exports = {
   deleteVenue,
   runVenueScraper,
   acceptScrapedVenues,
+  rejectScrapedVenues,
+  bulkDeleteVenues,
 }
