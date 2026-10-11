@@ -4,6 +4,7 @@ import { useState } from 'react'
 import AdminOverview from './AdminOverview'
 import AdminEvents from './AdminEvents'
 import AdminPendingEvents from './AdminPendingEvents'
+import AdminEventSubmissions from './AdminEventSubmissions'
 import AdminAddEvent from './AdminAddEvent'
 import AdminVenues from './AdminVenues'
 import AdminSettings from './AdminSettings'
@@ -37,6 +38,7 @@ const NAV_ITEMS = [
   { tab: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
   { tab: 'events-live', label: 'Live Events', icon: 'check' },
   { tab: 'events-pending', label: 'Pending Approval', icon: 'clock' },
+  { tab: 'events-community', label: 'Community Submissions', icon: 'mail' },
   { tab: 'events-add', label: 'Add Event', icon: 'plus' },
   { tab: 'content-venues', label: 'Venues', icon: 'pin' },
   { tab: 'content-advisories', label: 'Advisories', icon: 'compass' },
@@ -60,6 +62,7 @@ const PAGE_TITLES = {
   'tools-maintenance': 'Maintenance',
   'events-live': 'Live Events',
   'events-pending': 'Pending Approval',
+  'events-community': 'Community Submissions',
   'events-add': 'Add Event',
 }
 
@@ -75,6 +78,7 @@ const PAGE_SUBTITLES = {
   'tools-maintenance': 'Danger-zone actions and system health',
   'events-live': 'Approved events (venues + pop-ups) visible in the app',
   'events-pending': 'Scraped events awaiting approval',
+  'events-community': 'Review, edit, and publish community-submitted events',
   'events-add': 'Create a new event manually',
 }
 
@@ -100,6 +104,7 @@ export default function AdminDashboard({ onBackToApp, user }) {
       case 'tools-maintenance': return <AdminMaintenance />
       case 'events-live': return <AdminEvents />
       case 'events-pending': return <AdminPendingEvents />
+      case 'events-community': return <AdminEventSubmissions />
       case 'events-add': return <AdminAddEvent onClose={() => go('events-live')} />
       default: return <AdminOverview onNavigate={go} />
     }
