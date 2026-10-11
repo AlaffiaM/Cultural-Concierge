@@ -75,4 +75,4 @@ function startBotScheduler() {
   }, 15000)
 }
 
-module.exports = { startBotScheduler, runVenuesScheduled }
+module.exports = { startBotScheduler }
