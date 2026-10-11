@@ -32,8 +32,14 @@ const BANNED_TERMS = [
   'real estate', 'property expo', 'buy & sell', 'buy and sell',
 
   // agriculture / industrial trade:
-  'agro', 'poultry', 'agriculture expo', 'agtech',
-  'interplast', 'interplastpack', 'packaging expo', 'industrial expo', 'manufacturing expo',
+  'agro', 'poultry', 'agriculture expo', 'agtech', 'manufacturing', 'industrial trade',
+  'interplast', 'interplastpack', 'packaging expo', 'industrial expo',
+
+  // Immigration, recruiting, and professional networking:
+  'immigration', 'visa application', 'visa processing', 'settlement route',
+  'move and settle', 'move & settle', 'talent recruitment', 'hr round table',
+  'hr roundtable', 'human resources', 'future creators', 'ai innovation',
+  'kids camp', 'talent masterclass',
 
   // private / personal celebrations:
   // NOTE: 'wedding' is safe because 'expo' is already banned above,
@@ -62,6 +68,8 @@ const CORE_VIBE_REGEX = new RegExp(
     '\\b(sip.{0,5}paint|paint.{0,5}sip|painting|art class|art workshop|arts? and crafts?)\\b',
     // Exhibitions / galleries
     '\\b(exhibition|gallery|art show|art fair|museum|vernissage|open.?studio)\\b',
+    // Film and cinema
+    '\\b(film|movie|cinema|screening|documentary)\\b',
     // Festivals / fairs
     '\\b(festival|fayre|fest|bazaar)\\b',
     // Live music
@@ -71,7 +79,7 @@ const CORE_VIBE_REGEX = new RegExp(
     // Food & drink
     '\\b(brunch|sundowner|dinner|degustation|wine tasting|tasting menu|food|dining|chef|cuisine)\\b',
     // Workshops / classes / social groups
-    '\\b(workshop|masterclass|pottery|ceramics|craft|class|learn|course|journaling|knitting|book club|reading group)\\b',
+    '\\b(workshop|pottery|ceramics|craft|journaling|knitting|book club|reading group|cooking class|art class|writing workshop)\\b',
     // Outdoor / nature activities
     '\\b(walk|walking|hike|hiking|trail|outdoor|nature walk)\\b',
     // Performance / entertainment
@@ -85,7 +93,9 @@ const TYPE_RULES = [
   { type: 'Brunch', regex: /\bbrunch\b/ },
   { type: 'Sundowner', regex: /\b(sundowner|sunset)\b/ },
   { type: 'Exhibition', regex: /\b(exhibition|gallery|art show|art fair|museum|vernissage|open.?studio)\b/ },
-  { type: 'Workshop', regex: /\b(sip.{0,5}paint|paint.{0,5}sip|workshop|masterclass|pottery|ceramics|craft|class|learn|course|journaling|knitting|book club|reading group)\b/ },
+  { type: 'Film Festival', regex: /\b(film|cinema)\s+festival\b/ },
+  { type: 'Film', regex: /\b(film|movie|cinema|screening|documentary)\b/ },
+  { type: 'Workshop', regex: /\b(sip.{0,5}paint|paint.{0,5}sip|workshop|pottery|ceramics|craft|journaling|knitting|book club|reading group|cooking class|art class|writing workshop)\b/ },
   { type: 'Festival', regex: /\b(festival|fayre|fest|bazaar)\b/ },
   { type: 'Pop-up', regex: /\b(pop.?up|popup|market|food fair|night market|stall|vendors?|boutique)\b/ },
   { type: 'Dining', regex: /\b(dinner|degustation|wine tasting|tasting menu|food|dining|chef|cuisine)\b/ },
