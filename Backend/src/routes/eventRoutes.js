@@ -3,7 +3,10 @@ const router = express.Router()
 const { requireAdmin } = require('../middleware/admin')
 const eventController = require('../controllers/eventController')
 
-router.get('/', eventController.listEvents)
+router.get('/', (req, res, next) => {
+  if (req.query.all === 'true') return requireAdmin(req, res, next)
+  next()
+}, eventController.listEvents)
 router.get('/upcoming', eventController.getUpcoming)
 router.get('/ghosts', requireAdmin, eventController.getGhosts)
 router.get('/pending', requireAdmin, eventController.getPending)
