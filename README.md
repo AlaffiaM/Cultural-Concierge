@@ -91,6 +91,8 @@ Sign in with Google via Clerk. Access to the CMS is authorized in **two places**
 
 The Happenings view supports keyword search across event names, venues, descriptions, types, and tags, alongside pillar and date filters. The event classifier includes film/cinema listings and avoids treating generic “masterclass,” “class,” or “course” wording as sufficient evidence that an event is relevant.
 
+**Community submissions**: Visitors can submit events without signing in from the home page or public app header. Submissions are validated and stored separately from published events, including submitter contact details that are visible only to admins. An optional event poster can be uploaded when Cloudinary is configured, or linked by URL. Admins review submissions under **Community Submissions**, can edit event details before publishing, or decline with a recorded reason. Publishing creates a normal approved event with `source: "community"`; the original and reviewed event details and any rejection reason are retained as moderation feedback. Submitters receive status emails when Brevo is configured. Public submission is limited to five entries per IP per 15 minutes; poster uploads have a separate ten-per-15-minute limit and 5 MB file cap.
+
 **Venue flow**: Scraped venues → `status: "scraped"` → Admin reviews in the CMS venue scraper → Accept (→ `"inactive"`) or Edit (→ `"active"`).
 
 ## Admin CMS
@@ -110,6 +112,8 @@ Admin requests go through `adminFetch()` (`Frontend/src/admin/adminApi.js`), whi
 - Helmet security headers, CORS with explicit origin allowlist, rate limiting (100 req/min API, 10 req/min AI)
 - Input sanitized via `escapeRegex()` on all `$regex` queries (prevents regex injection)
 - Field whitelisting on updates — no raw `req.body` passed to Mongo
+- Public event lookups expose approved events only; full event and venue lists require admin authorization
+- Event and venue writes validate strings, URLs, dates, tags, and geographic coordinate ranges; malformed scraper rows are skipped
 - Env secrets live in `.env` (git-ignored) / Render dashboard — never committed
 
 **Rotate secrets immediately** if `.env` values are compromised.
