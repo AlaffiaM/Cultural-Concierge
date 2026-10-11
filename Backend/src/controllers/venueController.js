@@ -1,6 +1,6 @@
 const Venue = require('../models/Venue')
 const Event = require('../models/Event')
-const { escapeRegex } = require('../utils/sanitize')
+const { escapeRegex, isValidObjectId, isValidObjectIdArray, parsePagination, validateVenuePayload } = require('../utils/sanitize')
 const { rememberRejection } = require('../services/blocklistService')
 const { ingestScrapedVenues, enrichApprovedVenue } = require('../services/venueService')
 const { lookupVenueImages } = require('../services/venueImageService')
@@ -65,14 +65,18 @@ async function batchEnrichVenues(req, res) {
 
 async function listVenues(req, res) {
   try {
+    if (req.query.city !== undefined &&
+        (typeof req.query.city !== 'string' || req.query.city.length > 80)) {
+      return res.status(400).json({ message: 'city must be a string of 80 characters or fewer.' })
+    }
     const filter = req.query.all === 'true' ? {} : { status: { $in: ['active', 'inactive'] } }
     if (req.query.city) {
       filter.city = { $regex: escapeRegex(req.query.city), $options: 'i' }
     }
 
-    const page = Math.max(parseInt(req.query.page) || 1, 1)
-    const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200)
-    const skip = (page - 1) * limit
+    const pagination = parsePagination(req.query, 50, 200)
+    if (!pagination) return res.status(400).json({ message: 'page and limit must be valid positive integers.' })
+    const { page, limit, skip } = pagination
 
     const [venues, total] = await Promise.all([
       Venue.find(filter)
@@ -107,12 +111,22 @@ async function getVenuesByCity(req, res) {
 async function getVenuesByVibe(req, res) {
   try {
     const { vibe, q } = req.query
+    if (vibe !== undefined && (typeof vibe !== 'string' || vibe.length > 300)) {
+      return res.status(400).json({ message: 'vibe must be a comma-separated list of up to six tags.' })
+    }
+    if (q !== undefined && (typeof q !== 'string' || q.length > 120)) {
+      return res.status(400).json({ message: 'q must be a search string of 120 characters or fewer.' })
+    }
+    const requestedVibes = vibe ? vibe.split(',').map(value => value.trim()) : []
+    if (requestedVibes.length > 6 || requestedVibes.some(value => !value || value.length > 50)) {
+      return res.status(400).json({ message: 'vibe must contain up to six non-empty tags of 50 characters or fewer.' })
+    }
     const filter = {
       city: { $regex: escapeRegex(req.params.city), $options: 'i' },
       status: { $in: ['active', 'inactive'] },
     }
     if (vibe) {
-      const vibes = vibe.split(',').map(v => new RegExp(v.trim(), 'i'))
+      const vibes = requestedVibes.map(value => new RegExp(escapeRegex(value), 'i'))
       filter.vibeTags = { $in: vibes }
     }
     if (q && q.length >= 2) {
@@ -125,7 +139,7 @@ async function getVenuesByVibe(req, res) {
     }
     let venues = await Venue.find(filter).lean()
     if (vibe) {
-      const requested = vibe.split(',').map(v => v.trim().toLowerCase())
+      const requested = requestedVibes.map(value => value.toLowerCase())
       venues = venues.map(venue => {
         const matchCount = (venue.vibeTags || []).filter(t =>
           requested.includes(t.toLowerCase())
@@ -160,20 +174,25 @@ async function getUpcomingVenuesByCity(req, res) {
 
 async function createVenue(req, res) {
   try {
+    const validation = validateVenuePayload(req.body)
+    if (!validation.isValid) {
+      return res.status(400).json({ message: 'Invalid venue payload', errors: validation.errors })
+    }
+    const data = validation.sanitized
     const venue = new Venue({
-      name: req.body.name,
-      city: req.body.city,
-      type: req.body.type,
-      pillar: req.body.pillar,
-      vibeTags: req.body.vibeTags || [],
-      tags: req.body.tags || [],
-      description: req.body.description,
-      tip: req.body.tip,
-      address: req.body.address,
-      images: req.body.images || [],
-      coordinates: req.body.coordinates,
-      source: req.body.source || 'manual',
-      status: req.body.status || 'scraped',
+      name: data.name,
+      city: data.city,
+      type: data.type,
+      pillar: data.pillar,
+      vibeTags: data.vibeTags || [],
+      tags: data.tags || [],
+      description: data.description,
+      tip: data.tip,
+      address: data.address,
+      images: data.images || [],
+      coordinates: data.coordinates,
+      source: data.source || 'manual',
+      status: data.status || 'scraped',
     })
     const saved = await venue.save()
     res.status(201).json(saved)
@@ -184,9 +203,14 @@ async function createVenue(req, res) {
 
 async function updateVenue(req, res) {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid venue ID.' })
+    const validation = validateVenuePayload(req.body, { partial: true })
+    if (!validation.isValid) {
+      return res.status(400).json({ message: 'Invalid venue payload', errors: validation.errors })
+    }
     const updates = {}
     for (const key of VENUE_ALLOWED_UPDATES) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key]
+      if (validation.sanitized[key] !== undefined) updates[key] = validation.sanitized[key]
     }
     const venue = await Venue.findByIdAndUpdate(req.params.id, updates, { returnDocument: 'after', runValidators: true })
     if (!venue) return res.status(404).json({ message: 'Venue not found' })
@@ -198,6 +222,7 @@ async function updateVenue(req, res) {
 
 async function deleteVenue(req, res) {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid venue ID.' })
     const venue = await Venue.findByIdAndDelete(req.params.id)
     if (!venue) return res.status(404).json({ message: 'Venue not found' })
     if (venue.source && venue.source !== 'manual') {
@@ -233,17 +258,17 @@ async function runVenueScraper(req, res) {
 async function acceptScrapedVenues(req, res) {
   try {
     const { venueIds } = req.body
-    if (!venueIds || !Array.isArray(venueIds) || venueIds.length === 0) {
-      return res.status(400).json({ message: 'venueIds array is required' })
+    if (!isValidObjectIdArray(venueIds)) {
+      return res.status(400).json({ message: 'venueIds must be a non-empty array of valid IDs.' })
     }
 
     const result = await Venue.updateMany(
-      { _id: { $in: venueIds } },
+      { _id: { $in: venueIds }, status: 'scraped' },
       { $set: { status: 'active' } }
     )
 
     // Auto-fill images (and descriptions where possible) for just-approved venues.
-    const approved = await Venue.find({ _id: { $in: venueIds } }).lean()
+    const approved = await Venue.find({ _id: { $in: venueIds }, status: 'active' }).lean()
     let enriched = 0
     await Promise.allSettled(approved.map(async v => {
       const updates = await enrichApprovedVenue(v)
@@ -260,11 +285,11 @@ async function acceptScrapedVenues(req, res) {
 async function rejectScrapedVenues(req, res) {
   try {
     const { venueIds } = req.body
-    if (!venueIds || !Array.isArray(venueIds) || venueIds.length === 0) {
-      return res.status(400).json({ message: 'venueIds array is required' })
+    if (!isValidObjectIdArray(venueIds)) {
+      return res.status(400).json({ message: 'venueIds must be a non-empty array of valid IDs.' })
     }
 
-    const venues = await Venue.find({ _id: { $in: venueIds } }).lean()
+    const venues = await Venue.find({ _id: { $in: venueIds }, status: 'scraped' }).lean()
     for (const v of venues) {
       try {
         await rememberRejection('venue', { name: v.name, city: v.city, source: v.source })
@@ -273,7 +298,7 @@ async function rejectScrapedVenues(req, res) {
       }
     }
 
-    const result = await Venue.deleteMany({ _id: { $in: venueIds } })
+    const result = await Venue.deleteMany({ _id: { $in: venueIds }, status: 'scraped' })
 
     res.json({ deleted: result.deletedCount })
   } catch (err) {
@@ -285,8 +310,8 @@ async function rejectScrapedVenues(req, res) {
 async function bulkDeleteVenues(req, res) {
   try {
     const { venueIds } = req.body
-    if (!venueIds || !Array.isArray(venueIds) || venueIds.length === 0) {
-      return res.status(400).json({ message: 'venueIds array is required' })
+    if (!isValidObjectIdArray(venueIds)) {
+      return res.status(400).json({ message: 'venueIds must be a non-empty array of valid IDs.' })
     }
 
     // Skip-list bot-sourced venues so they don't re-import on the next run.
