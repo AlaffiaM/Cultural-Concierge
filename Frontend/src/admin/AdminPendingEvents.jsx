@@ -7,6 +7,15 @@ import { PILLAR_STYLE, SOURCE_STYLE } from './components/adminStyles'
 
 const CITIES = ['All', 'Lagos', 'Abuja', 'Kigali', 'Nairobi']
 
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : null
+  } catch {
+    return null
+  }
+}
+
 function PillarBadge({ pillar }) {
   if (!pillar) return <span style={{ color: 'var(--admin-text-muted)', fontSize: 12 }}>—</span>
   const s = PILLAR_STYLE[pillar] || { bg: 'rgba(255,255,255,0.06)', color: '#888', border: '#888' }
@@ -224,6 +233,7 @@ export default function AdminPendingEvents() {
               <th style={{ width: 48 }}></th>
               <th>Name</th>
               <th>Venue</th>
+              <th>Booking</th>
               <th>Source</th>
               <th>City</th>
               <th>Date</th>
@@ -232,62 +242,68 @@ export default function AdminPendingEvents() {
             </tr>
           </thead>
           <tbody>
-            {pending.map(ev => (
-              <tr key={ev._id} style={{ transition: 'background 0.1s' }}>
-                <td style={{ textAlign: 'center' }}>
-                  <input
-                    type="checkbox"
-                    checked={selected.has(ev._id)}
-                    onChange={() => toggleSelect(ev._id)}
-                    style={{ accentColor: 'var(--admin-copper)', width: 14, height: 14, cursor: 'pointer' }}
-                  />
-                </td>
-                <td>
-                  {ev.imageUrl ? (
-                    <a href={ev.imageUrl} target="_blank" rel="noopener noreferrer">
-                      <img src={ev.imageUrl} alt="" className="admin-thumb" style={{ width: 36, height: 36 }} />
-                    </a>
-                  ) : (
-                    <div className="admin-thumb" style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.04)' }} />
-                  )}
-                </td>
-                <td style={{ fontWeight: 600, color: 'var(--admin-text)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {ev.name}
-                </td>
-                <td style={{ color: 'var(--admin-text-muted)', fontSize: 11, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {ev.venue || '—'}
-                </td>
-                <td>
-                  <SourceBadge source={ev.source} />
-                </td>
-                <td style={{ fontSize: 11, color: 'var(--admin-text-muted)' }}>{ev.city}</td>
-                <td style={{ fontSize: 11, color: 'var(--admin-text-muted)', whiteSpace: 'nowrap' }}>
-                  {new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </td>
-                <td>
-                  <PillarBadge pillar={ev.pillar} />
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  <button
-                    onClick={() => handleDeleteSingle(ev._id)}
-                    disabled={deleting}
-                    title="Delete event"
-                    style={{
-                      background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer',
-                      color: 'var(--admin-text-muted)', opacity: deleting ? 0.3 : 0.5,
-                      padding: 4, borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => { if (!deleting) { e.currentTarget.style.color = '#dc3232'; e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(220,50,50,0.1)'; } }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--admin-text-muted)'; e.currentTarget.style.opacity = deleting ? '0.3' : '0.5'; e.currentTarget.style.background = 'none'; }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-                      <path d="M3 3.5h8M5.5 3.5V2.5a1 1 0 011-1h1a1 1 0 011 1v1M6 5.5v3.5M8 5.5v3.5M4 3.5l.5 8a1 1 0 001 1h3a1 1 0 001-1l.5-8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {pending.map(ev => {
+              const bookingUrl = safeExternalUrl(ev.url)
+              return (
+                <tr key={ev._id} style={{ transition: 'background 0.1s' }}>
+                  <td style={{ textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(ev._id)}
+                      onChange={() => toggleSelect(ev._id)}
+                      style={{ accentColor: 'var(--admin-copper)', width: 14, height: 14, cursor: 'pointer' }}
+                    />
+                  </td>
+                  <td>
+                    {ev.imageUrl ? (
+                      <a href={ev.imageUrl} target="_blank" rel="noopener noreferrer">
+                        <img src={ev.imageUrl} alt="" className="admin-thumb" style={{ width: 36, height: 36 }} />
+                      </a>
+                    ) : (
+                      <div className="admin-thumb" style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.04)' }} />
+                    )}
+                  </td>
+                  <td style={{ fontWeight: 600, color: 'var(--admin-text)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {ev.name}
+                  </td>
+                  <td style={{ color: 'var(--admin-text-muted)', fontSize: 11, maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {ev.venue || '—'}
+                  </td>
+                  <td style={{ fontSize: 11 }}>
+                    {bookingUrl ? <a href={bookingUrl} target="_blank" rel="noopener noreferrer">Open link</a> : '—'}
+                  </td>
+                  <td>
+                    <SourceBadge source={ev.source} />
+                  </td>
+                  <td style={{ fontSize: 11, color: 'var(--admin-text-muted)' }}>{ev.city}</td>
+                  <td style={{ fontSize: 11, color: 'var(--admin-text-muted)', whiteSpace: 'nowrap' }}>
+                    {new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </td>
+                  <td>
+                    <PillarBadge pillar={ev.pillar} />
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <button
+                      onClick={() => handleDeleteSingle(ev._id)}
+                      disabled={deleting}
+                      title="Delete event"
+                      style={{
+                        background: 'none', border: 'none', cursor: deleting ? 'not-allowed' : 'pointer',
+                        color: 'var(--admin-text-muted)', opacity: deleting ? 0.3 : 0.5,
+                        padding: 4, borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.15s',
+                      }}
+                      onMouseEnter={e => { if (!deleting) { e.currentTarget.style.color = '#dc3232'; e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(220,50,50,0.1)'; } }}
+                      onMouseLeave={e => { e.currentTarget.style.color = 'var(--admin-text-muted)'; e.currentTarget.style.opacity = deleting ? '0.3' : '0.5'; e.currentTarget.style.background = 'none'; }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                        <path d="M3 3.5h8M5.5 3.5V2.5a1 1 0 011-1h1a1 1 0 011 1v1M6 5.5v3.5M8 5.5v3.5M4 3.5l.5 8a1 1 0 001 1h3a1 1 0 001-1l.5-8" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
