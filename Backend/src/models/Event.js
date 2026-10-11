@@ -18,6 +18,7 @@ const eventSchema = new mongoose.Schema({
   description: String,
   tip: String,
   imageUrl: String,
+  url: String,
   venue: String,
   price: String,
   status: { type: String, enum: ['draft', 'approved'], default: 'draft' },
