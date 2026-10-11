@@ -1,20 +1,11 @@
-const puppeteer = require('puppeteer')
-const { install, resolveBuildId, detectBrowserPlatform } = require('@puppeteer/browsers')
+// Mookh connector — pulls events via the Mookh API.
+// Requires MOOKH_API_TOKEN (and optionally MOOKH_API_BASE). Mookh's API
+// (api.mookh.com) is access-gated; without credentials this source is
+// skipped gracefully instead of scraping their public pages.
+const axios = require('axios')
 const { classifyType } = require('../utils/eventClassifier')
 
 const SOURCE = 'mookh'
-
-const CHROME_CACHE = process.env.PUPPETEER_CACHE_DIR || '/opt/render/.cache/puppeteer'
-
-async function ensureChrome() {
-  const platform = detectBrowserPlatform()
-  const buildId = await resolveBuildId('chrome', platform, 'stable')
-  console.log(`[mookh] Ensuring Chrome ${buildId} (${platform})...`)
-  const result = await install({ browser: 'chrome', buildId, platform, cacheDir: CHROME_CACHE })
-  return result.executablePath
-}
-
-const MONTHS = { jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11 }
 
 function classifyPillar(name, desc) {
   const text = `${name} ${desc || ''}`.toLowerCase()
@@ -23,145 +14,105 @@ function classifyPillar(name, desc) {
   return 'CULTURE'
 }
 
-function extractMookhDate(text) {
-  // Parse date from listing: "Sat 04 Oct" or "Mon 01 Jun"
-  const m = text.match(/^\w{3}\s+(\d{1,2})\s+(\w{3})/)
-  if (!m) return null
-  const day = parseInt(m[1])
-  const month = MONTHS[m[2].toLowerCase().slice(0, 3)]
-  if (month === undefined) return null
-  const year = new Date().getFullYear()
-  const d = new Date(year, month, day)
-  if (isNaN(d.getTime())) return null
-  // If date is in the past and more than 30 days ago, assume next year
-  const now = new Date()
-  if (d < new Date(now.getTime() - 30 * 86400000)) {
-    d.setFullYear(year + 1)
-  }
-  return d
-}
-
-function extractTimeRange(text) {
-  // Extract time range like "02:00 pm - 08:00 pm"
-  const m = text.match(/(\d{1,2}:\d{2}\s*[ap]m)\s*-\s*(\d{1,2}:\d{2}\s*[ap]m)/i)
-  return m ? m[1].trim() : ''
-}
-
-function extractVenue(text) {
-  // Venue is the last part after the time range
-  const m = text.match(/\d{1,2}:\d{2}\s*[ap]m\s*-\s*\d{1,2}:\d{2}\s*[ap]m\s+(.+)$/i)
-  return m ? m[1].trim() : 'Nairobi'
-}
-
-function extractName(text) {
-  // Name is between the month and the date range
-  // Pattern: "{day} {date} {month} {NAME} {date_range}"
-  const m = text.match(/^\w{3}\s+\d{1,2}\s+\w{3}\s+(.+?)\s+\w{3},/)
-  if (m) return m[1].trim()
-  // Fallback: between month and time
-  const m2 = text.match(/^\w{3}\s+\d{1,2}\s+\w{3}\s+(.+?)\s+\d{1,2}:\d{2}/)
-  return m2 ? m2[1].trim() : ''
-}
-
 function extractCity(text) {
-  const lastLine = text.split('\n').pop() || text
-  const t = lastLine.toLowerCase()
-  if (/\bnairobi\b/.test(t)) return 'Nairobi'
+  if (!text) return 'Nairobi'
+  const t = text.toLowerCase()
   if (/\blagos\b/.test(t)) return 'Lagos'
   if (/\babuja\b/.test(t)) return 'Abuja'
   if (/\bkigali\b/.test(t)) return 'Kigali'
+  if (/\bnairobi\b/.test(t)) return 'Nairobi'
   return 'Nairobi'
 }
 
-async function scrape() {
-  let error = null
-  const executablePath = await ensureChrome()
-  const browser = await puppeteer.launch({
-    headless: true,
-    executablePath,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  })
-
-  const events = []
-
+function extractTime(dateStr) {
+  if (!dateStr) return ''
   try {
-    const page = await browser.newPage()
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
-    await page.goto('https://mookh.com/', { waitUntil: 'networkidle2', timeout: 30000 })
-    await new Promise(r => setTimeout(r, 3000))
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  } catch (_) {
+    return ''
+  }
+}
 
-    // Scroll to load more events
-    for (let i = 0; i < 5; i++) {
-      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
-      await new Promise(r => setTimeout(r, 1500))
-    }
-    await new Promise(r => setTimeout(r, 2000))
+function minPrice(tickets) {
+  const prices = (tickets || [])
+    .map(t => parseFloat(t?.price ?? t?.amount))
+    .filter(n => !isNaN(n) && n >= 0)
+  if (!prices.length) return ''
+  const min = Math.min(...prices)
+  return min === 0 ? 'Free' : String(min)
+}
 
-    // Extract event cards
-    const cards = await page.evaluate(() => {
-      const links = document.querySelectorAll('a[href*="/event/"]')
-      const seen = new Set()
-      const results = []
-      links.forEach(link => {
-        const href = link.getAttribute('href')
-        if (seen.has(href)) return
-        seen.add(href)
-        const text = link.innerText.replace(/\s+/g, ' ').trim()
-        if (!text) return
-        const img = link.querySelector('img')
-        const nameEl = link.querySelector('h4')
-        results.push({
-          href,
-          text,
-          imageUrl: img ? img.getAttribute('src') : '',
-          name: nameEl ? nameEl.innerText.trim() : '',
-        })
-      })
-      return results
-    })
+function normalizeItem(item) {
+  const name = item.title || item.name || item.event_name || ''
+  if (!name) return null
+  const date = new Date(item.start_date || item.startDate || item.start || item.date)
+  if (isNaN(date.getTime())) return null
+  return {
+    name,
+    city: extractCity(`${item.city || ''} ${item.venue || ''} ${item.location || ''}`),
+    date,
+    description: item.description || item.details || '',
+    imageUrl: item.image || item.imageUrl || item.poster || '',
+    pillar: classifyPillar(name, `${item.description || ''} ${item.category_name || ''}`),
+    type: classifyType(name, `${item.description || ''} ${item.category_name || ''}`),
+    venue: item.venue || item.location_name || '',
+    price: minPrice(item.tickets) || item.price || '',
+    source: SOURCE,
+    url: item.url || item.eventUrl || '',
+    time: extractTime(item.start_date || item.startDate || item.start),
+    coordinates: item.latitude && item.longitude ? { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) } : null,
+  }
+}
 
-    for (const card of cards) {
-      if (!card.text || card.text.length < 10) continue
+function extractItems(payload) {
+  if (Array.isArray(payload)) return payload
+  if (payload?.data && Array.isArray(payload.data)) return payload.data
+  if (payload?.events && Array.isArray(payload.events)) return payload.events
+  if (payload?.data?.events && Array.isArray(payload.data.events)) return payload.data.events
+  return payload?.items && Array.isArray(payload.items) ? payload.items : []
+}
 
-      const date = extractMookhDate(card.text)
-      if (!date) continue
+async function scrape() {
+  const base = (process.env.MOOKH_API_BASE || 'https://api.mookh.com').replace(/\/$/, '')
+  const token = process.env.MOOKH_API_TOKEN
 
-      const name = card.name || extractName(card.text)
-      if (!name || name.length < 2) continue
-
-      const time = extractTimeRange(card.text)
-      const venue = extractVenue(card.text)
-      const city = extractCity(card.text)
-
-      events.push({
-        name,
-        city,
-        date,
-        description: '',
-        imageUrl: card.imageUrl || '',
-        pillar: classifyPillar(name, ''),
-        type: classifyType(name, ''),
-        venue,
-        source: SOURCE,
-        time,
-        coordinates: null,
-      })
-    }
-  } catch (err) {
-    console.error('[mookh] Scrape failed:', err.message)
-    error = err.message
-  } finally {
-    await browser.close()
+  if (!token) {
+    console.warn('[mookh] MOOKH_API_TOKEN not configured — skipping source')
+    return { events: [], error: null, skipped: true }
   }
 
-  return { events, error }
+  const events = []
+  const errors = []
+
+  // Try the most common Mookh endpoints. The exact route/schema may need a
+  // one-line adjustment once you have live API access (reach out to Mookh).
+  for (const endpoint of ['/events', '/api/v1/events', '/api/events']) {
+    try {
+      const { data } = await axios.get(`${base}${endpoint}`, {
+        timeout: 20000,
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+      })
+      const items = extractItems(data)
+      for (const item of items) {
+        const ev = normalizeItem(item)
+        if (ev) events.push(ev)
+      }
+      if (events.length) break
+    } catch (err) {
+      errors.push(`${endpoint}: ${err.response?.status || err.message}`)
+    }
+  }
+
+  return { events, error: errors.length ? errors.join('; ') : null }
 }
 
 module.exports = { scrape }
 
 if (require.main === module) {
   scrape().then(({ events, error }) => {
-    if (error) console.error(`[mookh] Error: ${error}`)
+    if (error) console.error(`[mookh] Info: ${error}`)
     console.log(`Got ${events.length} events from Mookh`)
     events.forEach(e => console.log(`  ${e.date.toISOString().slice(0, 10)} | ${e.pillar.padEnd(8)} | ${e.city.padEnd(8)} | ${e.name.slice(0, 50)}`))
   }).catch(e => console.error(e))
