@@ -47,7 +47,10 @@ Output Requirements:
 2. Do not include any markdown styling, backticks, or code block wrappers. Output raw JSON only.
 3. Keep all instruction and advisory_text under 20 words, actionable and direct.
 4. Distinguish between general environmental risks and legal/entry requirements.
-5. For city_overview, write 2-3 sentences capturing the city's character.
+5. Give practical, city-specific guidance; avoid repeating identical advice across cities.
+6. Do not invent current outbreaks, entry rules, or named high-risk neighborhoods. If current details cannot be verified, say so and direct travelers to official government sources.
+7. Treat the response as general guidance, not a real-time alert. Set last_updated to today's date.
+8. For city_overview, write 2-3 sentences capturing the city's character.
 
 Use these exact city_id values:
   - Nairobi → "NBO-KEN"
@@ -67,9 +70,9 @@ Schema:
       "security_level_badge": "ADVISORY_LEVEL_TEXT",
       "crime_rating": "CRIME_SUMMARY_TEXT",
       "operational_guidelines": [
-        { "category": "Airport Transit", "instruction": "Free WiFi available at the airport arrivals hall. Connect to book your ride." },
-        { "category": "Night Travel", "instruction": "Avoid all non-essential night travel. Use armored vehicles if possible." },
-        { "category": "High-Risk Zones", "instruction": "ACTIONABLE_TEXT" }
+        { "category": "Airport Transit", "instruction": "Give practical, destination-specific airport arrival and transport guidance." },
+        { "category": "Night Travel", "instruction": "Give proportionate, city-specific night travel precautions; do not prescribe armored vehicles without a verified need." },
+        { "category": "High-Risk Zones", "instruction": "Name locations only when supported by current official guidance; otherwise say to check official local advisories." }
       ]
     },
     "health": {
@@ -94,6 +97,7 @@ async function scrape() {
   let updated = 0
   for (const city of cities) {
     if (!city.city_id || !city.city_name) { console.warn('[advisors-gemini] Skipping entry missing city_id/name'); continue }
+    city.last_updated = new Date().toISOString().slice(0, 10)
     await CityAdvisory.findOneAndUpdate({ city_id: city.city_id }, city, { upsert: true, new: true })
     updated++
     console.log(`[advisors-gemini] ${city.city_name} (${city.city_id})`)
