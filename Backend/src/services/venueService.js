@@ -1,11 +1,8 @@
 const axios = require('axios')
 const Venue = require('../models/Venue')
+const { escapeRegex, validateVenuePayload } = require('../utils/sanitize')
 const { getEntries, isBlocked } = require('./blocklistService')
 const { lookupVenueImages } = require('./venueImageService')
-
-function escapeRegex(str) {
-  return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
 
 function normalizeName(name) {
   return String(name || '').trim().toLowerCase()
@@ -38,37 +35,52 @@ async function ingestScrapedVenues(source) {
     let blocked = 0
     let skipped = 0
 
-    for (const data of scraped) {
-      const name = String(data.name || '').trim()
+    for (const raw of scraped) {
+      if (!raw || typeof raw.name !== 'string' || typeof raw.city !== 'string') {
+        skipped++
+        continue
+      }
+      const name = raw.name.trim()
       if (!name) {
         skipped++
         continue
       }
-      if (isBlocked(blockEntries, name, data.city)) {
+      if (isBlocked(blockEntries, name, raw.city)) {
         console.log(`[venues] BLOCKED: "${name}"`)
         blocked++
         continue
       }
 
-      const existing = await findExisting(name, data.city)
+      const validation = validateVenuePayload({
+        name,
+        city: raw.city,
+        type: raw.type || 'Venue',
+        pillar: raw.pillar || 'CULTURE',
+        tags: raw.tags || [],
+        vibeTags: raw.vibeTags || [],
+        description: raw.description || '',
+        tip: raw.tip || '',
+        address: raw.address || '',
+        images: raw.images || [],
+        coordinates: raw.coordinates,
+        source: raw.source || source,
+      })
+      if (!validation.isValid) {
+        console.warn(`[venues] skipped invalid scraped venue: "${name.slice(0, 120)}"`)
+        skipped++
+        continue
+      }
+
+      const venueData = validation.sanitized
+      const existing = await findExisting(name, venueData.city)
       if (existing) {
         skipped++
         continue
       }
 
       const venue = await Venue.create({
-        name,
-        city: data.city,
-        type: data.type || 'Venue',
-        pillar: data.pillar || 'CULTURE',
-        tags: data.tags || [],
-        vibeTags: data.vibeTags || [],
-        description: data.description || '',
-        tip: data.tip || '',
-        address: data.address || '',
-        images: data.images || [],
-        coordinates: data.coordinates || null,
-        source: data.source || source,
+        ...venueData,
+        coordinates: venueData.coordinates || null,
         status: 'scraped',
       })
       newVenues.push(venue)
@@ -115,4 +127,4 @@ async function enrichApprovedVenue(venue) {
   return updates
 }
 
-module.exports = { ingestScrapedVenues, enrichApprovedVenue, generateVenueDescription }
+module.exports = { ingestScrapedVenues, enrichApprovedVenue }
