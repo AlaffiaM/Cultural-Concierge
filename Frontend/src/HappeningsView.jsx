@@ -5,6 +5,15 @@ import "./HappeningsView.css";
 const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function HappeningsView({
   events,
   allVenues,
@@ -17,6 +26,7 @@ export default function HappeningsView({
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const [dateRange, setDateRange] = useState(null);
+  const [eventSearch, setEventSearch] = useState("");
 
   const now = new Date();
   const [calMonth, setCalMonth] = useState(now.getMonth());
@@ -91,6 +101,14 @@ export default function HappeningsView({
   function filteredEvents() {
     let list = events;
     if (activePillar) list = list.filter(e => e.pillar === activePillar);
+    const search = eventSearch.trim().toLocaleLowerCase();
+    if (search) {
+      list = list.filter(e =>
+        [e.name, e.venue, e.description, e.type, ...(e.tags || [])]
+          .filter(Boolean)
+        .some(value => String(value).toLocaleLowerCase().includes(search))
+      );
+    }
     if (dateRange) {
       const start = new Date(dateRange.start);
       start.setHours(0, 0, 0, 0);
@@ -131,6 +149,16 @@ export default function HappeningsView({
           {showCalendar ? 'Hide Calendar' : 'Filter by Date'}
         </button>
       </div>
+
+      <label className="event-search">
+        <input
+          type="search"
+          aria-label="Search events, venues, or types"
+          value={eventSearch}
+          onChange={e => setEventSearch(e.target.value)}
+          placeholder="Search events, venues, or types..."
+        />
+      </label>
 
       {dateRange && (
         <div className="cal-range-active">
@@ -185,7 +213,7 @@ export default function HappeningsView({
                 </div>
               ))
             : <p className="empty-state">
-                {dateRange ? "No events in this date range." : `No upcoming events in ${selectedCity}.`}
+                {eventSearch ? `No events match “${eventSearch}”.` : dateRange ? "No events in this date range." : `No upcoming events in ${selectedCity}.`}
               </p>
           : visible.map((event) => {
               const d = new Date(event.date);
@@ -245,6 +273,7 @@ export default function HappeningsView({
               const ev = selectedEvent;
               const d = new Date(ev.date);
               const cd = countdownTo(ev.date);
+              const bookingUrl = safeExternalUrl(ev.url);
               return (
                 <>
                   {ev.imageUrl && (
@@ -266,6 +295,12 @@ export default function HappeningsView({
                         <div className="event-modal-detail">
                           <span className="event-modal-label">Venue</span>
                           <span>{ev.venue}</span>
+                        </div>
+                      )}
+                      {bookingUrl && (
+                        <div className="event-modal-detail">
+                          <span className="event-modal-label">Booking</span>
+                          <a href={bookingUrl} target="_blank" rel="noopener noreferrer">View event / tickets</a>
                         </div>
                       )}
                       {ev.price && (
