@@ -6,7 +6,7 @@ import './EventEditor.css'
 const CITIES = ['Lagos', 'Abuja', 'Kigali', 'Nairobi']
 const PILLARS = ['CULTURE', 'WELLNESS', 'SOCIAL']
 const VIBES = ['Premium', 'Chic', 'Serene', 'Intimate', 'Vibrant', 'Curated']
-const TYPES = ['Festival', 'Exhibition', 'Workshop', 'Performance', 'Dining', 'Wellness', 'Music', 'Art', 'Pop-up', 'Brunch', 'Sundowner', 'Other']
+const TYPES = ['Festival', 'Exhibition', 'Film Festival', 'Film', 'Workshop', 'Performance', 'Dining', 'Wellness', 'Music', 'Art', 'Pop-up', 'Brunch', 'Sundowner', 'Other']
 
 const emptyForm = {
   name: '',
@@ -21,6 +21,7 @@ const emptyForm = {
   description: '',
   tip: '',
   imageUrl: '',
+  url: '',
   coordinates: { lat: '', lng: '' },
   linkedSpotId: '',
   isGhostLocation: false,
@@ -48,6 +49,7 @@ export default function EventEditor({ event, onClose }) {
         description: event.description || '',
         tip: event.tip || '',
         imageUrl: event.imageUrl || '',
+        url: event.url || '',
         coordinates: {
           lat: event.coordinates?.lat ?? '',
           lng: event.coordinates?.lng ?? '',
@@ -92,6 +94,7 @@ export default function EventEditor({ event, onClose }) {
         description: form.description,
         tip: form.tip,
         imageUrl: form.imageUrl,
+        url: form.url,
         coordinates: {
           lat: parseFloat(form.coordinates.lat) || 0,
           lng: parseFloat(form.coordinates.lng) || 0,
@@ -189,6 +192,11 @@ export default function EventEditor({ event, onClose }) {
         <div className="editor-field editor-field-wide">
           <label>Tip</label>
           <input value={form.tip} onChange={e => handleChange('tip', e.target.value)} placeholder="Pro tip for attendees..." />
+        </div>
+
+        <div className="editor-field editor-field-wide">
+          <label>Booking or event website</label>
+          <input type="url" value={form.url} onChange={e => handleChange('url', e.target.value)} placeholder="https://..." />
         </div>
 
         <div className="editor-field editor-field-wide">
