@@ -1,6 +1,6 @@
 // Event endpoints. `status`: draft = scraped awaiting approval, approved = live.
 const Event = require('../models/Event')
-const { escapeRegex, validateEventPayload } = require('../utils/sanitize')
+const { escapeRegex, isValidIsoDate, isValidObjectId, parsePagination, validateEventPayload } = require('../utils/sanitize')
 const { rememberRejection } = require('../services/blocklistService')
 
 const EVENT_ALLOWED_UPDATES = ['name', 'city', 'coordinates', 'linkedSpotId', 'date', 'endDate', 'time', 'type', 'pillar', 'tags', 'vibe', 'description', 'tip', 'imageUrl', 'url', 'venue', 'price', 'status', 'isGhostLocation']
@@ -44,6 +44,13 @@ function fuzzyMatch(nameA, nameB) {
 
 async function listEvents(req, res) {
   try {
+    for (const field of ['city', 'pillar', 'search']) {
+      const maxLength = field === 'search' ? 120 : 80
+      if (req.query[field] !== undefined &&
+          (typeof req.query[field] !== 'string' || req.query[field].length > maxLength)) {
+        return res.status(400).json({ message: `${field} must be a string of ${maxLength} characters or fewer.` })
+      }
+    }
     const filter = {}
     if (req.query.all !== 'true') {
       filter.status = 'approved'
@@ -64,9 +71,9 @@ async function listEvents(req, res) {
       filter.$or = [{ name: re }, { venue: re }, { city: re }]
     }
 
-    const page = Math.max(parseInt(req.query.page) || 1, 1)
-    const limit = Math.min(Math.max(parseInt(req.query.limit) || 20, 1), 100)
-    const skip = (page - 1) * limit
+    const pagination = parsePagination(req.query, 20, 100)
+    if (!pagination) return res.status(400).json({ message: 'page and limit must be valid positive integers.' })
+    const { page, limit, skip } = pagination
 
     const [events, total] = await Promise.all([
       Event.find(filter).sort({ date: 1 }).skip(skip).limit(limit).populate('linkedSpotId', 'name type'),
@@ -83,10 +90,19 @@ async function listEvents(req, res) {
 async function getUpcoming(req, res) {
   try {
     const now = new Date()
-    const dateFilter = { $gte: req.query.startDate ? new Date(req.query.startDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate()) }
+    for (const field of ['city', 'startDate', 'endDate']) {
+      const value = req.query[field]
+      if (value !== undefined && (typeof value !== 'string' ||
+          (field === 'city' ? value.length > 80 : !isValidIsoDate(value)))) {
+        return res.status(400).json({ message: field === 'city' ? 'city must be a string of 80 characters or fewer.' : `${field} must be a valid ISO date.` })
+      }
+    }
+    const startDate = req.query.startDate ? new Date(req.query.startDate) : new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const dateFilter = { $gte: startDate }
     if (req.query.endDate) {
       const end = new Date(req.query.endDate)
       end.setHours(23, 59, 59, 999)
+      if (end < startDate) return res.status(400).json({ message: 'endDate cannot be earlier than startDate.' })
       dateFilter.$lte = end
     }
     const filter = {
@@ -107,7 +123,10 @@ async function getUpcoming(req, res) {
 async function getGhosts(req, res) {
   try {
     const filter = { isGhostLocation: true }
-    if (req.query.status && req.query.status !== 'all' && GHOST_VALID_STATUSES.includes(req.query.status)) {
+    if (req.query.status && req.query.status !== 'all' && !GHOST_VALID_STATUSES.includes(req.query.status)) {
+      return res.status(400).json({ message: 'status must be draft, approved, or all.' })
+    }
+    if (req.query.status && req.query.status !== 'all') {
       filter.status = req.query.status
     }
     const events = await Event.find(filter).sort({ date: -1 }).populate('linkedSpotId', 'name type')
@@ -158,7 +177,10 @@ async function getToday(req, res) {
 
 async function getEventById(req, res) {
   try {
-    const event = await Event.findById(req.params.id).populate('linkedSpotId', 'name type details')
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid event ID.' })
+    }
+    const event = await Event.findOne({ _id: req.params.id, status: 'approved' }).populate('linkedSpotId', 'name type details')
     if (!event) return res.status(404).json({ message: 'Event not found' })
     res.json(event)
   } catch (err) {
@@ -202,7 +224,7 @@ async function createEvent(req, res) {
       url: payload.url,
       isGhostLocation: payload.isGhostLocation || false,
       source: payload.source || 'manual',
-      status: 'approved',
+      status: payload.status || 'approved',
     })
     const saved = await event.save()
     res.status(201).json(saved)
@@ -213,6 +235,7 @@ async function createEvent(req, res) {
 
 async function updateEvent(req, res) {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid event ID.' })
     const validation = validateEventPayload(req.body, { partial: true })
     if (!validation.isValid) {
       return res.status(400).json({ message: 'Invalid event payload', errors: validation.errors })
@@ -232,6 +255,7 @@ async function updateEvent(req, res) {
 
 async function approveEvent(req, res) {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid event ID.' })
     const event = await Event.findByIdAndUpdate(
       req.params.id,
       { status: 'approved' },
@@ -247,6 +271,12 @@ async function approveEvent(req, res) {
 async function deduplicateEvents(req, res) {
   try {
     const mode = req.query.mode || 'all'
+    if (!['all', 'multi-city'].includes(mode)) {
+      return res.status(400).json({ message: 'mode must be all or multi-city.' })
+    }
+    if (req.query.status && !['draft', 'approved'].includes(req.query.status)) {
+      return res.status(400).json({ message: 'status must be draft or approved.' })
+    }
     const filter = {}
     if (req.query.status) filter.status = req.query.status
 
@@ -321,6 +351,7 @@ async function deduplicateEvents(req, res) {
 
 async function deleteEvent(req, res) {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid event ID.' })
     const event = await Event.findByIdAndDelete(req.params.id)
     if (!event) return res.status(404).json({ message: 'Event not found' })
     // If it came from a bot source, remember it so it never re-imports.
