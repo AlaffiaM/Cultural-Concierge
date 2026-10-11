@@ -244,6 +244,22 @@
   margin-left: auto;
 }
 
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-menu-profile {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-menu-toggle {
+  display: none;
+}
+
 .submit-event-nav {
   letter-spacing: 0.08em;
 }
@@ -321,9 +337,14 @@
   transform: translateY(0);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 800px) {
   .header {
     padding: 10px 12px 14px;
+  }
+
+  .header .logo {
+    position: static;
+    transform: none;
   }
 
   .logo-img {
@@ -331,7 +352,79 @@
   }
 
   .user-area {
+    position: relative;
     gap: 5px;
+  }
+
+  .submit-event-nav {
+    padding: 6px 8px;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--card-bg);
+    cursor: pointer;
+  }
+
+  .mobile-menu-toggle span {
+    display: block;
+    width: 13px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: var(--copper);
+  }
+
+  .user-menu {
+    display: none;
+  }
+
+  .mobile-menu-open .user-menu {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 110;
+    display: flex;
+    min-width: 190px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card-bg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .user-menu-profile {
+    padding: 4px 6px 10px;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .mobile-menu-open .user-name {
+    display: inline;
+  }
+
+  .user-menu .btn-text {
+    width: 100%;
+    padding: 9px 10px;
+    text-align: left;
+  }
+
+  .user-menu .header-newsletter-note {
+    padding: 3px 6px;
   }
 
   .user-avatar {
@@ -357,8 +450,13 @@
     width: 88px;
   }
 
-  .user-name {
-    display: none;
+  .back-btn {
+    padding: 6px 7px;
+  }
+
+  .submit-event-nav {
+    font-size: 8px;
+    letter-spacing: 0;
   }
 }
 
