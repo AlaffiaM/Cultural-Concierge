@@ -1,28 +1,23 @@
+// Eventbrite connector — uses the official Eventbrite v3 API (no page scraping).
+// Requires EVENTBRITE_API_TOKEN (a personal OAuth token from Eventbrite's portal).
+// If the token is missing the source is skipped gracefully.
 const axios = require('axios')
-const cheerio = require('cheerio')
 const { classifyType } = require('../utils/eventClassifier')
 
 const SOURCE = 'eventbrite'
+const API_BASE = 'https://www.eventbriteapi.com/v3'
 
-const CATEGORIES = [
-  'music',
-  'food-and-drink',
-  'performing-arts',
-  'visual-arts',
-  'hobbies',
-  'health',
-  'other',
-]
+const CATEGORIES = ['103', '110', '104', '105', '113', '108', '115', '199'] // music, food, performing, visual, home&lifestyle, sports, family, other
 
-const CITY_CATEGORY_URLS = {
-  Lagos: CATEGORIES.map(c => `https://www.eventbrite.com/d/nigeria--lagos/events/${c}/`),
-  Abuja: CATEGORIES.map(c => `https://www.eventbrite.com/d/nigeria--abuja/events/${c}/`),
-  Nairobi: CATEGORIES.map(c => `https://www.eventbrite.com/d/kenya--nairobi/events/${c}/`),
-  Kigali: CATEGORIES.map(c => `https://www.eventbrite.com/d/rwanda--kigali/events/${c}/`),
+const CITY_QUERIES = {
+  Lagos: { address: 'Lagos, Nigeria', within: '50km' },
+  Abuja: { address: 'Abuja, Nigeria', within: '50km' },
+  Nairobi: { address: 'Nairobi, Kenya', within: '50km' },
+  Kigali: { address: 'Kigali, Rwanda', within: '50km' },
 }
 
-const DELAY_MS = 1500
-const RATE_LIMIT_DELAY_MS = 10000
+const MAX_PAGES = 10
+const DELAY_MS = 800
 
 function classifyPillar(name, desc) {
   const text = `${name} ${desc || ''}`.toLowerCase()
@@ -31,92 +26,111 @@ function classifyPillar(name, desc) {
   return 'CULTURE'
 }
 
-async function scrape() {
-  let error = null
-  const errors = []
+function minPrice(ticketClasses) {
+  const costs = (ticketClasses || [])
+    .filter(t => t.cost)
+    .map(t => parseFloat(t.cost.value))
+    .filter(n => !isNaN(n) && n >= 0)
+  if (!costs.length) return ''
+  const min = Math.min(...costs)
+  return min === 0 ? 'Free' : String(min)
+}
+
+function extractTime(dateObj) {
+  if (!dateObj) return ''
+  try {
+    const d = new Date(dateObj.utc || dateObj.local)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  } catch (_) {
+    return ''
+  }
+}
+
+async function searchCity(city) {
   const events = []
-  let consecutiveRateLimits = 0
+  const seen = new Set()
+  const { address, within } = CITY_QUERIES[city]
+  let continuation = null
 
-  for (const [city, urls] of Object.entries(CITY_CATEGORY_URLS)) {
-    for (const url of urls) {
-      if (consecutiveRateLimits >= 3) {
-        console.warn(`[eventbrite] ${city}: skipping remaining categories — too many consecutive 429s`)
-        errors.push(`${city}: skipped (rate limited)`)
-        break
-      }
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const params = {
+      'location.address': address,
+      'location.within': within,
+      categories: CATEGORIES.join(','),
+      expand: 'venue,ticket_classes',
+      'start_date.range_start': new Date(Date.now() - 6 * 86400000).toISOString(),
+    }
+    if (continuation) params.continuation = continuation
 
-      try {
-        const { data: html, status } = await axios.get(url, {
-          timeout: 20000,
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-          validateStatus: s => s < 500,
-        })
+    const { data } = await axios.get(`${API_BASE}/events/search/`, {
+      timeout: 20000,
+      headers: { Authorization: `Bearer ${process.env.EVENTBRITE_API_TOKEN}` },
+      params,
+    })
 
-        if (status === 429) {
-          consecutiveRateLimits++
-          console.warn(`[eventbrite] ${city} ${url.split('/').slice(-2, -1)[0]}: 429 rate limited (consecutive: ${consecutiveRateLimits}), backing off ${RATE_LIMIT_DELAY_MS}ms`)
-          errors.push(`${city} ${url.split('/').slice(-2, -1)[0]}: 429 rate limited`)
-          await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY_MS))
-          continue
-        }
+    for (const ev of (data.events || [])) {
+      if (!ev || !ev.name?.text) continue
+      if (seen.has(ev.id)) continue
+      seen.add(ev.id)
 
-        consecutiveRateLimits = 0
-        const $ = cheerio.load(html)
-        const ldScript = $('script[type="application/ld+json"]').first()
-        if (!ldScript.length) {
-          console.error(`[eventbrite] ${city} ${url.split('/').slice(-2, -1)[0]}: no JSON-LD found`)
-          continue
-        }
+      const venue = ev.venue || {}
+      const date = new Date(ev.start?.utc || ev.start?.local)
+      if (isNaN(date.getTime())) continue
 
-        const data = JSON.parse(ldScript.html().trim())
+      // Prefer the venue's address city; fall back to the searched city.
+      const venueCity = (venue.address?.city || '').trim()
+      const eventCity = venueCity && city.trim().toLowerCase().startsWith(venueCity.toLowerCase().slice(0, 2)) ? venueCity : city
 
-        for (const entry of (data.itemListElement || [])) {
-          const item = entry.item
-          if (!item || !item.name) continue
+      events.push({
+        name: ev.name.text,
+        city: eventCity,
+        date,
+        description: ev.description?.text || '',
+        imageUrl: ev.logo?.url || '',
+        pillar: classifyPillar(ev.name.text, ev.description?.text || ''),
+        type: classifyType(ev.name.text, ev.description?.text || ''),
+        venue: venue.name || '',
+        price: minPrice(ev.ticket_classes),
+        source: SOURCE,
+        url: ev.url || '',
+        time: extractTime(ev.start),
+        coordinates: venue.address?.latitude && venue.address?.longitude
+          ? { lat: parseFloat(venue.address.latitude), lng: parseFloat(venue.address.longitude) }
+          : null,
+      })
+    }
 
-          const date = new Date(item.startDate)
-          if (isNaN(date.getTime())) continue
+    continuation = data.pagination?.continuation
+    if (!continuation) break
+    if (page < MAX_PAGES - 1) await new Promise(r => setTimeout(r, DELAY_MS))
+  }
 
-          const location = item.location?.name || ''
-          const addressCity = item.location?.address?.addressLocality || city
-          const geo = item.location?.geo || {}
+  return events
+}
 
-          let time = ''
-          if (item.startDate) {
-            try {
-              time = new Date(item.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-            } catch (_) {}
-          }
+async function scrape() {
+  if (!process.env.EVENTBRITE_API_TOKEN) {
+    console.warn('[eventbrite] EVENTBRITE_API_TOKEN not configured — skipping source')
+    return { events: [], error: null, skipped: true }
+  }
 
-          const price = item.offers?.price?.toString() || ''
+  const events = []
+  const errors = []
 
-          events.push({
-            name: item.name,
-            city: addressCity,
-            date,
-            description: item.description || '',
-            imageUrl: item.image || '',
-            pillar: classifyPillar(item.name, item.description),
-            type: classifyType(item.name, item.description),
-            venue: location,
-            price,
-            source: SOURCE,
-            url: item.url || '',
-            time,
-            coordinates: geo.latitude ? { lat: parseFloat(geo.latitude), lng: parseFloat(geo.longitude) } : null,
-          })
-        }
-      } catch (err) {
-        console.error(`[eventbrite] ${city} ${url} failed:`, err.message)
-        errors.push(`${city} ${url.split('/').slice(-2, -1)[0]}: ${err.message}`)
-      }
-
-      await new Promise(r => setTimeout(r, DELAY_MS))
+  for (const city of Object.keys(CITY_QUERIES)) {
+    try {
+      const cityEvents = await searchCity(city)
+      events.push(...cityEvents)
+      console.log(`[eventbrite] ${city}: ${cityEvents.length} events`)
+    } catch (err) {
+      const status = err.response?.status || err.message
+      console.error(`[eventbrite] ${city} failed:`, status)
+      errors.push(`${city}: ${status}`)
     }
   }
 
-  error = errors.length ? errors.join('; ') : null
-  return { events, error }
+  return { events, error: errors.length ? errors.join('; ') : null }
 }
 
 module.exports = { scrape }
