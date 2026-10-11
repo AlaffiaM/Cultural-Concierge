@@ -2,7 +2,7 @@ const { subscribe } = require('../services/emailService')
 
 async function createSubscription(req, res) {
   try {
-    const result = await subscribe(req.body.email, req.body.name, req.body.source)
+    const result = await subscribe(req.body?.email, req.body?.name, req.body?.source)
     res.status(result.created ? 201 : 200).json(result)
   } catch (err) {
     if (err.status === 400) {
