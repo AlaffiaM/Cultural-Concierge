@@ -2,7 +2,9 @@
 // hard-rejects banned/corporate events, applies the core-vibe positive filter,
 // assigns an approved admin Type, then upserts as draft events for admin review.
 const Event = require('../models/Event')
+const { getEntries, isBlocked } = require('../services/blocklistService')
 const { isBanned, matchesCoreVibe, classifyType } = require('../utils/eventClassifier')
+const { isValidHttpUrl } = require('../utils/sanitize')
 
 const CITY_COORDS = {
   Lagos: { lat: 6.5244, lng: 3.3792 },
@@ -40,12 +42,21 @@ async function deduplicate(events) {
     seen.add(key)
 
     const escaped = fuzzy.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const eventDate = ev.date ? new Date(ev.date) : null
+    const normalizedDate = eventDate && !Number.isNaN(eventDate.getTime())
+      ? new Date(eventDate.toISOString().slice(0, 10))
+      : null
     const existing = await Event.findOne({
       city: { $regex: `^${cityKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
-      date: ev.date,
+      date: normalizedDate,
       name: { $regex: `^${escaped}`, $options: 'i' },
     })
-    if (!existing) unique.push(ev)
+    if (!existing) {
+      unique.push(ev)
+    } else if (!existing.url && isValidHttpUrl(ev.url)) {
+      existing.url = ev.url.trim()
+      await existing.save()
+    }
   }
   return unique
 }
@@ -54,11 +65,12 @@ async function runScrapers(sources) {
   const results = {}
   const allNew = []
   const startOfToday = new Date(new Date().toISOString().slice(0, 10))
+  const blockEntries = await getEntries('event')
 
   for (const source of sources) {
     try {
       const scraper = require(`./${source}`)
-      const { events: scraped, error: scrapeError } = await scraper.scrape()
+      const { events: scraped, error: scrapeError, skipped: sourceSkipped } = await scraper.scrape()
       const unique = await deduplicate(scraped)
 
       results[source] = {
@@ -67,13 +79,22 @@ async function runScrapers(sources) {
         skipped: scraped.length - unique.length,
         rejected: 0,
         past: 0,
+        blocked: 0,
         error: scrapeError || null,
+        disabled: !!sourceSkipped,
       }
+
+      if (sourceSkipped) continue
 
       for (const ev of unique) {
         if (ev.date && ev.date < startOfToday) {
           console.log(`[classify] SKIP (past): "${ev.name}" date=${ev.date?.toISOString?.()?.slice(0,10)}`)
           results[source].past++
+          continue
+        }
+        if (isBlocked(blockEntries, `${ev.name || ''} ${ev.description || ''}`, ev.city)) {
+          console.log(`[classify] SKIP (blocklist): "${ev.name}"`)
+          results[source].blocked++
           continue
         }
         const banned = isBanned(ev.name, ev.description)
@@ -104,6 +125,7 @@ async function runScrapers(sources) {
                 date: normalizedDate,
                 description: ev.description || '',
                 imageUrl: ev.imageUrl || '',
+                url: isValidHttpUrl(ev.url) ? ev.url.trim() : '',
                 pillar: ev.pillar || 'CULTURE',
                 type: classifyType(ev.name, ev.description) || ev.type || '',
                 venue: ev.venue || '',
