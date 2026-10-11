@@ -12,7 +12,9 @@ router.get('/upcoming/:city', venueController.getUpcomingVenuesByCity)
 router.post('/', requireAdmin, venueController.createVenue)
 router.put('/:id', requireAdmin, venueController.updateVenue)
 router.delete('/:id', requireAdmin, venueController.deleteVenue)
+router.post('/bulk-delete', requireAdmin, venueController.bulkDeleteVenues)
 router.post('/scraper/run', requireAdmin, venueController.runVenueScraper)
 router.post('/scraper/accept', requireAdmin, venueController.acceptScrapedVenues)
+router.post('/scraper/reject', requireAdmin, venueController.rejectScrapedVenues)
 
 module.exports = router
