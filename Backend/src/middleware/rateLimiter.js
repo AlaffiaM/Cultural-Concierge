@@ -17,4 +17,20 @@ const subscribeLimiter = rateLimit({
   message: { success: false, message: 'Too many subscription attempts. Try again later.' },
 })
 
-module.exports = { apiLimiter, subscribeLimiter }
+const eventSubmissionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many event submissions. Please try again later.' },
+})
+
+const eventImageLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many image uploads. Please try again later.' },
+})
+
+module.exports = { apiLimiter, subscribeLimiter, eventSubmissionLimiter, eventImageLimiter }
