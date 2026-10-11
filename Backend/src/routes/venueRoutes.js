@@ -3,9 +3,14 @@ const router = express.Router()
 const { requireAdmin } = require('../middleware/admin')
 const venueController = require('../controllers/venueController')
 
+function requireAdminForAllVenues(req, res, next) {
+  if (req.query.all === 'true') return requireAdmin(req, res, next)
+  next()
+}
+
 router.get('/lookup', requireAdmin, venueController.lookupVenueImage)
 router.post('/batch-enrich', requireAdmin, venueController.batchEnrichVenues)
-router.get('/', venueController.listVenues)
+router.get('/', requireAdminForAllVenues, venueController.listVenues)
 router.get('/:city', venueController.getVenuesByCity)
 router.get('/vibes/:city', venueController.getVenuesByVibe)
 router.get('/upcoming/:city', venueController.getUpcomingVenuesByCity)
