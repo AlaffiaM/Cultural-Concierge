@@ -30,4 +30,5 @@ export const sourceLabels = {
   tixafrica: 'Tix Africa',
   curated: 'Curated',
   manual: 'Manual',
+  community: 'Community',
 }
