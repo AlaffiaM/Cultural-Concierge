@@ -193,6 +193,26 @@
 
 /* ===== Event List ===== */
 
+.event-search {
+  display: block;
+  margin: 0 0 14px;
+}
+
+.event-search input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.event-search input:focus {
+  outline: 2px solid var(--copper);
+  outline-offset: 1px;
+}
+
 .events-list {
   display: flex;
   flex-direction: column;
@@ -509,6 +529,13 @@
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 500;
+}
+
+.event-modal-detail a {
+  color: var(--copper);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .event-modal-label {
