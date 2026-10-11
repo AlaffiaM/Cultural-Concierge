@@ -292,7 +292,7 @@ function App() {
                 </>
               ) : (
                 <>
-                  <button className="btn-text" onClick={handleGoogleSignIn}>Sign in</button>
+                  <button className="btn-text" onClick={handleGoogleSignIn} disabled>Sign in</button>
                   <span className="header-newsletter-note">Subscribe</span>
                 </>
               )}
@@ -315,7 +315,8 @@ function App() {
                 </p>
               </div>
               <div className="home-actions">
-                <button className="btn btn-primary btn-full" onClick={handleGoogleSignIn}>
+                <button className="btn btn-primary btn-full" onClick={handleGoogleSignIn} disabled>    
+                  {/* hmmm */}
                   Sign in with Google
                 </button>
                 <p className="home-newsletter-note">Logging in subscribes you to our monthly newsletter</p>
