@@ -7,6 +7,7 @@ router.use(requireAdmin)
 
 router.post('/run', scraperController.runScraper)
 router.get('/history', scraperController.getScraperHistory)
+router.get('/runs', scraperController.getRunLogs)
 router.post('/approve', scraperController.approveScrapedEvents)
 router.post('/reject', scraperController.rejectScrapedEvents)
 
