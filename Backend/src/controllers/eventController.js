@@ -1,8 +1,9 @@
 // Event endpoints. `status`: draft = scraped awaiting approval, approved = live.
 const Event = require('../models/Event')
-const { escapeRegex } = require('../utils/sanitize')
+const { escapeRegex, validateEventPayload } = require('../utils/sanitize')
+const { rememberRejection } = require('../services/blocklistService')
 
-const EVENT_ALLOWED_UPDATES = ['name', 'city', 'coordinates', 'linkedSpotId', 'date', 'endDate', 'time', 'type', 'pillar', 'tags', 'vibe', 'description', 'tip', 'imageUrl', 'venue', 'price', 'status', 'isGhostLocation']
+const EVENT_ALLOWED_UPDATES = ['name', 'city', 'coordinates', 'linkedSpotId', 'date', 'endDate', 'time', 'type', 'pillar', 'tags', 'vibe', 'description', 'tip', 'imageUrl', 'url', 'venue', 'price', 'status', 'isGhostLocation']
 const GHOST_VALID_STATUSES = ['draft', 'approved']
 
 function scoreEvent(ev) {
@@ -168,32 +169,39 @@ async function getEventById(req, res) {
 
 async function createEvent(req, res) {
   try {
-    const normalizedDate = req.body.date ? new Date(new Date(req.body.date).toISOString().slice(0, 10)) : undefined
+    const validation = validateEventPayload(req.body)
+    if (!validation.isValid) {
+      return res.status(400).json({ message: 'Invalid event payload', errors: validation.errors })
+    }
+
+    const payload = validation.sanitized
+    const normalizedDate = payload.date ? new Date(new Date(payload.date).toISOString().slice(0, 10)) : undefined
     const existing = await Event.findOne({
-      name: req.body.name,
-      city: req.body.city,
+      name: payload.name,
+      city: payload.city,
       date: normalizedDate,
     }).collation({ locale: 'en', strength: 2 })
     if (existing) {
       return res.status(409).json({ message: 'Event already exists', existingId: existing._id })
     }
     const event = new Event({
-      name: req.body.name,
-      city: req.body.city,
-      coordinates: req.body.coordinates,
-      linkedSpotId: req.body.linkedSpotId || null,
+      name: payload.name,
+      city: payload.city,
+      coordinates: payload.coordinates,
+      linkedSpotId: payload.linkedSpotId || null,
       date: normalizedDate,
-      endDate: req.body.endDate,
-      time: req.body.time,
-      type: req.body.type,
-      pillar: req.body.pillar,
-      tags: req.body.tags || [],
-      vibe: req.body.vibe,
-      description: req.body.description,
-      tip: req.body.tip,
-      imageUrl: req.body.imageUrl,
-      isGhostLocation: req.body.isGhostLocation || false,
-      source: req.body.source || 'manual',
+      endDate: payload.endDate,
+      time: payload.time,
+      type: payload.type,
+      pillar: payload.pillar,
+      tags: payload.tags || [],
+      vibe: payload.vibe,
+      description: payload.description,
+      tip: payload.tip,
+      imageUrl: payload.imageUrl,
+      url: payload.url,
+      isGhostLocation: payload.isGhostLocation || false,
+      source: payload.source || 'manual',
       status: 'approved',
     })
     const saved = await event.save()
@@ -205,11 +213,16 @@ async function createEvent(req, res) {
 
 async function updateEvent(req, res) {
   try {
+    const validation = validateEventPayload(req.body, { partial: true })
+    if (!validation.isValid) {
+      return res.status(400).json({ message: 'Invalid event payload', errors: validation.errors })
+    }
+
     const updates = {}
     for (const key of EVENT_ALLOWED_UPDATES) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key]
+      if (validation.sanitized[key] !== undefined) updates[key] = validation.sanitized[key]
     }
-    const event = await Event.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true })
+    const event = await Event.findByIdAndUpdate(req.params.id, updates, { returnDocument: 'after', runValidators: true })
     if (!event) return res.status(404).json({ message: 'Event not found' })
     res.json(event)
   } catch (err) {
@@ -310,6 +323,14 @@ async function deleteEvent(req, res) {
   try {
     const event = await Event.findByIdAndDelete(req.params.id)
     if (!event) return res.status(404).json({ message: 'Event not found' })
+    // If it came from a bot source, remember it so it never re-imports.
+    if (event.source && event.source !== 'manual') {
+      try {
+        await rememberRejection('event', { name: event.name, city: event.city, source: event.source })
+      } catch (err) {
+        console.warn(`[events] could not skip-list "${event.name}": ${err.message}`)
+      }
+    }
     res.json({ message: 'Event deleted' })
   } catch (err) {
     console.error(err.message);
