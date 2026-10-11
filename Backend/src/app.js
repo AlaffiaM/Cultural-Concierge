@@ -77,6 +77,7 @@ app.get('/api/status', (req, res) => {
 // Mount route modules
 app.use('/api/venues', require('./routes/venueRoutes'));
 app.use('/api/events', require('./routes/eventRoutes'));
+app.use('/api/event-submissions', require('./routes/eventSubmissionRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/system', require('./routes/systemRoutes'));
 app.use('/api/scraper', require('./routes/scraperRoutes'));
