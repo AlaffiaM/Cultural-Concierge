@@ -131,6 +131,13 @@
   font-weight: 600;
 }
 
+.tb-advisory-note {
+  margin: -10px 0 18px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
 /* ===== Airport Tip ===== */
 
 .tb-airport-tip {
