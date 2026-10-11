@@ -1,0 +1,333 @@
+.community-review {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.community-review-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 22px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-card);
+}
+
+.community-review-eyebrow {
+  color: var(--admin-copper);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.community-review-intro h3 {
+  margin: 6px 0;
+  color: var(--admin-text);
+  font-family: var(--admin-heading);
+  font-size: 21px;
+}
+
+.community-review-intro p {
+  margin: 0;
+  color: var(--admin-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.community-review-count {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid rgba(226,154,94,0.3);
+  border-radius: 20px;
+  background: rgba(226,154,94,0.1);
+  color: var(--admin-copper);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.community-review-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.community-review-filters button {
+  padding: 8px 12px;
+  border: 1px solid var(--admin-border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--admin-text-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.community-review-filters button.active {
+  border-color: rgba(226,154,94,0.4);
+  background: rgba(226,154,94,0.12);
+  color: var(--admin-copper);
+}
+
+.community-review-empty {
+  padding: 56px 20px;
+  border: 1px dashed var(--admin-border);
+  border-radius: var(--admin-radius);
+  text-align: center;
+}
+
+.community-review-empty > span {
+  color: var(--admin-copper);
+  font-size: 28px;
+}
+
+.community-review-empty h3 {
+  margin: 12px 0 6px;
+  color: var(--admin-text);
+  font-family: var(--admin-heading);
+}
+
+.community-review-empty p {
+  margin: 0;
+  color: var(--admin-text-muted);
+  font-size: 13px;
+}
+
+.community-submission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.community-submission-card {
+  padding: 18px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-card);
+}
+
+.community-history-card {
+  padding: 18px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-card);
+}
+
+.community-history-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.community-history-title h3 {
+  margin: 8px 0 4px;
+  color: var(--admin-text);
+  font-size: 15px;
+}
+
+.community-history-title p,
+.community-history-date {
+  margin: 0;
+  color: var(--admin-text-muted);
+  font-size: 11px;
+}
+
+.community-history-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.community-history-status.approved {
+  background: rgba(151,167,108,0.16);
+  color: #b9d284;
+}
+
+.community-history-status.rejected {
+  background: rgba(220,80,72,0.12);
+  color: #f08c83;
+}
+
+.community-history-feedback {
+  margin: 14px 0 0;
+  padding: 12px;
+  border-left: 2px solid #f08c83;
+  background: rgba(220,80,72,0.06);
+  color: var(--admin-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.community-history-feedback strong,
+.community-history-columns strong {
+  color: var(--admin-text);
+}
+
+.community-history-details {
+  margin-top: 14px;
+  color: var(--admin-copper);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.community-history-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  color: var(--admin-text-muted);
+}
+
+.community-history-columns p {
+  margin: 6px 0 0;
+  color: var(--admin-text-muted);
+  line-height: 1.5;
+}
+
+.community-submission-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-text-muted);
+  font-size: 11px;
+}
+
+.community-submission-meta a {
+  color: var(--admin-copper);
+}
+
+.community-submission-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.community-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--admin-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.community-field-wide {
+  grid-column: 1 / -1;
+}
+
+.community-field input,
+.community-field select,
+.community-field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-sm);
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.community-field select option {
+  color: var(--admin-text);
+  background: var(--admin-bg);
+}
+
+.community-field input:focus,
+.community-field select:focus,
+.community-field textarea:focus {
+  outline: 1px solid var(--admin-copper);
+  border-color: var(--admin-copper);
+}
+
+.community-field textarea {
+  resize: vertical;
+}
+
+.community-reject-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.community-reject-row > .community-field {
+  flex: 1;
+}
+
+.community-review-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.community-review-actions button {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--admin-radius-sm);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.community-review-actions button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.community-reject-btn {
+  border-color: rgba(220,80,72,0.3) !important;
+  background: rgba(220,80,72,0.1);
+  color: #f08c83;
+}
+
+.community-approve-btn {
+  background: var(--admin-copper);
+  color: #211f1b;
+}
+
+@media (max-width: 650px) {
+  .community-review-intro,
+  .community-reject-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .community-review-count {
+    align-self: flex-start;
+  }
+
+  .community-submission-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .community-field-wide {
+    grid-column: auto;
+  }
+
+  .community-review-actions {
+    justify-content: flex-end;
+  }
+}
