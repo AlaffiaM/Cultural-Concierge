@@ -7,6 +7,7 @@ import CityCards from "./CityCards";
 import VenuesView from "./VenuesView";
 import HappeningsView from "./HappeningsView";
 import TravelBrief from "./TravelBrief";
+import EventSubmissionForm from "./EventSubmissionForm";
 
 
 import VenueDetailModal from "./VenueDetailModal";
@@ -32,7 +33,7 @@ function gtag(...args) {
 }
 
 function App() {
-  // view = 'home' | 'cities' | 'venues' | 'admin' (simple state machine, no router).
+  // view = 'home' | 'cities' | 'venues' | 'submit-event' | 'admin' (simple state machine, no router).
   const { isLoaded, isSignedIn, user } = useUser();
   const { getToken, signOut } = useAuth();
   const { signIn } = useSignIn();
@@ -196,6 +197,11 @@ function App() {
     gtag("event", "select_city", { city });
   }
 
+  function handleSubmitEvent() {
+    setView("submit-event");
+    gtag("event", "open_event_submission");
+  }
+
   function handleBack() {
     setView("cities");
     setSelectedCity(null);
@@ -247,6 +253,9 @@ function App() {
             <img src={alaffiaLogo} alt="Alaffia" className="logo-img" />
           </div>
           <div className="user-area">
+            {view !== "submit-event" && (
+              <button className="btn-text submit-event-nav" onClick={handleSubmitEvent}>Share an event</button>
+            )}
             {isSignedIn ? (
               <>
                 {user?.imageUrl && <img src={user.imageUrl} alt="" className="user-avatar" />}
@@ -287,6 +296,7 @@ function App() {
                   Sign in with Google
                 </button>
                 <p className="home-newsletter-note">Logging in subscribes you to our monthly newsletter</p>
+                <button className="home-submit-event" onClick={handleSubmitEvent}>Know an event? Share it with us</button>
               </div>
             </div>
           )}
@@ -320,6 +330,10 @@ function App() {
                     {cities.find((c) => c.name === selectedCity)?.country}
                   </span>
                 </div>
+              )}
+
+              {view === "submit-event" && (
+                <EventSubmissionForm city={selectedCity} onBack={handleBack} />
               )}
 
               <div className="venues-header">
