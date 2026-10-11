@@ -1,6 +1,6 @@
 const Event = require('../models/Event')
 const EventSubmission = require('../models/EventSubmission')
-const { isValidEmail, isValidHttpUrl } = require('../utils/sanitize')
+const { escapeRegex, isValidEmail, isValidHttpUrl, isValidObjectId } = require('../utils/sanitize')
 const multer = require('multer')
 const { upload } = require('../utils/imageProcessor')
 const { sendTransactional } = require('../services/brevoService')
@@ -103,7 +103,7 @@ async function submitEvent(req, res) {
 
   try {
     const pendingDuplicate = await EventSubmission.findOne({
-      eventName: { $regex: `^${values.eventName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+      eventName: { $regex: `^${escapeRegex(values.eventName)}$`, $options: 'i' },
       city: values.city,
       date: values.date,
       status: 'pending',
@@ -113,7 +113,7 @@ async function submitEvent(req, res) {
     }
 
     const duplicate = await Event.findOne({
-      name: { $regex: `^${values.eventName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, $options: 'i' },
+      name: { $regex: `^${escapeRegex(values.eventName)}$`, $options: 'i' },
       city: values.city,
       date: values.date,
     }).select('_id')
@@ -143,9 +143,11 @@ async function submitEvent(req, res) {
 
 async function listSubmissions(req, res) {
   try {
-    const filter = req.query.status && ['pending', 'approved', 'rejected'].includes(req.query.status)
-      ? { status: req.query.status }
-      : { status: 'pending' }
+    if (req.query.status !== undefined &&
+        (typeof req.query.status !== 'string' || !['pending', 'approved', 'rejected'].includes(req.query.status))) {
+      return res.status(400).json({ message: 'status must be pending, approved, or rejected.' })
+    }
+    const filter = { status: req.query.status || 'pending' }
     const submissions = await EventSubmission.find(filter).sort({ createdAt: 1 }).lean()
     res.json(submissions)
   } catch (err) {
@@ -156,6 +158,7 @@ async function listSubmissions(req, res) {
 
 async function approveSubmission(req, res) {
   try {
+    if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid submission ID.' })
     const submission = await EventSubmission.findOne({ _id: req.params.id, status: 'pending' })
     if (!submission) return res.status(404).json({ message: 'Pending submission not found.' })
 
@@ -214,6 +217,7 @@ async function approveSubmission(req, res) {
 }
 
 async function rejectSubmission(req, res) {
+  if (!isValidObjectId(req.params.id)) return res.status(400).json({ message: 'Invalid submission ID.' })
   const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : ''
   if (!reason || reason.length > 500) {
     return res.status(400).json({ message: 'A rejection reason (up to 500 characters) is required.' })
