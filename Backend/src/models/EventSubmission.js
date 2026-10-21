@@ -13,6 +13,7 @@ const eventSubmissionSchema = new mongoose.Schema({
   price: { type: String, trim: true, maxlength: 80 },
   imageUrl: { type: String, trim: true, maxlength: 1000 },
   url: { type: String, trim: true, maxlength: 1000 },
+  frequency: { type: String, enum: ['weekly', 'monthly', 'quarterly', 'none'], default: 'none' },
   submitterName: { type: String, required: true, trim: true, maxlength: 120 },
   submitterEmail: { type: String, required: true, trim: true, lowercase: true, maxlength: 254 },
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
