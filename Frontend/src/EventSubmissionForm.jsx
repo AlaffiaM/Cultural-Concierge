@@ -9,6 +9,12 @@ const PILLARS = [
   { value: 'SOCIAL', label: 'Food, music & social' },
 ]
 const TYPES = ['Festival', 'Exhibition', 'Film', 'Workshop', 'Performance', 'Dining', 'Wellness', 'Music', 'Art', 'Pop-up', 'Brunch', 'Other']
+const FREQUENCIES = [
+  { value: 'none', label: 'One-time' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'quarterly', label: 'Quarterly' },
+]
 
 const initialForm = (city) => ({
   eventName: '',
@@ -23,6 +29,7 @@ const initialForm = (city) => ({
   price: '',
   imageUrl: '',
   url: '',
+  frequency: 'none',
   submitterName: '',
   submitterEmail: '',
   consent: false,
@@ -141,6 +148,12 @@ export default function EventSubmissionForm({ city, onBack }) {
           <label className="submission-field">
             <span>Date <b>*</b></span>
             <input required type="date" min={new Date().toISOString().slice(0, 10)} value={form.date} onChange={e => update('date', e.target.value)} />
+          </label>
+          <label className="submission-field">
+            <span>Frequency</span>
+            <select value={form.frequency} onChange={e => update('frequency', e.target.value)}>
+              {FREQUENCIES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+            </select>
           </label>
           <label className="submission-field">
             <span>Time</span>
