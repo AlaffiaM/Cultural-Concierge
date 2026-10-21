@@ -40,7 +40,7 @@ function uploadSubmissionImage(req, res) {
 
 function validateSubmission(data, { partial = false } = {}) {
   const errors = []
-  const fields = ['eventName', 'city', 'date', 'time', 'type', 'pillar', 'venue', 'address', 'description', 'price', 'imageUrl', 'url']
+  const fields = ['eventName', 'city', 'date', 'time', 'type', 'pillar', 'venue', 'address', 'description', 'price', 'imageUrl', 'url', 'frequency']
   const values = {}
 
   for (const field of fields) {
@@ -86,6 +86,9 @@ function validateSubmission(data, { partial = false } = {}) {
   if (values.description && values.description.length > 3000) errors.push('Description must be 3,000 characters or fewer.')
   if (values.url && !isValidHttpUrl(values.url)) errors.push('Booking or event link must be a valid HTTP or HTTPS URL.')
   if (values.imageUrl && !isValidHttpUrl(values.imageUrl)) errors.push('Image link must be a valid HTTP or HTTPS URL.')
+  if (values.frequency && !['weekly', 'monthly', 'quarterly', 'none'].includes(values.frequency)) {
+    errors.push('Frequency must be weekly, monthly, quarterly, or none.')
+  }
 
   return { errors, values }
 }
@@ -181,6 +184,7 @@ async function approveSubmission(req, res) {
       status: 'approved',
       source: 'community',
       isGhostLocation: false,
+      frequency: data.frequency || 'none',
     })
 
     submission.status = 'approved'
@@ -198,6 +202,7 @@ async function approveSubmission(req, res) {
       price: data.price || '',
       imageUrl: data.imageUrl || '',
       url: data.url || '',
+      frequency: data.frequency || 'none',
     }
     submission.reviewedAt = new Date()
     await submission.save()
