@@ -3,7 +3,7 @@ const Event = require('../models/Event')
 const { escapeRegex, isValidIsoDate, isValidObjectId, parsePagination, validateEventPayload } = require('../utils/sanitize')
 const { rememberRejection } = require('../services/blocklistService')
 
-const EVENT_ALLOWED_UPDATES = ['name', 'city', 'coordinates', 'linkedSpotId', 'date', 'endDate', 'time', 'type', 'pillar', 'tags', 'vibe', 'description', 'tip', 'imageUrl', 'url', 'venue', 'price', 'status', 'isGhostLocation']
+const EVENT_ALLOWED_UPDATES = ['name', 'city', 'coordinates', 'linkedSpotId', 'date', 'endDate', 'time', 'type', 'pillar', 'tags', 'vibe', 'description', 'tip', 'imageUrl', 'url', 'venue', 'price', 'status', 'isGhostLocation', 'frequency']
 const GHOST_VALID_STATUSES = ['draft', 'approved']
 
 function scoreEvent(ev) {
