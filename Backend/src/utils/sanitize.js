@@ -94,6 +94,7 @@ function validateEventPayload(payload, { partial = false } = {}) {
   const textFields = {
     name: 120, city: 120, time: 80, type: 60, vibe: 120, description: 3000,
     tip: 1000, imageUrl: 1000, url: 1000, venue: 160, price: 80, source: 80,
+    frequency: 20,
   }
 
   if (!partial) {
@@ -134,6 +135,12 @@ function validateEventPayload(payload, { partial = false } = {}) {
 
   if (data.isGhostLocation !== undefined && typeof data.isGhostLocation !== 'boolean') {
     errors.push('isGhostLocation must be a boolean.')
+  }
+
+  if (data.frequency !== undefined && data.frequency !== null && data.frequency !== '') {
+    if (!['weekly', 'monthly', 'quarterly', 'none'].includes(data.frequency)) {
+      errors.push('Frequency must be weekly, monthly, quarterly, or none.')
+    }
   }
 
   if (data.tags !== undefined) {
